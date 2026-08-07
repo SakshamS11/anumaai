@@ -70,3 +70,13 @@ If documentation conflicts, the master product specification and an explicit fou
 After each implementation phase, run the configured formatter, lint, TypeScript checks, relevant unit tests, integration/security tests, and Playwright tests. Fix failures introduced by the change. For AI work, add versioned fixtures and measure individual tasks rather than reporting a single generic accuracy score.
 
 Every phase handoff must summarize changed files, architecture decisions, assumptions, unresolved risks, and founder decisions required. Do not advance to the next phase without explicit instruction.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
