@@ -2,7 +2,7 @@
 
 ## Decision summary
 
-ANUMA is a modular monolith deployed as a Next.js App Router application with strict TypeScript. PostgreSQL is the authoritative data store; Supabase is the preferred MVP platform for Postgres, authentication, and private object storage. Durable background workflows execute transcription, deterministic metrics, structured analysis, trackers, scorecards, coaching, and aggregate refreshes.
+ANUMA is a modular monolith deployed as a Next.js App Router application with strict TypeScript. PostgreSQL is the authoritative data store; Supabase is the preferred MVP platform for Postgres, authentication, and private object storage. Durable background workflows execute transcription, deterministic metrics, structured analysis, and only the optional downstream consumers selected by an organization's configuration.
 
 The architecture optimizes for the expensive-to-change concerns: tenant ownership, immutable evidence, explicit data grain, version lineage, append-only corrections, event-based outcomes, and configuration versioning.
 
@@ -22,6 +22,51 @@ flowchart LR
   W -. "authorized signed URL" .-> S
 ```
 
+## Intelligence dependency graph
+
+ANUMA is a dependency graph, not a mandatory linear pipeline. Evidence creates reusable observations and deterministic measures. Each consumer selects compatible, versioned inputs independently; it does not require every preceding product capability to exist.
+
+```mermaid
+flowchart LR
+  E["Audio and transcript evidence"] --> M["Deterministic metrics"]
+  E --> O["Reusable structured observations\nfacts, questions, objections, decisions"]
+  O --> CI["Customer Intelligence"]
+  M --> FI["Frontline Performance"]
+  O --> T["Optional client trackers"]
+  M --> T
+  O --> S["Optional client scorecards"]
+  T --> S
+  O --> C["Evidence-backed coaching"]
+  T --> C
+  S --> C
+  P["Approved client playbook"] --> C
+  X["External outcome events"] --> OI["Outcome Intelligence"]
+  O --> OI
+  M --> OI
+  T --> OI
+  S --> OI
+```
+
+The graph does not imply that every edge is present for every organization or conversation. Trackers and scorecards are client-specific optional consumers; coaching is optional and consumes evidence and underlying observations in addition to any score results. Outcomes are external business events associated with conversations/opportunities, not a result of ANUMA coaching or scoring.
+
+## Extract once, reuse many times
+
+The semantic-analysis stage produces validated, evidence-backed observations for reuse. Customer Intelligence, management aggregates, deterministic tracker values, scorecard calculations, outcome comparisons, and reports must consume the existing typed observations/metrics whenever they can reliably answer the question.
+
+Before invoking a model, the application service must check whether the requested result is available from compatible structured observations or deterministic computation. A new model call is justified only when it performs genuinely new semantic interpretation; it is not a formatting mechanism for a dashboard, aggregate, or policy calculation. This keeps cost, latency, inconsistency, and model-version drift out of downstream consumers.
+
+## Incremental-value test
+
+Every proposed processing stage or abstraction must satisfy at least one of these tests:
+
+1. creates new information;
+2. standardizes information for reuse;
+3. applies client-specific business interpretation;
+4. enables a user decision or action; or
+5. links interaction information with external business truth.
+
+Do not introduce a layer that merely reformats information already available without adding one of these forms of value.
+
 ## Implementation classifications
 
 - **MVP CORE**: required to prove the MVP thesis and implemented in the phase that owns the capability.
@@ -40,8 +85,8 @@ Documentation of an entity or module is not authorization to implement it early.
 | Metrics | MVP CORE | deterministic definitions, runs, values, quality and eligibility inputs | prompt-based arithmetic |
 | Intelligence | MVP CORE | analysis runs, facts, questions, responses, objections, decision observations, evidence | score policy or authoritative outcomes |
 | Configuration | MVP CORE | domain packs and tracker/scorecard definitions and publications | evaluation results |
-| Evaluation | MVP CORE | tracker runs/results, scorecard runs/results, coaching | redetection duplicated in scorecards |
-| Outcomes | MVP CORE | append-only outcome events and derived current state | mutable “final outcome” truth or CRM opportunity management |
+| Evaluation | MVP CORE | optional tracker runs/results, optional scorecard runs/results, optional coaching | redetection duplicated in scorecards or mandatory gating of independent insights |
+| Outcomes | MVP CORE | append-only external business events and derived current state | mutable “final outcome” truth, CRM opportunity management, or dependence on scoring/coaching |
 | Corrections | MVP CORE | proposals, approvals/rejections, typed overlays and effective reviewed state | deletion of original output |
 | Insights | MVP CORE | tenant-scoped aggregates, eligibility gates, maturity gates, drill-down cohorts | causal inference |
 | Audit & governance | MVP SUPPORTING | pilot-critical audit events and retention/deletion workflows | secrets or transcript bodies in logs |
@@ -49,7 +94,7 @@ Documentation of an entity or module is not authorization to implement it early.
 | Custom dimensions | DEFERRED | governed organization-defined analytical dimensions | arbitrary JSON or unrestricted querying |
 | Internal access grants | DEFERRED | explicit, time-bounded, purpose-limited ANUMA support/quality access | ordinary customer organization roles |
 
-Modules communicate through typed application services and domain values. React components render application DTOs; they do not calculate domain metrics or evaluate business rules.
+Modules communicate through typed application services and domain values. React components render application DTOs; they do not calculate domain metrics or evaluate business rules. Consumer modules declare the exact compatible input versions they use; they may not create a transcript-to-model dependency when reusable observations or deterministic values already answer the request.
 
 ## Request and authorization path
 
@@ -81,6 +126,8 @@ stateDiagram-v2
   ready --> queued: explicit new run
   partial --> queued: retry missing stage
 ```
+
+This lifecycle records capture and processing availability; it is not the intelligence dependency graph. `evaluating` means one or more configured optional evaluations are running or pending, not that trackers, scorecards, coaching, or outcomes must run in sequence. Outcomes can arrive before, during, or after any processing state.
 
 The conversation lifecycle is derived from stage attempts, not the only record of processing. Each workflow step:
 

@@ -159,6 +159,8 @@ Semantic records point to an evidence group and may require at least one referen
 
 ## Structured intelligence grains
 
+The existing independent records are intentional: analysis produces reusable facts/questions/responses/objections, metric runs produce deterministic values, tracker/scorecard/coaching runs record optional client-specific consumers, and outcome events are external business truth. No new dependency table or schema redesign is required to enforce a linear pipeline; each consumer binds only the compatible source runs and inputs it actually uses.
+
 ### `fact_definitions`
 
 Versioned taxonomy item with stable key, category, value type, cardinality, allowed roles, aggregation rules, sensitivity, and vertical applicability.
@@ -253,7 +255,7 @@ Many-to-many link with relationship type and effective ordering. Keep optional b
 
 ### `outcome_events`
 
-Append-only event: organization, optional opportunity/conversation, vertical-specific event definition, occurred/recorded timestamps, source (`manual`, later `import`), actor, amount/currency fields for revenue/discount/margin, product reference, metadata, and supersedes event ID. A projection calculates current outcome; deletion/correction produces a compensating event.
+Append-only external business event: organization, optional opportunity/conversation, vertical-specific event definition, occurred/recorded timestamps, source (`manual`, later `import`), actor, amount/currency fields for revenue/discount/margin, product reference, metadata, and supersedes event ID. A projection calculates current outcome; deletion/correction produces a compensating event. Outcome events do not depend on tracker, scorecard, or coaching runs; Outcome Intelligence joins them to compatible prior interaction observations for descriptive comparison.
 
 ## Custom dimensions and entities
 

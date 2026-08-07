@@ -170,7 +170,7 @@ Outcome comparisons require a matching conversation quality assessment with `out
 | `outcomes.eligible_count` | count | conversations/opportunities meeting comparison policy |
 | `outcomes.labelled_count` | count | eligible records with qualifying outcome event in window |
 | `outcomes.additional_needed` | count | max(0, configured maturity threshold − labelled count), also evaluated per cohort |
-| `outcomes.feature_rate_by_cohort` | ratio | conversations containing a fact/tracker/metric condition / eligible outcome cohort |
+| `outcomes.feature_rate_by_cohort` | ratio | conversations containing a compatible observation, metric, tracker, or score-result condition / eligible outcome cohort |
 | `outcomes.rate_difference` | percentage points | feature rate cohort A − cohort B, descriptive only |
 
 Maturity labels are proposed as:

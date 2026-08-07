@@ -2,7 +2,7 @@
 
 ## Purpose and boundary
 
-Trackers describe **what happened** in a conversation according to a published definition. They expose configurable, reusable observations such as whether budget was discovered, which price was quoted, or whether a test drive was offered. They are not scorecard criteria and do not assign representative performance points.
+Trackers are optional organization-specific observations/checks over reusable evidence, facts, questions, objections, and deterministic metrics. They expose configurable results such as whether budget was discovered, which price was quoted, or whether a test drive was offered. Not every fact or conversation needs a tracker. Trackers are not scorecard criteria and do not assign representative performance points.
 
 ## Definition lifecycle
 
@@ -60,7 +60,7 @@ If false, the conditional tracker is `NOT_APPLICABLE`. Missing/uncertain prerequ
 1. Resolve the exact tracker-set publication and input run IDs.
 2. Topologically sort dependencies; reject cycles at publication.
 3. Evaluate applicability.
-4. Reuse typed facts/objects and deterministic metrics before invoking semantic detection.
+4. Reuse typed facts/objects and deterministic metrics before invoking semantic detection. Invoke a model only if the tracker needs genuinely new semantic interpretation that existing structured inputs cannot provide.
 5. Validate the typed result and evidence constraints.
 6. Persist original result and provenance transactionally.
 7. Queue review for configured uncertainty, low confidence, or high-impact results.
@@ -92,6 +92,7 @@ Tracker rates always identify tracker version, denominator, applicable count, un
 ## Guardrails
 
 - Tracker prompts cannot invent score policy or coaching.
+- Customer Intelligence and Outcome Intelligence may consume compatible observations directly; they must not require a tracker result.
 - Tracker detection is not duplicated inside scorecards.
 - No arbitrary organization-authored code or SQL.
 - Published definitions require schema validation, dependency validation, evidence policy, and test fixtures.

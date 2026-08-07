@@ -28,6 +28,7 @@ If documentation conflicts, the master product specification and an explicit fou
 - Provider and model selection is environment/configuration driven.
 - Aggregate analytics must apply the matching conversation-level quality/eligibility assessment and disclose exclusions.
 - Customer organization roles are only `representative`, `manager`, and `admin`; internal ANUMA access is not ordinary tenant membership.
+- Before invoking an AI model, determine whether the required result can be reliably derived from existing structured observations or deterministic computation. Prefer reuse and deterministic computation over repeated model inference.
 
 ## Architecture boundaries
 
@@ -49,6 +50,7 @@ If documentation conflicts, the master product specification and an explicit fou
 - Corrections are append-only overlays with actor, reason, timestamp, and target field/value.
 - Representatives may propose eligible corrections; managers/admins accept or reject them, and only accepted corrections affect the reviewed projection.
 - Definitions and configurations are immutable once published; edits create new versions.
+- Treat intelligence as a dependency graph: reusable observations and metrics may independently feed insights, trackers, scorecards, coaching, and outcome comparisons. Do not impose a mandatory linear pipeline.
 - Outcome history is event-based. Corrections supersede events rather than mutating them.
 - Store money as integer minor units plus ISO 4217 currency.
 - Store confidence as a bounded numeric value only when its meaning is documented for that producer.

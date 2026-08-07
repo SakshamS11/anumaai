@@ -2,7 +2,7 @@
 
 ## Purpose and separation
 
-Scorecards represent **how a client evaluates what happened**. They consume facts, first-class objects, deterministic metrics, and tracker results. They do not repeat extraction logic or prompt a model to rediscover the conversation.
+Scorecards are optional organization-specific judgments about what happened. They consume compatible facts, first-class objects, deterministic metrics, and tracker results; they do not repeat extraction logic or prompt a model to rediscover the conversation. Not every customer needs a scorecard, and Customer Intelligence and Outcome Intelligence must not depend on scorecard availability.
 
 ## Versioned structure
 
@@ -71,7 +71,7 @@ Every semantic criterion result includes evidence or explicitly documents that i
 
 ## Coaching contract
 
-Coaching is downstream of reviewed/effective observations and an approved playbook:
+Where configured, coaching is downstream of reviewed/effective observations and an approved playbook. It may consume underlying observations, evidence, tracker results, scorecard criteria/results, and the playbook; a numerical score alone is never sufficient:
 
 - maximum two strengths;
 - one to three improvement priorities;

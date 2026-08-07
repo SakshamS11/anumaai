@@ -6,6 +6,19 @@ The MVP is a pilot-ready modular monolith for automotive and electronics retail.
 
 Phase 0 creates architecture documentation only. Later phases must be explicitly authorized and executed sequentially.
 
+## Intelligence dependency principle
+
+ANUMA is a dependency graph, not a mandatory linear pipeline. Evidence-backed observations and deterministic metrics are reusable inputs with independent consumers:
+
+- structured facts, questions, and objections can feed Customer Intelligence directly;
+- deterministic metrics can feed Frontline Performance directly;
+- observations can feed optional organization-specific trackers;
+- tracker results can optionally feed organization-specific scorecards;
+- evidence, observations, tracker results, scorecard criteria/results, and an approved client playbook can feed limited coaching;
+- external outcome events exist beside conversation intelligence and may be joined directly to compatible observations, metrics, tracker results, or score results for descriptive Outcome Intelligence.
+
+No customer needs every tracker or a scorecard, and Customer Intelligence and Outcome Intelligence must not depend on scorecards. A new processing layer must create or standardize reusable information, apply client-specific interpretation, enable a decision/action, or link the interaction to external business truth; otherwise it does not belong in the MVP.
+
 ## In scope by capability
 
 ### Capture and evidence

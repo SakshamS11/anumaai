@@ -40,6 +40,7 @@ Event-based outcomes joined to prior observations. Comparisons are descriptive a
 
 - **Evidence before judgment.** Every important claim links to the source conversation and timestamp.
 - **Facts before prose.** Store queryable objects first; prose is a presentation layer.
+- **Extract once, reuse many times.** Semantic analysis produces reusable observations; aggregate intelligence and client-specific evaluation consume those observations rather than repeatedly interpreting the full transcript.
 - **Insight before dashboard volume.** Surface operational findings with cohort, period, sample size, and drill-down.
 - **Business language before AI language.** Use Customer Intelligence, Evidence, Questions, Objections, Process, Coaching, and Outcome Intelligence.
 - **Human correction is product data.** Preserve both model output and reviewed truth.

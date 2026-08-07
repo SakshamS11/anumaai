@@ -13,12 +13,18 @@ flowchart LR
   TR1 --> AR1["Analysis run A"]
   TR1 --> AR2["Analysis run B"]
   TR2 --> AR3["Analysis run C"]
-  AR2 --> TK["Tracker run"]
-  TK --> SC["Scorecard run"]
-  SC --> CO["Coaching run"]
+  AR2 --> O["Reusable observations"]
+  TR1 --> M["Deterministic metric run"]
+  O --> TK["Optional tracker run"]
+  M --> TK
+  O --> SC["Optional scorecard run"]
+  TK --> SC
+  O --> CO["Optional coaching run"]
+  TK --> CO
+  SC --> CO
 ```
 
-The conversation has nullable active pointers for product display, but every downstream record binds exact source IDs. Promotion of an active run is an audited action and does not delete the prior active run.
+The conversation has nullable active pointers for product display, but every downstream record binds exact source IDs. The graph illustrates possible provenance edges, not a mandatory sequence: observations and metrics may feed independent consumers, and coaching can use underlying evidence/observations as well as optional tracker/scorecard results. Promotion of an active run is an audited action and does not delete the prior active run.
 
 ## Registries and configuration
 
@@ -36,7 +42,7 @@ The speech port supports submission, status retrieval/webhook handling, result r
 
 ## Analysis provider port
 
-The analysis port accepts an explicit task, untrusted transcript data envelope, locale/domain context, prompt/schema versions, and deterministic generation settings where available. It returns schema-validated structured output plus usage, latency, provider request ID, finish/error status, and raw response reference.
+The analysis port accepts an explicit task, untrusted transcript data envelope, locale/domain context, prompt/schema versions, and deterministic generation settings where available. It returns schema-validated structured output plus usage, latency, provider request ID, finish/error status, and raw response reference. The caller must first establish that the task cannot reliably be fulfilled from existing structured observations or deterministic computation.
 
 The provider receives no database or external tools. Transcript content is clearly delimited as data and cannot modify system instructions. Output failing schema or evidence-integrity validation is rejected or routed to repair/review; it is never silently coerced into a claim.
 
