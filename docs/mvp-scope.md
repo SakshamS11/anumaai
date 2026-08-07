@@ -23,11 +23,13 @@ Phase 0 creates architecture documentation only. Later phases must be explicitly
 
 - Conversation, participant, representative, customer, interaction, question, and timing metrics defined in `metrics-catalog.md`.
 - Deterministic calculation where possible, explicit producer and quality status, and no unsupported precision.
+- Versioned conversation-level quality assessment and explicit analytics, benchmark, and outcome-comparison eligibility with disclosed exclusions.
 
 ### Structured intelligence
 
 - Versioned semantic facts with evidence and provenance.
 - First-class questions, responses, objections, and response/handling links.
+- Evidence-backed decision drivers, purchase barriers, deferral reasons, and explicit loss signals kept distinct from authoritative outcome events.
 - Automotive and electronics vertical packs using shared definitions plus pack configuration.
 
 ### Client configuration and evaluation
@@ -36,19 +38,32 @@ Phase 0 creates architecture documentation only. Later phases must be explicitly
 - Versioned scorecards consuming facts/trackers rather than redetecting events.
 - Applicability-aware score results and evidence requirements.
 - At most two coaching strengths and one to three improvement priorities.
-- Append-only manager corrections and comments.
+- Generic coaching clearly labelled unless derived from an approved client playbook.
+- Append-only correction proposals and reviews: representatives may propose; managers/admins accept or reject.
 
 ### Management and outcomes
 
 - Conversation Intelligence as the strongest detail surface.
 - Customer Intelligence and Frontline Performance aggregate views with filters and drill-down.
 - Manual event-based automotive and electronics outcomes.
+- Optional commercial-thread association for multiple interactions/outcome events; no CRM opportunity management.
 - Gated Outcome Intelligence with learning-state progress and descriptive, adequately sampled comparisons.
 
 ### Internal quality
 
 - Immutable model runs and provenance.
 - Task-specific evaluation fixtures for entities, numerics, speaker attribution, questions, answer linkage, objections, trackers, cost, and latency.
+- Synthetic, de-identified, or explicitly authorized fixtures/data; no routine `internal_quality` membership in customer organizations.
+
+## Implementation priority
+
+| Classification | MVP treatment |
+|---|---|
+| **MVP CORE** | tenancy and customer roles; conversations/capture/consent; transcription and speaker mapping; evidence; structured intelligence including questions, objections, and decision observations; deterministic metrics; conversation quality/eligibility; trackers, scorecards, coaching; correction workflow; manual outcome events; core intelligence views |
+| **MVP SUPPORTING** | durable processing attempts, minimum reproducibility registries, pilot-critical audit/retention/deletion, review queue where required, vertical dictionaries/aliases, fixture-based quality evaluation, and a minimal opportunity/conversation association only when a pilot requires it |
+| **DEFERRED** | general custom dimensions, generalized entity-master tooling, internal ANUMA tenant-access grants, advanced experiment management, CRM-style opportunity workflows, automated integrations, exports/report builders, and enterprise legal-hold machinery |
+
+Deferred concepts remain documented for future-safe grain and ownership, but their presence in Phase 0 is not permission to implement them in Phase 1 or Phase 2.
 
 ## Explicit exclusions
 
@@ -59,6 +74,7 @@ Phase 0 creates architecture documentation only. Later phases must be explicitly
 - Cross-client benchmarks during the MVP.
 - General ask-your-data chat, unrestricted model-to-SQL, and AI report builders.
 - CRM, dealer-management, ERP, or automated outcome integrations.
+- CRM opportunity management, pipeline forecasting, or sales-task management; the optional opportunity record is only a commercial-thread association.
 - Government, banking, insurance, real-estate, or contact-center packs.
 - Production multi-STT routing or multiple speech providers.
 - Support for every Indian language.
@@ -86,17 +102,28 @@ Phase 0 creates architecture documentation only. Later phases must be explicitly
 - The system produces typed facts, linked questions/responses, objections, next steps, metrics, tracker observations, score results, and limited coaching.
 - An administrator can publish versioned tracker and scorecard configurations without changing historical evaluations.
 - Managers can see aggregate findings with date range, cohort, sample size, and conversation drill-down.
+- Aggregate findings disclose quality eligibility coverage and excluded/unassessed conversations.
 - Outcomes are recorded as history and comparison views remain gated below declared thresholds.
 - Tenant-isolation tests prove that users cannot read, mutate, sign, export, or analyze another organization's data.
 
+## Provisional founder defaults
+
+- A user may belong to multiple organizations; each request operates in one explicit active organization context.
+- Representatives may have effective-dated team/location assignments.
+- Every conversation snapshots its representative, team, and location context.
+- Managers see assigned team/location scope; admins see their organization.
+- The MVP UI is India/INR-first while money storage remains ISO 4217 currency capable.
+- Representatives may propose corrections on eligible outputs; managers/admins approve or reject them. Original output is immutable and accepted corrections form the effective reviewed projection.
+- Generic coaching is clearly labelled unless it is derived from an approved client playbook.
+- Benchmark and outcome thresholds are governance defaults subject to validation against pilot data.
+
 ## Product decisions required before or during Phase 1
 
-1. Pilot organization structure: whether one user can belong to multiple organizations and whether one representative can work at multiple locations.
-2. Data residency, default audio/transcript retention, legal basis, and consent wording for pilot jurisdictions.
-3. Durable workflow provider and operational ownership.
-4. Definition of an eligible conversation for benchmarking and minimum sample size per outcome cohort.
-5. Whether managers may view all conversations at assigned locations or only explicit teams.
-6. Currency and locale scope beyond INR/India in the MVP.
-7. Correction authority: manager-only versus representative-proposed corrections requiring review.
-8. Initial approved client playbooks for evidence-backed example phrasing.
-
+1. Data residency, default audio/transcript retention, legal basis, and consent wording for pilot jurisdictions.
+2. Durable workflow provider and operational ownership.
+3. Initial categorical quality rules and exclusion-reason taxonomy for analytics eligibility.
+4. Final benchmark/outcome eligibility definitions, outcome window, and minimum per-cohort thresholds after pilot validation.
+5. Whether a manager assigned to both a team and a location receives the union or intersection of those scopes.
+6. Maximum recording duration/file size and supported pilot devices/browsers.
+7. Initial approved client playbooks and approval ownership for evidence-backed example phrasing.
+8. Whether explicitly authorized pilot conversations may be retained for offline quality evaluation, and for how long.

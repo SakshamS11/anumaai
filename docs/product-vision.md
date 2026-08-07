@@ -61,9 +61,9 @@ Review team interactions, inspect and correct evidence-backed intelligence, unde
 
 Manage membership, locations, vertical packs, trackers, scorecards, retention, and organization settings.
 
-### Internal quality operator
+### Internal quality workflow
 
-Compare model, prompt, taxonomy, and provider runs against reviewed fixtures without exposing cross-tenant data or collapsing performance into one “AI accuracy” score.
+Compare model, prompt, taxonomy, and provider runs against approved synthetic, de-identified, or explicitly authorized fixtures without creating an ordinary internal membership role in customer organizations, exposing cross-tenant data, or collapsing performance into one “AI accuracy” score.
 
 ## Success evidence for the pilot
 
@@ -77,4 +77,3 @@ Compare model, prompt, taxonomy, and provider runs against reviewed fixtures wit
 ## Non-goals
 
 ANUMA is not a meeting assistant, call-center suite, generic transcript summarizer, open-ended chatbot, universal sales coach, employee surveillance tool, or wrapper around a speech/model vendor. It does not perform emotion, personality, age, gender, or causal inference.
-

@@ -22,10 +22,17 @@ Priority threats include cross-tenant data access, overly broad manager/support 
 
 - Supabase Auth provides identity; organization membership and authorization are application data.
 - Resolve organization and scope server-side from the session and active membership.
-- Roles are representative, manager, and organization admin; internal quality/support access is a separately approved, time-bounded path.
+- Customer organization roles are only representative, manager, and admin. A user may hold memberships in multiple organizations, but one active organization context is authorized per request.
 - Representatives access their own interactions. Managers access assigned teams/locations. Admins access their organization and configuration.
+- Representatives may propose corrections on eligible outputs; managers/admins in scope accept or reject them. Correction review never overwrites original provider/model output.
 - Sensitive actions—export, playback signing, retention change, deletion, configuration publication, correction acceptance, and outcome supersession—use explicit application policies and audit events.
 - Membership disablement invalidates access promptly; session lifetime and refresh behavior must be tested.
+
+## Internal ANUMA access
+
+`internal_quality` is not an ordinary customer organization role and is not implemented as tenant membership in the MVP. Quality evaluation uses approved synthetic, de-identified, or explicitly authorized fixtures/data. Ordinary ANUMA staff access to customer conversations is not assumed.
+
+A future support/quality access-grant model is DEFERRED. If introduced, it must be separate from membership and require explicit purpose, tenant/scope, approver, start/expiry, least privilege, reason, revocation, prominent audit history, and customer visibility where contractually required. It must not create standing cross-tenant access.
 
 ## Database isolation
 
@@ -94,8 +101,7 @@ Logs and traces must redact secrets, tokens, signed URLs, transcript/audio conte
 1. Pilot jurisdictions, consent wording, and controller/processor roles.
 2. Data/storage/provider regions and cross-border restrictions.
 3. Default and maximum retention per data class.
-4. Internal support/quality access approval and customer visibility.
+4. Whether and when the DEFERRED internal access-grant model is needed, plus approval and customer-visibility requirements.
 5. Customer PII fields truly required for pilot operations.
 6. Export/deletion SLA, backup expiry, and legal hold policy.
 7. Whether client data may be used for model evaluation beyond delivering the service.
-

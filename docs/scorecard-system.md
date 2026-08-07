@@ -78,7 +78,7 @@ Coaching is downstream of reviewed/effective observations and an approved playbo
 - observed behavior and evidence;
 - why it matters under the client playbook;
 - a concrete recommended behavior;
-- example phrasing only from an approved playbook or labeled generic;
+- example phrasing only from an approved playbook or clearly labelled generic;
 - confidence and source version.
 
 Coaching items are not part of the numerical score and never include personality or emotion judgments.
@@ -94,4 +94,3 @@ Before publication, validate total weights, duplicate keys, dependency cycles, i
 - No public early-pilot leaderboards.
 - Team/store comparisons require minimum cohort size and role-based access.
 - Scores describe adherence to a client-defined process, not universal sales quality.
-

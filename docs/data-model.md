@@ -22,6 +22,7 @@ erDiagram
   TEAM ||--o{ TEAM_MEMBERSHIP : contains
   ORGANIZATION ||--o{ CONVERSATION : owns
   LOCATION ||--o{ CONVERSATION : hosts
+  CONVERSATION ||--o{ CONVERSATION_QUALITY_ASSESSMENT : assessed_by
   CONVERSATION ||--o{ PARTICIPANT : includes
   CONVERSATION ||--o{ CONSENT_RECORD : authorizes
   CONVERSATION ||--o{ RECORDING : captures
@@ -30,6 +31,9 @@ erDiagram
   TRANSCRIPTION_RUN ||--o{ SPEAKER_MAPPING_VERSION : interpreted_by
   SPEAKER_MAPPING_VERSION ||--o{ SPEAKER_MAPPING_ENTRY : maps
   TRANSCRIPTION_RUN ||--o{ ANALYSIS_RUN : feeds
+  TRANSCRIPTION_RUN ||--o{ CONVERSATION_QUALITY_ASSESSMENT : informs
+  SPEAKER_MAPPING_VERSION ||--o{ CONVERSATION_QUALITY_ASSESSMENT : informs
+  ANALYSIS_RUN ||--o{ CONVERSATION_QUALITY_ASSESSMENT : informs
   ANALYSIS_RUN ||--o{ FACT : produces
   ANALYSIS_RUN ||--o{ QUESTION : produces
   QUESTION ||--o{ QUESTION_RESPONSE_LINK : has
@@ -51,6 +55,16 @@ erDiagram
   ORGANIZATION ||--o{ AUDIT_EVENT : records
 ```
 
+## Implementation classification
+
+| Classification | Major entities to implement |
+|---|---|
+| **MVP CORE** | `users`, `organizations`, `memberships`, `locations`, `teams`, effective-dated assignments, `conversations`, `participants`, `consent_records`, `recordings`, transcription/speaker-mapping/analysis runs, transcript segments, evidence, facts, questions/responses, objections/handling, decision observations, metric runs/values, conversation quality assessments, trackers, scorecards, coaching, corrections, and outcome events |
+| **MVP SUPPORTING** | `processing_attempts`, the minimum model/prompt/taxonomy/domain-pack registries required for reproducibility, review tasks/comments where needed by corrections, pilot-critical audit events, retention policies/deletion requests, pack entity aliases required by the first pilots, and the minimal `opportunities`/conversation link only if a pilot requires multi-interaction association |
+| **DEFERRED** | general custom-dimension storage, full entity-master management beyond pilot dictionaries, durable internal ANUMA access grants, advanced quality-lab experiment management, CRM-style/generalized opportunity workflows, exports, and enterprise legal-hold machinery |
+
+An entity being described below does not promote it into the immediate Phase 2 build. Phase 2 implements MVP CORE data foundation plus only the MVP SUPPORTING records needed by the next authorized flow. DEFERRED concepts remain documented so later additions do not break data grain or tenant ownership.
+
 ## Identity, tenancy, and organization structure
 
 ### `users`
@@ -63,11 +77,13 @@ Tenant root: `id`, name, slug, status, default locale/timezone/currency, retenti
 
 ### `memberships`
 
-One user in one organization: `id`, `organization_id`, `user_id`, role (`representative`, `manager`, `admin`, `internal_quality` where internal access is separately authorized), status, joined/ended timestamps. Unique active membership per user/organization.
+One user in one organization: `id`, `organization_id`, `user_id`, role (`representative`, `manager`, `admin`), status, joined/ended timestamps. Unique active membership per user/organization. A user may hold active memberships in multiple organizations, but each request resolves one active organization context.
+
+`internal_quality` is not a customer membership role. A future internal-access model, if approved, must use separate purpose-limited, time-bounded, customer-visible where required, and fully audited grants rather than ordinary tenant membership. The MVP quality lab uses synthetic, de-identified, or explicitly authorized fixtures/data.
 
 ### `locations`, `teams`, `team_memberships`
 
-Locations form an optional adjacency-list hierarchy with type (`region`, `store`, `showroom`, `other`). Teams optionally belong to a location. Team membership relates an organization membership to a team with effective dates. Conversation rows snapshot the responsible representative and location/team identifiers; later assignment changes do not rewrite history.
+Locations form an optional adjacency-list hierarchy with type (`region`, `store`, `showroom`, `other`). Teams optionally belong to a location. Team/location assignments relate an organization membership to a team and/or location with effective dates. Representatives may hold multiple effective-dated assignments. Conversation rows snapshot the responsible representative, team, and location identifiers; later assignment changes do not rewrite history. Managers see their assigned team/location scope, while admins see their organization.
 
 ## Conversations, consent, and recordings
 
@@ -76,6 +92,14 @@ Locations form an optional adjacency-list hierarchy with type (`region`, `store`
 The commercial interaction grain: `id`, `organization_id`, vertical pack version, interaction type, representative membership ID, location/team IDs, occurred/start/end timestamps, source, lifecycle status, detected locale summary, active transcription/analysis/mapping IDs, created by, timestamps.
 
 A conversation may have multiple recordings and many processing runs. A conversation is not a file, transcript, or opportunity.
+
+### `conversation_quality_assessments`
+
+Append-only, versioned assessment at the conversation and exact processing-input grain: `id`, `organization_id`, `conversation_id`, policy/version, transcription run ID, speaker-mapping version ID, analysis run ID where relevant, producer and producer version, `audio_quality`, `transcription_quality`, `diarization_quality`, `speaker_mapping_quality`, `semantic_analysis_quality`, `analytics_eligible`, `benchmark_eligible`, `outcome_comparison_eligible`, structured exclusion reason codes/notes, `review_state`, reviewer/correction lineage, and timestamps.
+
+Quality dimensions use categorical states such as `adequate`, `limited`, `insufficient`, `unknown`, and `not_assessed`, with dimension-specific evidence/diagnostics. A producer may record its native confidence separately when documented, but the model must not manufacture a composite numerical quality score. Eligibility flags are outputs of a published quality/eligibility policy and can be human-reviewed without overwriting the original assessment.
+
+Assessments are recalculated when the active transcription, mapping, analysis, or policy version changes. Analytical projections use the assessment matching the source run combination they query. They disclose included, excluded, unassessed, and exclusion-reason counts; operational quality/coverage reporting may intentionally include ineligible conversations.
 
 ### `participants`
 
@@ -143,6 +167,8 @@ Versioned taxonomy item with stable key, category, value type, cardinality, allo
 
 One assertion instance: analysis run, fact definition version, subject type/ID, speaker role, normalized typed value columns plus validated long-tail JSONB, display text, evidence group, confidence, review state, and occurrence time. Repeated mentions may be separate observations; a resolver can project a current entity-level fact without discarding them.
 
+Decision drivers and barriers are evidence-backed fact definitions in the shared `decision.*` namespace. They describe conversation observations such as a primary driver, purchase barrier, reason for deferral, or explicit loss signal. They remain distinct from an objection event and from an authoritative client-supplied outcome/lost-reason event. A model inference cannot update or replace outcome history.
+
 ### `questions`
 
 One substantive or rhetorical utterance identified as a question: analysis run, asker role/participant, occurrence time, original text, normalized topic definition, type (`open`, `closed`, `clarification`, `rhetorical`, `other`), substantive flag, evidence group, confidence, review state.
@@ -207,6 +233,8 @@ Append-only polymorphic correction: organization, target type/ID, target field/p
 
 Effective-value views select the latest accepted, non-superseded correction for an allowed target/field. Target allowlists and per-type schemas prevent arbitrary mutation paths.
 
+The MVP authority default is: representatives may propose corrections on eligible outputs in conversations they can access; managers/admins in scope may accept or reject them. Proposals have no effect until accepted. Accepted corrections become the effective reviewed projection, while original model/provider output and rejected/superseded proposals remain auditable. This policy may become organization-configurable later.
+
 ### `review_tasks` and `comments`
 
 Optional review queue for uncertain/high-impact findings, with assignment, priority, status, and resolution. Comments are collaborative context and do not themselves change data.
@@ -216,6 +244,8 @@ Optional review queue for uncertain/high-impact findings, with assignment, prior
 ### `opportunities`
 
 Optional client-neutral commercial thread linking multiple conversations: organization, external/manual reference, vertical, opened/closed dates, current derived state, owner, location. It allows a showroom visit, follow-up, and delivery to belong to one opportunity without requiring a CRM.
+
+ANUMA does not implement CRM opportunity management. This abstraction exists only when a pilot needs to associate multiple interactions and outcome events with one commercial thread. It must not grow into pipelines, forecasting, task management, or CRM ownership logic during the MVP.
 
 ### `conversation_opportunities`
 
@@ -233,7 +263,7 @@ Versioned product/brand/model/competitor vocabularies can be global pack default
 
 ### `dimension_definitions` and `dimension_values`
 
-Definitions specify subject types, value type, enum/entity constraints, filterability, sensitivity, and version. Values use typed columns with a subject ID and effective dates. Only approved dimensions can participate in aggregates.
+DEFERRED. The future design specifies subject types, value type, enum/entity constraints, filterability, sensitivity, and version. Values use typed columns with a subject ID and effective dates. Only approved dimensions can participate in aggregates. Do not implement this general mechanism in Phase 2 unless a confirmed pilot requirement cannot be represented by the core schema or versioned pack configuration.
 
 ## Audit, retention, and deletion
 
@@ -248,6 +278,7 @@ Versioned policy by data class; requests record scope, authority, approval, sche
 ## Required indexes and constraints
 
 - Tenant/date indexes on conversations, runs, outcomes, facts, questions, objections, and audit events.
+- Quality-assessment indexes on conversation/policy/source-run combination and each eligibility flag for tenant-scoped aggregate joins.
 - Unique `(organization_id, id)` pairs where composite tenant-safe foreign keys are used.
 - Segment indexes on `(transcription_run_id, ordinal)` and GiST/full-text support for authorized transcript search.
 - Partial unique indexes for active memberships and one published semantic version per definition/version.
@@ -256,5 +287,4 @@ Versioned policy by data class; requests record scope, authority, approval, sche
 
 ## RLS posture
 
-Users can access records only through active memberships and scoped roles. Representatives see their own conversations; managers see configured teams/locations; admins see their organization. Background workers set a verified organization context and operate on one tenant/job at a time. Service-role use is isolated to server workers and never accepted as a substitute for domain authorization.
-
+Users can access records only through active memberships and scoped roles. Representatives see their own conversations; managers see assigned teams/locations; admins see their organization. Background workers set a verified organization context and operate on one tenant/job at a time. Service-role use is isolated to server workers and never accepted as a substitute for domain authorization. Future internal ANUMA access grants are separate from membership and are not part of the MVP tenant-role model.

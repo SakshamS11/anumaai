@@ -22,22 +22,32 @@ flowchart LR
   W -. "authorized signed URL" .-> S
 ```
 
+## Implementation classifications
+
+- **MVP CORE**: required to prove the MVP thesis and implemented in the phase that owns the capability.
+- **MVP SUPPORTING**: required for a safe, operable pilot, but should be implemented only when its consuming core flow needs it.
+- **DEFERRED**: retained as a future-safe architectural boundary; do not implement it in Phase 1 or Phase 2 unless a later phase or explicit founder decision promotes it.
+
+Documentation of an entity or module is not authorization to implement it early. Phase plans must select the smallest set of MVP CORE and immediately necessary MVP SUPPORTING structures.
+
 ## Module boundaries
 
-| Module | Owns | Must not own |
-|---|---|---|
-| Identity & tenancy | organizations, memberships, roles, teams, locations, assignments | UI-only authorization |
-| Conversations | interactions, participants, consent, recordings, lifecycle | provider payloads |
-| Transcription | transcription runs, normalized segments, speaker mappings | business facts |
-| Metrics | deterministic definitions, runs, values, quality | prompt-based arithmetic |
-| Intelligence | analysis runs, facts, questions, responses, objections, evidence | score policy |
-| Configuration | domain packs, dimensions, tracker/scorecard definitions and publications | evaluation results |
-| Evaluation | tracker runs/results, scorecard runs/results, coaching | redetection duplicated in scorecards |
-| Outcomes | append-only outcome events and derived current state | mutable “final outcome” truth |
-| Corrections | generic typed correction overlays and review state | deletion of original output |
-| Insights | tenant-scoped aggregates, maturity gates, drill-down cohorts | causal inference |
-| Quality lab | fixtures, judgments, experiment comparisons | production data access by default |
-| Audit & governance | audit events, retention/deletion workflows, export records | secrets or transcript bodies in logs |
+| Module | Classification | Owns | Must not own |
+|---|---|---|---|
+| Identity & tenancy | MVP CORE | organizations, memberships, customer roles, teams, locations, effective assignments | UI-only authorization or internal ANUMA access |
+| Conversations | MVP CORE | interactions, participants, consent, recordings, lifecycle, conversation-level quality assessment | provider payloads |
+| Transcription | MVP CORE | transcription runs, normalized segments, speaker mappings | business facts |
+| Metrics | MVP CORE | deterministic definitions, runs, values, quality and eligibility inputs | prompt-based arithmetic |
+| Intelligence | MVP CORE | analysis runs, facts, questions, responses, objections, decision observations, evidence | score policy or authoritative outcomes |
+| Configuration | MVP CORE | domain packs and tracker/scorecard definitions and publications | evaluation results |
+| Evaluation | MVP CORE | tracker runs/results, scorecard runs/results, coaching | redetection duplicated in scorecards |
+| Outcomes | MVP CORE | append-only outcome events and derived current state | mutable “final outcome” truth or CRM opportunity management |
+| Corrections | MVP CORE | proposals, approvals/rejections, typed overlays and effective reviewed state | deletion of original output |
+| Insights | MVP CORE | tenant-scoped aggregates, eligibility gates, maturity gates, drill-down cohorts | causal inference |
+| Audit & governance | MVP SUPPORTING | pilot-critical audit events and retention/deletion workflows | secrets or transcript bodies in logs |
+| Quality lab | MVP SUPPORTING | approved fixtures, judgments, experiment comparisons | routine membership or production-data access in customer tenants |
+| Custom dimensions | DEFERRED | governed organization-defined analytical dimensions | arbitrary JSON or unrestricted querying |
+| Internal access grants | DEFERRED | explicit, time-bounded, purpose-limited ANUMA support/quality access | ordinary customer organization roles |
 
 Modules communicate through typed application services and domain values. React components render application DTOs; they do not calculate domain metrics or evaluate business rules.
 
@@ -50,6 +60,8 @@ Modules communicate through typed application services and domain values. React 
 5. Audit privileged reads, exports, configuration publication, corrections, outcome changes, signed playback, and deletion actions.
 
 Every tenant-owned row carries `organization_id`, including child and derived records where practical. This deliberate denormalization makes RLS direct, reduces unsafe joins, and simplifies tenant-scoped partitioning and deletion. Foreign keys use composite organization-aware constraints for critical ownership paths.
+
+A user may hold memberships in multiple organizations and must select or resolve one active organization context per request. Customer roles are only `representative`, `manager`, and `admin`. Representatives can have effective-dated team/location assignments; each conversation snapshots its representative, team, and location context. Managers see assigned team/location scope, while admins see their organization.
 
 ## Processing lifecycle
 
@@ -110,11 +122,19 @@ The adapter validates provider responses. Domain services receive only normalize
 
 Start with tenant-scoped PostgreSQL views for current effective facts and materialized views for higher-cost aggregates. Every management finding stores or can reconstruct definition, cohort filter, date range, numerator, denominator, sample size, source refresh time, and conversation IDs for drill-down.
 
-Refresh aggregate projections after processing/outcome changes and on a scheduled repair job. Never let an aggregate bypass RLS or tenant filters. Below maturity thresholds, return learning progress rather than a comparison.
+Before a conversation contributes to aggregates, a versioned conversation quality assessment evaluates audio, transcription, diarization, speaker mapping, and semantic analysis quality against a published eligibility policy. It records categorical quality states, source run/version IDs, review state, eligibility flags, and exclusion reasons; it does not invent a composite numerical quality score.
+
+Aggregate views join the assessment that matches the exact active source runs used by the aggregate. They exclude conversations that are not `analytics_eligible` from analytical denominators, not `benchmark_eligible` from benchmark cohorts, and not `outcome_comparison_eligible` from outcome comparisons. Every view also returns total considered, included, excluded, unassessed, and exclusion counts by reason so coverage is disclosed rather than hidden. Operational coverage views may include ineligible conversations when their purpose is to show processing or quality failures.
+
+Refresh aggregate projections after processing, quality review, correction, or outcome changes and on a scheduled repair job. Never let an aggregate bypass RLS or tenant filters. Below maturity thresholds, return learning progress rather than a comparison. Benchmark and outcome thresholds remain governance defaults subject to pilot validation.
+
+## Correction workflow
+
+The proposed MVP default is that representatives may propose corrections on eligible outputs associated with their accessible conversations. Managers and admins within scope may accept or reject proposals. Original provider/model output is immutable; the latest accepted, non-superseded correction becomes the effective reviewed projection. The authority matrix may become organization-configurable later, but Phase 1 and Phase 2 should implement this default rather than an open-ended permissions engine.
 
 ## Custom dimensions
 
-Avoid arbitrary columns and unrestricted JSON querying. Define versioned `dimension_definitions` per platform/domain pack/organization and attach typed `dimension_values` to supported subjects (conversation, location, product, representative, or outcome). Supported value kinds are text, enum, number, boolean, date, entity reference, and money. High-value shared filters remain first-class columns/tables; JSONB holds validated long-tail payloads only.
+Avoid arbitrary columns and unrestricted JSON querying. The future-safe design uses versioned `dimension_definitions` per platform/domain pack/organization and typed `dimension_values` on supported subjects. This capability is DEFERRED for the initial MVP; high-value shared filters use first-class columns/tables, and validated JSONB may hold non-query-critical long-tail payloads until a pilot need justifies custom dimensions.
 
 ## Deployment and operations
 
@@ -143,10 +163,10 @@ Avoid arbitrary columns and unrestricted JSON querying. Define versioned `dimens
 ## Architecture decisions to settle before Phase 1
 
 - Supabase project region and data residency constraints.
-- Multi-organization membership and location assignment cardinality.
 - Workflow platform and maximum supported audio duration/file size.
 - Default retention/deletion windows and legal-hold behavior.
-- Exact RLS role matrix and internal support access process.
+- Exact RLS operations within the founder-approved representative, assigned manager, and organization admin scopes.
 - Definition publication/promotion approval workflow.
-- Benchmark eligibility and minimum per-cohort thresholds.
-
+- Initial categorical quality rules and exclusion reason taxonomy; thresholds require pilot validation.
+- Benchmark eligibility, outcome window, and minimum per-cohort thresholds after pilot validation.
+- Approved client playbooks and the review process for clearly labelled generic coaching.

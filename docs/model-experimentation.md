@@ -51,7 +51,7 @@ The provider receives no database or external tools. Transcript content is clear
 7. Approve, reject, or shadow the candidate; record decision and evaluator.
 8. Promote configuration separately per environment and monitor drift.
 
-Production comparisons use explicit sampling and client authorization. Do not send tenant data to a new provider merely because an adapter exists.
+Production comparisons use explicit sampling and client authorization. Do not send tenant data to a new provider merely because an adapter exists. The MVP quality workflow does not grant ANUMA staff ordinary membership in customer organizations.
 
 ## Quality lab tasks
 
@@ -71,7 +71,7 @@ Never collapse these into a generic “AI accuracy” score. Slice results by Au
 
 ## Fixtures and judgments
 
-Fixtures reference consented/de-identified or synthetic media/transcripts, immutable source versions, expected structured outputs, acceptable alternatives, and adjudicator history. Human judgments are append-only and disagreements are retained. Training/evaluation use is governed separately from product processing consent.
+Fixtures use approved synthetic, de-identified, or explicitly authorized media/transcripts and reference immutable source versions, expected structured outputs, acceptable alternatives, authorization basis/retention, and adjudicator history. Human judgments are append-only and disagreements are retained. Training/evaluation use is governed separately from product processing consent. A future time-bounded internal access-grant model is DEFERRED and cannot be implied by the quality-lab design.
 
 ## Cost and provenance
 
@@ -92,4 +92,3 @@ Run records store provider request ID, model and provider versions, input/output
 3. Quality thresholds and adjudication ownership per task.
 4. Permitted use of pilot conversations for offline evaluation/model improvement.
 5. Budget ceilings per audio minute/conversation and retry policy.
-

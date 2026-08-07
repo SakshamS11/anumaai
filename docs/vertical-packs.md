@@ -72,9 +72,15 @@ Each pack must declare:
 - `auto.objection.insurance`
 - `auto.objection.service_network`
 
+### Automotive decision drivers and barriers
+
+Automotive specializes the shared `decision.*` definitions with canonical values including `affordability`, `exchange_valuation`, `waiting_period`, `competitor_offer`, `family_decision`, `purchase_timing`, `financing`, and `feature_gap`. The pack may add vehicle-specific values through versioning, but it must preserve the shared distinction between a specific objection, a synthesized conversation barrier/deferral reason, and an authoritative outcome reason.
+
+Examples: `decision.primary_driver = family_requirement`, `decision.purchase_barrier = affordability`, or `decision.reason_for_deferral = family_decision`. Each remains evidence-backed and carries an explicit-versus-inferred basis.
+
 ### Automotive outcome events
 
-`lead_created`, `showroom_visit`, `test_drive_scheduled`, `test_drive_completed`, `quotation_issued`, `booked`, `lost`, `delivered`, `cancelled`, and correction/supersession. Revenue, discount, and margin are optional money attributes. `lost` includes a versioned reason when supplied. A later event does not delete earlier funnel history.
+`lead_created`, `showroom_visit`, `test_drive_scheduled`, `test_drive_completed`, `quotation_issued`, `booked`, `lost`, `delivered`, `cancelled`, and correction/supersession. Revenue, discount, and margin are optional money attributes. `lost` includes a versioned authoritative client reason when supplied. A later event does not delete earlier funnel history, and a conversation-level `decision.purchase_barrier` or `decision.explicit_loss_signal` never substitutes for this event.
 
 ### Suggested automotive trackers
 
@@ -133,9 +139,15 @@ Each pack must declare:
 - `electronics.objection.store_price`
 - `electronics.objection.return_policy`
 
+### Electronics decision drivers and barriers
+
+Electronics specializes the shared `decision.*` definitions with canonical values including `online_price`, `stock`, `warranty`, `financing`, `brand_preference`, `purchase_timing`, `needs_more_comparison`, and `feature_gap`. The pack may add category-specific values through versioning while preserving the shared objection/decision-observation/outcome distinction.
+
+Examples: `decision.primary_driver = required_feature`, `decision.purchase_barrier = online_price`, or `decision.reason_for_deferral = needs_more_comparison`. Each remains evidence-backed and carries an explicit-versus-inferred basis.
+
 ### Electronics outcome events
 
-`purchased`, `not_purchased`, `follow_up_required`, `reserved`, `cancelled`, and correction/supersession. Optional values are revenue, discount, and purchased product/entity. Events support multiple conversations per optional opportunity while preserving the original interaction link.
+`purchased`, `not_purchased`, `follow_up_required`, `reserved`, `cancelled`, and correction/supersession. Optional values are revenue, discount, purchased product/entity, and a versioned authoritative client reason where supplied. Events support multiple conversations per optional opportunity while preserving the original interaction link. Conversation-level decision observations never replace these outcome events.
 
 ### Suggested electronics trackers
 
@@ -158,4 +170,3 @@ Organizations may add aliases, entities, trackers, scorecards, outcome reason va
 ## Pack test fixtures
 
 Each pack ships multilingual/code-mixed fixtures containing positive, negative, uncertain, not-applicable, multiple-product, multiple-price, competitor, question/answer, and objection/handling cases. Numeric exact match, entity linking, evidence span correctness, and speaker attribution are scored separately.
-

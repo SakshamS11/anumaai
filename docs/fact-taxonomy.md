@@ -73,6 +73,27 @@ Money facts include amount minor units, currency, amount qualifier (`exact`, `ap
 | `competition.offer` | structured text/money | competitor promotion or terms |
 | `competition.comparison_criterion` | taxonomy entity | price, feature, availability, service, etc. |
 
+### Decision drivers and barriers
+
+These are structured, evidence-backed conversation observations. Each records category/entity, normalized value, supporting evidence, speaker attribution where relevant, confidence, review state, and `assertion_basis` (`explicit_statement` or `inferred_from_evidence`). A primary designation is permitted only within one analysis run/policy and must remain reviewable.
+
+| Key | Value type | Meaning |
+|---|---|---|
+| `decision.primary_driver` | taxonomy entity + text | the strongest observed factor supporting the customer's decision or preference |
+| `decision.purchase_barrier` | taxonomy entity + text | the strongest observed factor preventing or delaying purchase |
+| `decision.reason_for_deferral` | taxonomy entity + text/timeframe | why the customer indicated or appeared to defer a decision |
+| `decision.explicit_loss_signal` | taxonomy entity + text | explicit conversation evidence that the opportunity is unlikely or lost |
+
+The concepts have deliberately different grains:
+
+| Concept | What it represents | Authority |
+|---|---|---|
+| Objection | a specific resistance statement/event raised during the interaction | conversation observation |
+| Decision driver/barrier | a synthesized, evidence-backed observation about the main decision factor or impediment | explicit or inferred conversation observation |
+| Outcome/lost reason | what the client later records as the commercial result or authoritative loss reason | authoritative outcome event |
+
+One conversation may contain several objections but one inferred primary barrier. A client-supplied lost reason may disagree with the conversation observation; preserve both and never let a `decision.*` fact update or replace the outcome event.
+
 ### Closing
 
 | Key | Value type | Meaning |
@@ -131,4 +152,3 @@ Review states: `unreviewed`, `confirmed`, `corrected`, `rejected`, `needs_review
 - Entity aliases are language-aware and retain the original surface text.
 - Pack upgrades require an explicit compatibility/migration map; historical facts keep their original definition version.
 - Frequently queried facts may gain typed projection tables without changing the canonical assertion/event history.
-

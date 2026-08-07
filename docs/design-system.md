@@ -29,6 +29,21 @@ Supporting neutrals should be derived as explicit accessible tokens, not opacity
 
 Signal Coral is intentional and sparse. Carbon and Porcelain carry most large surfaces. Electric Aqua is a verification/active analytical signal, not a second general CTA color.
 
+### Accessible brand interactions
+
+Normal-sized text on Signal Coral defaults to Carbon, not white. The calculated contrast of Carbon (`#10131A`) on Signal Coral (`#FF4F3D`) is approximately `5.70:1`, while white on Signal Coral is approximately `3.26:1` and therefore fails WCAG AA for normal text. Carbon is also the default text/icon color on Electric Aqua (`#20D6C7`), with approximately `10.18:1` contrast; white on Aqua is insufficient.
+
+| Interaction token | Value | Foreground | Intended use |
+|---|---|---|---|
+| `--coral-action` | `#FF4F3D` | Carbon | default primary action |
+| `--coral-action-hover` | `#FF695A` | Carbon | pointer hover (`~6.57:1`) |
+| `--coral-action-active` | `#F04435` | Carbon | pressed state (`~4.94:1`) |
+| `--aqua-signal` | `#20D6C7` | Carbon | default verified/active signal |
+| `--aqua-signal-hover` | `#49E0D4` | Carbon | interactive hover (`~11.41:1`) |
+| `--aqua-signal-active` | `#10BFB1` | Carbon | pressed/selected state (`~8.06:1`) |
+
+Interactive states must not rely on color change alone: hover may add underline/elevation, active uses position/border treatment, and disabled states retain readable text while clearly reducing affordance. On light surfaces, keyboard focus uses a 2px Carbon ring with a Porcelain offset; on Carbon surfaces, use a 2px Electric Aqua ring with a Porcelain offset. Phase 1 must verify all token pairs, focus visibility, disabled states, icons, and large/normal text using automated contrast checks plus keyboard review. These accessibility variants preserve the Coral/Carbon/Aqua identity; they are not a reason to substitute a generic blue or purple palette.
+
 ## Typography
 
 Use a precise modern grotesk/sans family with excellent Latin and Devanagari coverage; approve the production family in Phase 1 after rendering Hindi and Hinglish. Maintain a system-font fallback stack. Use tabular numerals for metrics and money.
@@ -69,6 +84,7 @@ Text plus icon/color; never color alone. Separate:
 
 - processing: queued, transcribing, analyzing, ready, partial, failed;
 - evidence quality: verified, measured, estimated, inferred, uncertain;
+- conversation quality: adequate, limited, insufficient, unknown/not assessed, with analytics eligibility and exclusion reason where relevant;
 - evaluation: pass, partial, fail, not applicable, uncertain;
 - outcome: vertical-specific event/state.
 
@@ -141,4 +157,3 @@ Prefer “Evidence,” “Customer Intelligence,” “Process,” and “Outcom
 3. Prototype the Conversation Intelligence evidence/audio interaction first.
 4. Establish responsive table/filter patterns before building aggregate screens.
 5. User-test quality labels and outcome-learning copy with pilot managers.
-

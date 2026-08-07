@@ -26,6 +26,8 @@ If documentation conflicts, the master product specification and an explicit fou
 - Automotive and electronics are configuration packs on one platform, not separate applications.
 - Organization isolation is mandatory in application authorization, database RLS, storage paths, jobs, and analytics.
 - Provider and model selection is environment/configuration driven.
+- Aggregate analytics must apply the matching conversation-level quality/eligibility assessment and disclose exclusions.
+- Customer organization roles are only `representative`, `manager`, and `admin`; internal ANUMA access is not ordinary tenant membership.
 
 ## Architecture boundaries
 
@@ -38,12 +40,14 @@ If documentation conflicts, the master product specification and an explicit fou
 - Use UTC timestamps and explicit organization ownership on tenant-scoped records.
 - Prefer normalized typed columns for identifiers, joins, filters, money, status, and high-value facts; use JSONB only for versioned payloads and long-tail values.
 - Introduce no microservices during the MVP without an approved architecture decision.
+- Respect the `MVP CORE`, `MVP SUPPORTING`, and `DEFERRED` classifications; a documented future-safe entity is not permission to implement it early.
 
 ## Data and evidence rules
 
 - Evidence references point to immutable transcript segments from a specific transcription run and include a time range.
 - Active run pointers are conveniences only; historical records retain their exact source run.
 - Corrections are append-only overlays with actor, reason, timestamp, and target field/value.
+- Representatives may propose eligible corrections; managers/admins accept or reject them, and only accepted corrections affect the reviewed projection.
 - Definitions and configurations are immutable once published; edits create new versions.
 - Outcome history is event-based. Corrections supersede events rather than mutating them.
 - Store money as integer minor units plus ISO 4217 currency.
@@ -64,4 +68,3 @@ If documentation conflicts, the master product specification and an explicit fou
 After each implementation phase, run the configured formatter, lint, TypeScript checks, relevant unit tests, integration/security tests, and Playwright tests. Fix failures introduced by the change. For AI work, add versioned fixtures and measure individual tasks rather than reporting a single generic accuracy score.
 
 Every phase handoff must summarize changed files, architecture decisions, assumptions, unresolved risks, and founder decisions required. Do not advance to the next phase without explicit instruction.
-

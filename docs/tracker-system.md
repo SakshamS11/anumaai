@@ -72,7 +72,7 @@ The idempotency key includes conversation, tracker version, source run IDs, and 
 
 Positive semantic results require timestamped evidence. Negative results store the evaluated scope and source runs; they must not fabricate a quote. Numeric/entity results retain the exact evidence surface and normalized value.
 
-Human correction appends a correction record with reviewer, reason, original and corrected state/value, evidence, and provenance. The original result remains immutable. Aggregate views select effective accepted values and can report model-only versus reviewed quality separately.
+Human correction appends a correction record with proposer/reviewer, reason, original and corrected state/value, evidence, and provenance. The original result remains immutable. Under the MVP default, representatives may propose corrections on eligible tracker outputs in their accessible conversations; managers/admins in scope accept or reject them. Only an accepted, non-superseded correction changes the effective reviewed projection. Aggregate views select effective accepted values and can report model-only versus reviewed quality separately. The authority policy may become organization-configurable later.
 
 ## Example definitions
 
@@ -96,4 +96,3 @@ Tracker rates always identify tracker version, denominator, applicable count, un
 - No arbitrary organization-authored code or SQL.
 - Published definitions require schema validation, dependency validation, evidence policy, and test fixtures.
 - Numeric outputs use typed units/money; entities use canonical IDs plus original surface text.
-
