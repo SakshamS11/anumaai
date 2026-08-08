@@ -798,45 +798,54 @@ export type Database = {
       };
       recordings: {
         Row: {
+          capture_source: string;
           checksum_sha256: string | null;
           conversation_id: string;
           created_at: string;
           created_by_membership_id: string;
           duration_milliseconds: number | null;
           file_size_bytes: number;
+          finalized_at: string | null;
           id: string;
           mime_type: string;
           organization_id: string;
+          original_filename: string | null;
           status: Database["public"]["Enums"]["recording_status"];
           storage_bucket: string;
           storage_object_path: string;
           updated_at: string;
         };
         Insert: {
+          capture_source?: string;
           checksum_sha256?: string | null;
           conversation_id: string;
           created_at?: string;
           created_by_membership_id: string;
           duration_milliseconds?: number | null;
           file_size_bytes: number;
+          finalized_at?: string | null;
           id?: string;
           mime_type: string;
           organization_id: string;
+          original_filename?: string | null;
           status?: Database["public"]["Enums"]["recording_status"];
           storage_bucket?: string;
           storage_object_path: string;
           updated_at?: string;
         };
         Update: {
+          capture_source?: string;
           checksum_sha256?: string | null;
           conversation_id?: string;
           created_at?: string;
           created_by_membership_id?: string;
           duration_milliseconds?: number | null;
           file_size_bytes?: number;
+          finalized_at?: string | null;
           id?: string;
           mime_type?: string;
           organization_id?: string;
+          original_filename?: string | null;
           status?: Database["public"]["Enums"]["recording_status"];
           storage_bucket?: string;
           storage_object_path?: string;
@@ -1071,12 +1080,15 @@ export type Database = {
           model: string;
           organization_id: string;
           provider: string;
+          provider_metadata: Json;
           provider_model_version: string | null;
           provider_request_id: string | null;
           recording_id: string;
+          requested_by_membership_id: string | null;
           requested_language_mode: string | null;
           started_at: string | null;
           status: Database["public"]["Enums"]["run_status"];
+          workflow_run_id: string | null;
         };
         Insert: {
           completed_at?: string | null;
@@ -1091,12 +1103,15 @@ export type Database = {
           model: string;
           organization_id: string;
           provider: string;
+          provider_metadata?: Json;
           provider_model_version?: string | null;
           provider_request_id?: string | null;
           recording_id: string;
+          requested_by_membership_id?: string | null;
           requested_language_mode?: string | null;
           started_at?: string | null;
           status?: Database["public"]["Enums"]["run_status"];
+          workflow_run_id?: string | null;
         };
         Update: {
           completed_at?: string | null;
@@ -1111,12 +1126,15 @@ export type Database = {
           model?: string;
           organization_id?: string;
           provider?: string;
+          provider_metadata?: Json;
           provider_model_version?: string | null;
           provider_request_id?: string | null;
           recording_id?: string;
+          requested_by_membership_id?: string | null;
           requested_language_mode?: string | null;
           started_at?: string | null;
           status?: Database["public"]["Enums"]["run_status"];
+          workflow_run_id?: string | null;
         };
         Relationships: [
           {
@@ -1126,6 +1144,13 @@ export type Database = {
             referencedRelation: "recordings";
             referencedColumns: ["organization_id", "conversation_id", "id"];
           },
+          {
+            foreignKeyName: "transcription_runs_requested_by_fk";
+            columns: ["organization_id", "requested_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
         ];
       };
     };
@@ -1133,6 +1158,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      append_customer_recording_consent: {
+        Args: {
+          p_capture_method: Database["public"]["Enums"]["consent_capture_method"];
+          p_conversation_id: string;
+          p_status: Database["public"]["Enums"]["consent_status"];
+        };
+        Returns: string;
+      };
       bootstrap_organization: {
         Args: {
           p_country_code?: string;
@@ -1156,6 +1189,37 @@ export type Database = {
           p_title?: string;
           p_vertical: Database["public"]["Enums"]["conversation_vertical"];
         };
+        Returns: string;
+      };
+      create_speaker_mapping_version: {
+        Args: {
+          p_entries: Json;
+          p_reason?: string;
+          p_transcription_run_id: string;
+        };
+        Returns: string;
+      };
+      finalize_recording_upload: {
+        Args: { p_recording_id: string };
+        Returns: undefined;
+      };
+      prepare_recording_upload: {
+        Args: {
+          p_capture_source: string;
+          p_conversation_id: string;
+          p_duration_milliseconds: number;
+          p_file_size_bytes: number;
+          p_mime_type: string;
+          p_original_filename?: string;
+        };
+        Returns: {
+          recording_id: string;
+          storage_bucket: string;
+          storage_object_path: string;
+        }[];
+      };
+      request_transcription_run: {
+        Args: { p_recording_id: string };
         Returns: string;
       };
     };

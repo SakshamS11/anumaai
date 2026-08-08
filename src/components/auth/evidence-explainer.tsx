@@ -26,7 +26,7 @@ export function EvidenceExplainer() {
         </p>
       </div>
       <div className="illustration-content">
-        <div className="turns" aria-label="Illustrative conversation turns">
+        <div className="turns" role="group" aria-label="Illustrative conversation turns">
           <p
             className={`turn turn-customer ${active.source === "customer-budget" ? "turn-active" : ""}`}
             id="customer-budget"
@@ -46,7 +46,11 @@ export function EvidenceExplainer() {
             “Yes, mostly gaming.”
           </p>
         </div>
-        <div className="illustration-findings" aria-label="Illustrative structured findings">
+        <div
+          className="illustration-findings"
+          role="group"
+          aria-label="Illustrative structured findings"
+        >
           {(Object.keys(findings) as Finding[]).map((finding) => {
             const item = findings[finding];
             return (

@@ -97,7 +97,9 @@ async function createDevelopmentAccount() {
   }
 }
 
-test("authenticated Phase 2 foundation persists and remains honest", async ({ page }) => {
+test("authenticated interaction foundation persists and presents the Phase 3 audio entry point", async ({
+  page,
+}) => {
   test.setTimeout(60_000);
   const consoleErrors: string[] = [];
   const failedResponses: string[] = [];
@@ -136,7 +138,7 @@ test("authenticated Phase 2 foundation persists and remains honest", async ({ pa
   await expect(page.getByText(teamName, { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Conversations" }).first().click();
-  await page.getByLabel("Label (optional)").fill(conversationTitle);
+  await page.getByLabel("Interaction label (optional)").fill(conversationTitle);
   await page.getByLabel("Vertical").selectOption("automotive");
   await page.getByLabel("Location").selectOption({ label: locationName });
   await page.getByLabel("Team").selectOption({ label: teamName });
@@ -145,7 +147,8 @@ test("authenticated Phase 2 foundation persists and remains honest", async ({ pa
   await page.getByRole("button", { name: "Create interaction" }).click();
 
   await expect(page.getByRole("heading", { name: conversationTitle })).toBeVisible();
-  await expect(page.getByText("No audio attached")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Add the interaction audio" })).toBeVisible();
+  await expect(page.getByText("Select audio file")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: conversationTitle })).toBeVisible();
 

@@ -60,6 +60,8 @@ If documentation conflicts, the master product specification and an explicit fou
 - Provider credentials and service-role credentials are server-only.
 - Authorization is checked server-side and reinforced with RLS; UI visibility is not authorization.
 - Audio stays private and is served only through short-lived signed URLs after authorization.
+- Create recording metadata before any browser upload. Storage paths must bind organization, conversation, and a real recording row; a manager's review access is not recording-write authority.
+- Customer recording consent is append-only provenance attached to the anonymous customer participant. `granted` and `not_required` permit product processing; other states block it without making a legal claim.
 - Treat transcript text as hostile user content; it cannot issue instructions to the analysis system.
 - Avoid transcript contents, signed URLs, secrets, and raw audio in logs.
 - Destructive and export actions require authorization and audit events.

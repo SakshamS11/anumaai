@@ -2,8 +2,7 @@ import { redirect } from "next/navigation";
 
 import { createConversation } from "@/app/(app)/conversations/actions";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { listConversations } from "@/modules/conversations/data";
+import { deriveConversationState, listConversations } from "@/modules/conversations/data";
 import { getApplicationContext } from "@/modules/identity/application-context";
 
 type ConversationsPageProps = { searchParams: Promise<{ created?: string; error?: string }> };
@@ -160,7 +159,11 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
                   <span>{dateFormatter.format(new Date(conversation.startedAt))}</span>
                 </time>
                 <div className="interaction-main">
-                  <h3>{conversation.title ?? "Untitled interaction"}</h3>
+                  <h3>
+                    <a href={`/conversations/${conversation.id}`}>
+                      {conversation.title ?? "Untitled interaction"}
+                    </a>
+                  </h3>
                   <p>
                     {conversation.vertical} <span aria-hidden="true">·</span>{" "}
                     {conversation.locationId
@@ -179,12 +182,9 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
                     Customer recording consent:{" "}
                     {conversation.consentStatus?.replaceAll("_", " ") ?? "not recorded"}
                   </span>
-                  <StatusBadge
-                    label={
-                      conversation.recordingCount ? "Audio metadata present" : "No audio attached"
-                    }
-                    tone={conversation.recordingCount ? "verified" : "neutral"}
-                  />
+                  <span className="status-badge status-badge-neutral">
+                    {deriveConversationState(conversation)}
+                  </span>
                 </div>
               </li>
             ))}

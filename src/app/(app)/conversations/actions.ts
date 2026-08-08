@@ -23,7 +23,7 @@ export async function createConversation(formData: FormData) {
   if (!input.success) redirect("/conversations?error=Check+the+conversation+details.");
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("create_conversation_with_consent", {
+  const { data: conversationId, error } = await supabase.rpc("create_conversation_with_consent", {
     p_organization_id: context.current.organization.id,
     p_vertical: input.data.vertical,
     p_started_at: new Date().toISOString(),
@@ -38,6 +38,7 @@ export async function createConversation(formData: FormData) {
     redirect("/conversations?error=The+conversation+could+not+be+created+for+this+scope.");
   }
 
+  if (!conversationId) redirect("/conversations?error=The+interaction+could+not+be+created.");
   revalidatePath("/conversations");
-  redirect("/conversations?created=conversation");
+  redirect(`/conversations/${conversationId}`);
 }

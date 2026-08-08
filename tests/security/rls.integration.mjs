@@ -337,6 +337,43 @@ try {
       1,
       "customer recording consent references the anonymous customer participant",
     );
+    const [preparedRecording] = await tx`
+      select * from public.prepare_recording_upload(
+        ${repConversationId}, 'audio/webm', 128, 1000, 'browser_recording', 'role-play.webm'
+      )
+    `;
+    assertEqual(Boolean(preparedRecording.recording_id), true, "representative prepares exact recording metadata before upload");
+    assertEqual(
+      preparedRecording.storage_object_path,
+      `${ids.orgA}/${repConversationId}/${preparedRecording.recording_id}/source.webm`,
+      "prepared recording path is organization, conversation, and real recording scoped",
+    );
+    await expectDenied(tx, "recording cannot finalize before its exact private object exists", () => tx`
+      select public.finalize_recording_upload(${preparedRecording.recording_id})
+    `);
+    await tx`
+      select public.append_customer_recording_consent(${repConversationId}, 'withdrawn', 'verbal')
+    `;
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.consent_records where conversation_id = ${repConversationId}`,
+      ),
+      2,
+      "customer consent updates append provenance instead of overwriting it",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`
+          select count(*) from public.consent_records as consent
+          join public.conversation_participants as participant on participant.id = consent.participant_id
+          where consent.conversation_id = ${repConversationId} and participant.role = 'customer'
+        `,
+      ),
+      2,
+      "every consent history entry remains attached to the anonymous customer",
+    );
     await expectDenied(tx, "representative cannot create conversation for another representative", () => tx`
       insert into public.conversations (
         organization_id, created_by_membership_id, representative_membership_id,
@@ -384,6 +421,11 @@ try {
     await expectDenied(tx, "manager review access does not grant audio upload authority", () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.managerAttemptRecordingA}/audio.webm`})
+    `);
+    await expectDenied(tx, "manager review access does not grant recording preparation authority", () => tx`
+      select * from public.prepare_recording_upload(
+        ${ids.conversationA}, 'audio/webm', 128, 1000, 'browser_recording', 'manager.webm'
+      )
     `);
 
     await assumeRole(tx, "authenticated", ids.adminAUser);
