@@ -5,6 +5,7 @@ import { AudioCapturePanel } from "@/components/conversations/audio-capture-pane
 import { ConversationEvidence } from "@/components/conversations/conversation-evidence";
 import { CustomerConsentPanel } from "@/components/conversations/customer-consent-panel";
 import { InteractionUnderstanding } from "@/components/conversations/interaction-understanding";
+import { InteractionReview } from "@/components/conversations/interaction-review";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { deriveConversationState, getConversationDetail } from "@/modules/conversations/data";
@@ -102,6 +103,12 @@ export default async function ConversationPage({ params }: ConversationPageProps
         }
         conversationId={conversation.id}
         observations={conversation.observations}
+      />
+      <InteractionReview
+        canRequest={Boolean(conversation.activeAnalysisRunId)}
+        conversationId={conversation.id}
+        observations={conversation.observations}
+        review={conversation.latestReview}
       />
     </>
   );

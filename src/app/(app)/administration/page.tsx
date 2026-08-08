@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
 
-import { createLocation, createTeam } from "@/app/(app)/administration/actions";
+import {
+  createLocation,
+  createOrganizationCheck,
+  createTeam,
+  seedStarterElectronicsChecks,
+} from "@/app/(app)/administration/actions";
+import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getApplicationContext } from "@/modules/identity/application-context";
@@ -17,6 +23,15 @@ export default async function AdministrationPage({ searchParams }: Administratio
 
   const { organization, membership, locations, teams } = context.current;
   const isAdmin = membership.role === "admin";
+  const supabase = await createClient();
+  const { data: checks } = await supabase
+    .from("check_definitions")
+    .select(
+      "id,name,description,purpose,applicability,evaluation_strategy,weight,active,is_starter",
+    )
+    .eq("organization_id", organization.id)
+    .order("is_starter", { ascending: false })
+    .order("created_at");
 
   return (
     <>
@@ -137,6 +152,95 @@ export default async function AdministrationPage({ searchParams }: Administratio
           ) : null}
         </section>
       </div>
+
+      <section className="product-panel administration-checks" aria-labelledby="checks-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Interaction review</p>
+            <h2 id="checks-title">Checks</h2>
+          </div>
+          <span className="count-label">{checks?.length ?? 0}</span>
+        </div>
+        {checks?.length ? (
+          <ul className="record-list check-configuration-list">
+            {checks.map((check) => (
+              <li key={check.id}>
+                <div>
+                  <strong>{check.name}</strong>
+                  <span>{check.description}</span>
+                  <small>
+                    {check.purpose === "scorecard" ? "Included in scorecard" : "Monitor only"} ·{" "}
+                    {check.applicability === "when_relevant"
+                      ? "When relevant"
+                      : "Every interaction"}
+                    {check.weight ? ` · Weight ${check.weight}` : ""}
+                  </small>
+                </div>
+                <StatusBadge label={check.active ? "Active" : "Inactive"} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="section-copy">
+            <p>No review checks are configured yet.</p>
+            {isAdmin ? (
+              <form action={seedStarterElectronicsChecks}>
+                <button className="button button-secondary" type="submit">
+                  Add Starter Electronics checks
+                </button>
+              </form>
+            ) : null}
+          </div>
+        )}
+        {isAdmin ? (
+          <form action={createOrganizationCheck} className="compact-form check-create-form">
+            <p className="section-copy">
+              Add a focused organization check. New checks are versioned and never rewrite past
+              reviews.
+            </p>
+            <label className="form-field">
+              <span>Check name</span>
+              <input name="name" required />
+            </label>
+            <label className="form-field form-field-wide">
+              <span>What should ANUMA look for?</span>
+              <textarea name="description" required rows={3} />
+            </label>
+            <label className="form-field">
+              <span>Purpose</span>
+              <select defaultValue="monitor" name="purpose">
+                <option value="monitor">Monitor only</option>
+                <option value="scorecard">Include in scorecard</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span>Applicability</span>
+              <select defaultValue="every_interaction" name="applicability">
+                <option value="every_interaction">Every interaction</option>
+                <option value="when_relevant">When relevant</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span>How to check</span>
+              <select defaultValue="semantic" name="evaluation_strategy">
+                <option value="semantic">Review the interaction</option>
+                <option value="phrase">Match an exact phrase</option>
+              </select>
+            </label>
+            <label className="form-field">
+              <span>Exact phrase (only for phrase matching)</span>
+              <input name="phrase" />
+            </label>
+            <label className="form-field">
+              <span>Weight (only for scorecard checks)</span>
+              <input min="0.01" name="weight" step="0.01" type="number" />
+            </label>
+            <button className="button button-primary form-field-wide" type="submit">
+              Add check
+            </button>
+          </form>
+        ) : null}
+      </section>
     </>
   );
 }

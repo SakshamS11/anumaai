@@ -46,6 +46,17 @@ const ids = {
   transcriptionB: "80000000-0000-4000-8000-000000000002",
   segmentA: "90000000-0000-4000-8000-000000000001",
   segmentB: "90000000-0000-4000-8000-000000000002",
+  transcriptionOtherA: "80000000-0000-4000-8000-000000000003",
+  analysisA: "a0000000-0000-4000-8000-000000000001",
+  analysisOtherA: "a0000000-0000-4000-8000-000000000002",
+  analysisB: "a0000000-0000-4000-8000-000000000003",
+  checkA: "b0000000-0000-4000-8000-000000000001",
+  checkB: "b0000000-0000-4000-8000-000000000002",
+  scorecardA: "c0000000-0000-4000-8000-000000000001",
+  scorecardB: "c0000000-0000-4000-8000-000000000002",
+  reviewA: "d0000000-0000-4000-8000-000000000001",
+  reviewOtherA: "d0000000-0000-4000-8000-000000000002",
+  reviewB: "d0000000-0000-4000-8000-000000000003",
 };
 
 const sql = postgres(readDatabaseUrl(), {
@@ -117,6 +128,12 @@ try {
       "evidence_references",
       "outcome_events",
       "conversation_quality_assessments",
+      "check_definitions",
+      "check_evaluations",
+      "scorecard_definitions",
+      "scorecard_definition_checks",
+      "scorecard_evaluations",
+      "review_runs",
     ];
 
     const rlsRows = await tx`
@@ -219,6 +236,12 @@ try {
         (${ids.transcriptionB}, ${ids.orgB}, ${ids.conversationB}, ${ids.recordingB}, 'fixture', 'fixture-v1', 'completed')
     `;
     await tx`
+      insert into public.transcription_runs (
+        id, organization_id, conversation_id, recording_id, provider, model, status
+      ) values
+        (${ids.transcriptionOtherA}, ${ids.orgA}, ${ids.otherConversationA}, ${ids.otherRecordingA}, 'fixture', 'fixture-v1', 'completed')
+    `;
+    await tx`
       insert into public.transcript_segments (
         id, organization_id, conversation_id, transcription_run_id,
         sequence_number, provider_speaker_identifier, start_milliseconds,
@@ -234,6 +257,61 @@ try {
       ) values
         (${ids.orgA}, ${ids.conversationA}, 'test_drive', now(), 'manual', ${ids.repAMembership}),
         (${ids.orgB}, ${ids.conversationB}, 'purchased', now(), 'manual', ${ids.repBMembership})
+    `;
+    await tx`
+      insert into public.analysis_runs (
+        id, organization_id, conversation_id, source_transcription_run_id,
+        provider, model, prompt_version, taxonomy_version, domain_pack_version, status
+      ) values
+        (${ids.analysisA}, ${ids.orgA}, ${ids.conversationA}, ${ids.transcriptionA}, 'fixture', 'fixture-v1', 'fixture', 'fixture', 'fixture', 'completed'),
+        (${ids.analysisOtherA}, ${ids.orgA}, ${ids.otherConversationA}, ${ids.transcriptionOtherA}, 'fixture', 'fixture-v1', 'fixture', 'fixture', 'fixture', 'completed'),
+        (${ids.analysisB}, ${ids.orgB}, ${ids.conversationB}, ${ids.transcriptionB}, 'fixture', 'fixture-v1', 'fixture', 'fixture', 'fixture', 'completed')
+    `;
+    await tx`
+      insert into public.check_definitions (
+        id, organization_id, key, name, description, purpose, applicability,
+        evaluation_strategy, observation_types, weight, created_by_membership_id
+      ) values
+        (${ids.checkA}, ${ids.orgA}, 'fixture_check_a', 'Fixture check A', 'Fixture organization A check.', 'scorecard', 'every_interaction', 'observation', '{need}', 1, ${ids.adminAMembership}),
+        (${ids.checkB}, ${ids.orgB}, 'fixture_check_b', 'Fixture check B', 'Fixture organization B check.', 'scorecard', 'every_interaction', 'observation', '{need}', 1, ${ids.adminBMembership})
+    `;
+    await tx`
+      insert into public.scorecard_definitions (
+        id, organization_id, key, name, check_definition_ids, created_by_membership_id
+      ) values
+        (${ids.scorecardA}, ${ids.orgA}, 'fixture_scorecard_a', 'Fixture scorecard A', array[${ids.checkA}]::uuid[], ${ids.adminAMembership}),
+        (${ids.scorecardB}, ${ids.orgB}, 'fixture_scorecard_b', 'Fixture scorecard B', array[${ids.checkB}]::uuid[], ${ids.adminBMembership})
+    `;
+    await tx`
+      insert into public.scorecard_definition_checks (organization_id, scorecard_definition_id, check_definition_id) values
+        (${ids.orgA}, ${ids.scorecardA}, ${ids.checkA}),
+        (${ids.orgB}, ${ids.scorecardB}, ${ids.checkB})
+    `;
+    await tx`
+      insert into public.review_runs (
+        id, organization_id, conversation_id, analysis_run_id, evaluation_version, trigger_reason,
+        configuration_snapshot, status, created_by_membership_id
+      ) values
+        (${ids.reviewA}, ${ids.orgA}, ${ids.conversationA}, ${ids.analysisA}, 'fixture-a', 'initial', '{"checks":[],"scorecards":[]}'::jsonb, 'completed', ${ids.adminAMembership}),
+        (${ids.reviewOtherA}, ${ids.orgA}, ${ids.otherConversationA}, ${ids.analysisOtherA}, 'fixture-other-a', 'initial', '{"checks":[],"scorecards":[]}'::jsonb, 'completed', ${ids.adminAMembership}),
+        (${ids.reviewB}, ${ids.orgB}, ${ids.conversationB}, ${ids.analysisB}, 'fixture-b', 'initial', '{"checks":[],"scorecards":[]}'::jsonb, 'completed', ${ids.adminBMembership})
+    `;
+    await tx`
+      insert into public.check_evaluations (
+        organization_id, conversation_id, analysis_run_id, check_definition_id, review_run_id,
+        evaluation_version, result_state, explanation
+      ) values
+        (${ids.orgA}, ${ids.conversationA}, ${ids.analysisA}, ${ids.checkA}, ${ids.reviewA}, 'fixture-a', 'met', 'Fixture A result.'),
+        (${ids.orgA}, ${ids.otherConversationA}, ${ids.analysisOtherA}, ${ids.checkA}, ${ids.reviewOtherA}, 'fixture-other-a', 'met', 'Fixture other A result.'),
+        (${ids.orgB}, ${ids.conversationB}, ${ids.analysisB}, ${ids.checkB}, ${ids.reviewB}, 'fixture-b', 'met', 'Fixture B result.')
+    `;
+    await tx`
+      insert into public.scorecard_evaluations (
+        organization_id, conversation_id, analysis_run_id, scorecard_definition_id, review_run_id,
+        evaluation_version, score_percent, applicable_check_count, evaluated_check_count, insufficient_evidence_count
+      ) values
+        (${ids.orgA}, ${ids.conversationA}, ${ids.analysisA}, ${ids.scorecardA}, ${ids.reviewA}, 'fixture-a', 100, 1, 1, 0),
+        (${ids.orgB}, ${ids.conversationB}, ${ids.analysisB}, ${ids.scorecardB}, ${ids.reviewB}, 'fixture-b', 100, 1, 1, 0)
     `;
     await tx`
       insert into storage.objects (bucket_id, name) values
@@ -308,6 +386,19 @@ try {
     assertEqual(await count(tx, tx`select count(*) from public.transcription_runs where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcription run");
     assertEqual(await count(tx, tx`select count(*) from public.transcript_segments where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcript segment");
     assertEqual(await count(tx, tx`select count(*) from public.outcome_events where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant outcome");
+    assertEqual(await count(tx, tx`select count(*) from public.check_definitions where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B check definitions");
+    await expectDenied(tx, "non-admin cannot create organization check configuration", () => tx`
+      insert into public.check_definitions (
+        organization_id, key, name, description, purpose, applicability, evaluation_strategy, observation_types, weight
+      ) values (${ids.orgA}, 'rep_config_attack', 'Rep config attack', 'Must be denied.', 'scorecard', 'every_interaction', 'observation', '{need}', 1)
+    `);
+    await expectDenied(tx, "organization A cannot create config for organization B", () => tx`
+      insert into public.check_definitions (
+        organization_id, key, name, description, purpose, applicability, evaluation_strategy, observation_types, weight
+      ) values (${ids.orgB}, 'cross_tenant_config_attack', 'Cross tenant config attack', 'Must be denied.', 'scorecard', 'every_interaction', 'observation', '{need}', 1)
+    `);
+    assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B check evaluations");
+    assertEqual(await count(tx, tx`select count(*) from public.scorecard_evaluations where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B scorecard evaluations");
     assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgA}/%`}`), 1, "representative reads own authorized audio path");
     assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgB}/%`}`), 0, "representative cannot read cross-tenant audio path");
 
@@ -434,6 +525,8 @@ try {
     assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationA}`), 1, "manager reads assigned location/team conversation");
     assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`), 0, "manager cannot read unassigned location/team conversation");
     assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationB}`), 0, "manager cannot read cross-tenant conversation");
+    assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where conversation_id = ${ids.conversationA}`), 1, "manager reads assigned conversation review");
+    assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where conversation_id = ${ids.otherConversationA}`), 0, "manager cannot read unassigned conversation review");
     await expectDenied(tx, "manager review access does not grant audio upload authority", () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.managerAttemptRecordingA}/audio.webm`})

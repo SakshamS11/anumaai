@@ -148,7 +148,7 @@ export function ConversationEvidence({
                 segment.providerSpeakerIdentifier ??
                 "Unattributed speaker";
               return (
-                <li key={segment.id}>
+                <li id={`segment-${segment.id}`} key={segment.id}>
                   <button
                     className="evidence-marker"
                     type="button"

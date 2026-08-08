@@ -38,6 +38,30 @@ export type ConversationDetail = ConversationListItem & {
     currencyCode: string | null;
     evidenceGroupId: string;
   }>;
+  latestReview: {
+    id: string;
+    status: string;
+    semanticRequestCount: number;
+    checks: Array<{
+      id: string;
+      name: string;
+      description: string;
+      purpose: "monitor" | "scorecard";
+      state: ReviewResultState;
+      explanation: string;
+      applicabilityReason: string | null;
+      evidenceGroupId: string | null;
+      evidenceSegmentId: string | null;
+    }>;
+    scorecards: Array<{
+      id: string;
+      name: string;
+      scorePercent: number | null;
+      applicableCheckCount: number;
+      evaluatedCheckCount: number;
+      insufficientEvidenceCount: number;
+    }>;
+  } | null;
   transcriptSegments: Array<{
     id: string;
     sequenceNumber: number;
@@ -53,6 +77,8 @@ export type ConversationDetail = ConversationListItem & {
   }>;
   consentHistory: Array<{ status: string; capturedAt: string; captureMethod: string }>;
 };
+
+type ReviewResultState = "met" | "not_met" | "partial" | "not_applicable" | "insufficient_evidence";
 
 export function deriveConversationState(
   item: Pick<
@@ -164,6 +190,7 @@ export async function getConversationDetail(
     mappingsResult,
     runResult,
     observationsResult,
+    reviewRunsResult,
   ] = await Promise.all([
     supabase
       .from("consent_records")
@@ -217,6 +244,15 @@ export async function getConversationDetail(
           .eq("analysis_run_id", conversation.active_analysis_run_id)
           .order("created_at")
       : Promise.resolve({ data: [], error: null }),
+    conversation.active_analysis_run_id
+      ? supabase
+          .from("review_runs")
+          .select("id,status,semantic_request_count,created_at")
+          .eq("conversation_id", conversationId)
+          .eq("analysis_run_id", conversation.active_analysis_run_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (
     [
@@ -229,6 +265,7 @@ export async function getConversationDetail(
       mappingsResult,
       runResult,
       observationsResult,
+      reviewRunsResult,
     ].some((result) => result.error)
   ) {
     throw new Error("Could not load interaction evidence.");
@@ -240,6 +277,76 @@ export async function getConversationDetail(
   const mappings = mappingsResult.data ?? [];
   const consent = consentResult.data ?? [];
   const observations = observationsResult.data ?? [];
+  const latestReviewRun = reviewRunsResult.data?.[0] ?? null;
+  const [reviewChecksResult, reviewScoresResult] = latestReviewRun
+    ? await Promise.all([
+        supabase
+          .from("check_evaluations")
+          .select(
+            "id,check_definition_id,result_state,explanation,applicability_reason,evidence_group_id",
+          )
+          .eq("review_run_id", latestReviewRun.id)
+          .order("created_at"),
+        supabase
+          .from("scorecard_evaluations")
+          .select(
+            "id,scorecard_definition_id,score_percent,applicable_check_count,evaluated_check_count,insufficient_evidence_count",
+          )
+          .eq("review_run_id", latestReviewRun.id)
+          .order("created_at"),
+      ])
+    : [
+        { data: [], error: null },
+        { data: [], error: null },
+      ];
+  if (reviewChecksResult.error || reviewScoresResult.error) {
+    throw new Error("Could not load interaction review.");
+  }
+  const reviewChecks = reviewChecksResult.data ?? [];
+  const reviewScores = reviewScoresResult.data ?? [];
+  const reviewCheckDefinitionIds = reviewChecks.map((item) => item.check_definition_id);
+  const reviewScorecardIds = reviewScores.map((item) => item.scorecard_definition_id);
+  const evidenceGroupIds = reviewChecks.flatMap((item) =>
+    item.evidence_group_id ? [item.evidence_group_id] : [],
+  );
+  const [reviewDefinitionsResult, scorecardDefinitionsResult, evidenceReferencesResult] =
+    await Promise.all([
+      reviewCheckDefinitionIds.length
+        ? supabase
+            .from("check_definitions")
+            .select("id,name,description,purpose")
+            .in("id", reviewCheckDefinitionIds)
+        : Promise.resolve({ data: [], error: null }),
+      reviewScorecardIds.length
+        ? supabase.from("scorecard_definitions").select("id,name").in("id", reviewScorecardIds)
+        : Promise.resolve({ data: [], error: null }),
+      evidenceGroupIds.length
+        ? supabase
+            .from("evidence_references")
+            .select("evidence_group_id,transcript_segment_id,sequence_number")
+            .in("evidence_group_id", evidenceGroupIds)
+            .order("sequence_number")
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+  if (
+    reviewDefinitionsResult.error ||
+    scorecardDefinitionsResult.error ||
+    evidenceReferencesResult.error
+  ) {
+    throw new Error("Could not load review configuration evidence.");
+  }
+  const reviewDefinitions = new Map(
+    (reviewDefinitionsResult.data ?? []).map((item) => [item.id, item]),
+  );
+  const scorecardDefinitions = new Map(
+    (scorecardDefinitionsResult.data ?? []).map((item) => [item.id, item]),
+  );
+  const firstEvidenceSegment = new Map(
+    (evidenceReferencesResult.data ?? []).map((item) => [
+      item.evidence_group_id,
+      item.transcript_segment_id,
+    ]),
+  );
 
   return {
     id: conversation.id,
@@ -280,6 +387,47 @@ export async function getConversationDetail(
       currencyCode: observation.currency_code,
       evidenceGroupId: observation.evidence_group_id,
     })),
+    latestReview: latestReviewRun
+      ? {
+          id: latestReviewRun.id,
+          status: latestReviewRun.status,
+          semanticRequestCount: latestReviewRun.semantic_request_count,
+          checks: reviewChecks.flatMap((item) => {
+            const definition = reviewDefinitions.get(item.check_definition_id);
+            if (!definition) return [];
+            return [
+              {
+                id: item.id,
+                name: definition.name,
+                description: definition.description,
+                purpose: definition.purpose as "monitor" | "scorecard",
+                state: item.result_state as ReviewResultState,
+                explanation: item.explanation,
+                applicabilityReason: item.applicability_reason,
+                evidenceGroupId: item.evidence_group_id,
+                evidenceSegmentId: item.evidence_group_id
+                  ? (firstEvidenceSegment.get(item.evidence_group_id) ?? null)
+                  : null,
+              },
+            ];
+          }),
+          scorecards: reviewScores.flatMap((item) => {
+            const definition = scorecardDefinitions.get(item.scorecard_definition_id);
+            return definition
+              ? [
+                  {
+                    id: item.id,
+                    name: definition.name,
+                    scorePercent: item.score_percent,
+                    applicableCheckCount: item.applicable_check_count,
+                    evaluatedCheckCount: item.evaluated_check_count,
+                    insufficientEvidenceCount: item.insufficient_evidence_count,
+                  },
+                ]
+              : [];
+          }),
+        }
+      : null,
     transcriptSegments: segments.map((segment) => ({
       id: segment.id,
       sequenceNumber: segment.sequence_number,

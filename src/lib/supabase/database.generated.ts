@@ -211,6 +211,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "check_definitions_creator_org_fk";
+            columns: ["organization_id", "created_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
             foreignKeyName: "check_definitions_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
@@ -223,6 +230,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "check_definitions";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "check_definitions_supersedes_org_fk";
+            columns: ["organization_id", "supersedes_definition_id"];
+            isOneToOne: false;
+            referencedRelation: "check_definitions";
+            referencedColumns: ["organization_id", "id"];
           },
         ];
       };
@@ -239,6 +253,7 @@ export type Database = {
           id: string;
           organization_id: string;
           result_state: string;
+          review_run_id: string | null;
         };
         Insert: {
           analysis_run_id: string;
@@ -252,6 +267,7 @@ export type Database = {
           id?: string;
           organization_id: string;
           result_state: string;
+          review_run_id?: string | null;
         };
         Update: {
           analysis_run_id?: string;
@@ -265,6 +281,7 @@ export type Database = {
           id?: string;
           organization_id?: string;
           result_state?: string;
+          review_run_id?: string | null;
         };
         Relationships: [
           {
@@ -286,6 +303,13 @@ export type Database = {
             columns: ["organization_id", "conversation_id", "evidence_group_id"];
             isOneToOne: false;
             referencedRelation: "evidence_groups";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
+            foreignKeyName: "check_evaluations_review_run_fk";
+            columns: ["organization_id", "conversation_id", "review_run_id"];
+            isOneToOne: false;
+            referencedRelation: "review_runs";
             referencedColumns: ["organization_id", "conversation_id", "id"];
           },
         ];
@@ -1204,6 +1228,111 @@ export type Database = {
           },
         ];
       };
+      review_runs: {
+        Row: {
+          analysis_run_id: string;
+          completed_at: string | null;
+          configuration_snapshot: Json;
+          conversation_id: string;
+          created_at: string;
+          created_by_membership_id: string | null;
+          error_code: string | null;
+          error_message: string | null;
+          evaluation_version: string;
+          id: string;
+          organization_id: string;
+          semantic_request_count: number;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["run_status"];
+          trigger_reason: string;
+        };
+        Insert: {
+          analysis_run_id: string;
+          completed_at?: string | null;
+          configuration_snapshot: Json;
+          conversation_id: string;
+          created_at?: string;
+          created_by_membership_id?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          evaluation_version: string;
+          id?: string;
+          organization_id: string;
+          semantic_request_count?: number;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["run_status"];
+          trigger_reason: string;
+        };
+        Update: {
+          analysis_run_id?: string;
+          completed_at?: string | null;
+          configuration_snapshot?: Json;
+          conversation_id?: string;
+          created_at?: string;
+          created_by_membership_id?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          evaluation_version?: string;
+          id?: string;
+          organization_id?: string;
+          semantic_request_count?: number;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["run_status"];
+          trigger_reason?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "review_runs_organization_id_conversation_id_analysis_run_i_fkey";
+            columns: ["organization_id", "conversation_id", "analysis_run_id"];
+            isOneToOne: false;
+            referencedRelation: "analysis_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
+            foreignKeyName: "review_runs_organization_id_created_by_membership_id_fkey";
+            columns: ["organization_id", "created_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      scorecard_definition_checks: {
+        Row: {
+          check_definition_id: string;
+          created_at: string;
+          organization_id: string;
+          scorecard_definition_id: string;
+        };
+        Insert: {
+          check_definition_id: string;
+          created_at?: string;
+          organization_id: string;
+          scorecard_definition_id: string;
+        };
+        Update: {
+          check_definition_id?: string;
+          created_at?: string;
+          organization_id?: string;
+          scorecard_definition_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scorecard_definition_checks_organization_id_check_definiti_fkey";
+            columns: ["organization_id", "check_definition_id"];
+            isOneToOne: false;
+            referencedRelation: "check_definitions";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "scorecard_definition_checks_organization_id_scorecard_defi_fkey";
+            columns: ["organization_id", "scorecard_definition_id"];
+            isOneToOne: false;
+            referencedRelation: "scorecard_definitions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       scorecard_definitions: {
         Row: {
           active: boolean;
@@ -1247,6 +1376,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "scorecard_definitions_creator_org_fk";
+            columns: ["organization_id", "created_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
             foreignKeyName: "scorecard_definitions_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
@@ -1266,6 +1402,7 @@ export type Database = {
           id: string;
           insufficient_evidence_count: number;
           organization_id: string;
+          review_run_id: string | null;
           score_percent: number | null;
           scorecard_definition_id: string;
         };
@@ -1279,6 +1416,7 @@ export type Database = {
           id?: string;
           insufficient_evidence_count?: number;
           organization_id: string;
+          review_run_id?: string | null;
           score_percent?: number | null;
           scorecard_definition_id: string;
         };
@@ -1292,6 +1430,7 @@ export type Database = {
           id?: string;
           insufficient_evidence_count?: number;
           organization_id?: string;
+          review_run_id?: string | null;
           score_percent?: number | null;
           scorecard_definition_id?: string;
         };
@@ -1309,6 +1448,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "scorecard_definitions";
             referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "scorecard_evaluations_review_run_fk";
+            columns: ["organization_id", "conversation_id", "review_run_id"];
+            isOneToOne: false;
+            referencedRelation: "review_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
           },
         ];
       };
@@ -1698,6 +1844,19 @@ export type Database = {
         };
         Returns: string;
       };
+      create_organization_check: {
+        Args: {
+          p_applicability: string;
+          p_description: string;
+          p_evaluation_strategy: string;
+          p_name: string;
+          p_organization_id: string;
+          p_phrase?: string;
+          p_purpose: string;
+          p_weight?: number;
+        };
+        Returns: string;
+      };
       create_speaker_mapping_version: {
         Args: {
           p_entries: Json;
@@ -1708,6 +1867,26 @@ export type Database = {
       };
       finalize_recording_upload: {
         Args: { p_recording_id: string };
+        Returns: undefined;
+      };
+      persist_analysis_result: {
+        Args: {
+          p_analysis_run_id: string;
+          p_metric_values: Json;
+          p_observations: Json;
+        };
+        Returns: {
+          already_persisted: boolean;
+          metric_run_id: string;
+        }[];
+      };
+      persist_interaction_review: {
+        Args: {
+          p_check_evaluations: Json;
+          p_review_run_id: string;
+          p_scorecard_evaluations: Json;
+          p_semantic_request_count?: number;
+        };
         Returns: undefined;
       };
       prepare_recording_upload: {
@@ -1731,6 +1910,10 @@ export type Database = {
           p_proposed_value: Json;
           p_reason?: string;
         };
+        Returns: string;
+      };
+      request_interaction_review: {
+        Args: { p_conversation_id: string; p_trigger_reason?: string };
         Returns: string;
       };
       request_interaction_understanding: {

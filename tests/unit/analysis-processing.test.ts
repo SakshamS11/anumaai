@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { amountMajorToMinor } from "@/modules/analysis/types";
 import { longestUninterruptedSpeech } from "@/modules/analysis/metrics";
+import { hasPersistedAnalysisResult } from "@/modules/analysis/idempotency";
 
 describe("analysis money semantics", () => {
   it.each([
@@ -19,11 +20,18 @@ describe("analysis money semantics", () => {
   });
 });
 
+describe("analysis retry idempotency", () => {
+  it("finalizes a persisted result instead of creating a second result set on retry", () => {
+    expect(hasPersistedAnalysisResult(1)).toBe(true);
+    expect(hasPersistedAnalysisResult(0)).toBe(false);
+  });
+});
+
 describe("longest uninterrupted speech", () => {
-  it("merges consecutive same-speaker transcript segments", () => {
+  it("treats a small provider timestamp gap as one continuous speaker turn span", () => {
     const segments = [
       { role: "representative", start_milliseconds: 0, end_milliseconds: 1000 },
-      { role: "representative", start_milliseconds: 1000, end_milliseconds: 3500 },
+      { role: "representative", start_milliseconds: 1100, end_milliseconds: 3500 },
       { role: "customer", start_milliseconds: 3500, end_milliseconds: 4200 },
       { role: "representative", start_milliseconds: 4200, end_milliseconds: 5000 },
     ] as Parameters<typeof longestUninterruptedSpeech>[0];

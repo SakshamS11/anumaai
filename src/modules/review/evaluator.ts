@@ -2,10 +2,14 @@ export type CheckState = "met" | "not_met" | "partial" | "not_applicable" | "ins
 
 export type ReviewCheck = {
   applicability: "every_interaction" | "when_relevant";
+  description: string;
   evaluationStrategy: "observation" | "phrase" | "semantic";
-  key: string;
+  id: string;
+  name: string;
   observationTypes: string[];
   phrase: string | null;
+  purpose: "monitor" | "scorecard";
+  weight: number | null;
 };
 
 export type ReviewObservation = {
@@ -14,115 +18,92 @@ export type ReviewObservation = {
   valueText: string | null;
 };
 
-export type ReviewSegment = { role: string; text: string };
+export type ReviewSegment = {
+  id: string;
+  role: string;
+  text: string;
+};
 
-export function evaluateCheck(
+export type ReviewResult = {
+  applicabilityReason: string | null;
+  evidenceGroupId: string | null;
+  evidenceSegmentIds: string[];
+  explanation: string;
+  state: CheckState;
+};
+
+function applicableObservations(check: ReviewCheck, observations: ReviewObservation[]) {
+  return observations.filter((observation) => check.observationTypes.includes(observation.type));
+}
+
+function isRelevant(check: ReviewCheck, observations: ReviewObservation[]) {
+  // A configured observation dependency is the bounded applicability rule for
+  // starter checks. Custom semantic checks without one stay for the single
+  // semantic batch to decide; no check-name parsing is used.
+  if (check.applicability === "every_interaction") return true;
+  if (check.observationTypes.length === 0) return null;
+  return applicableObservations(check, observations).length > 0;
+}
+
+export function evaluateDeterministicCheck(
   check: ReviewCheck,
   observations: ReviewObservation[],
   segments: ReviewSegment[],
-): { evidenceGroupId: string | null; explanation: string; state: CheckState } {
-  const relevantObservations = observations.filter((observation) =>
-    check.observationTypes.includes(observation.type),
-  );
-  const transcript = segments
-    .map((segment) => segment.text)
-    .join("\n")
-    .toLocaleLowerCase();
-  const priceRelevant = observations.some((item) =>
-    ["objection", "competitor", "competitor_price", "price"].includes(item.type),
-  );
-  const financeRelevant = observations.some(
-    (item) => item.type === "finance" || /\bemi\b/i.test(item.valueText ?? ""),
-  );
-  const relevant = check.key.includes("price")
-    ? priceRelevant
-    : check.key.includes("finance")
-      ? financeRelevant
-      : true;
-  if (check.applicability === "when_relevant" && !relevant) {
+): ReviewResult | null {
+  const relevance = isRelevant(check, observations);
+  const matchingObservations = applicableObservations(check, observations);
+  if (relevance === false) {
     return {
+      applicabilityReason: "This check was not relevant to the interaction.",
       evidenceGroupId: null,
+      evidenceSegmentIds: [],
       explanation: "This check was not relevant to the interaction.",
       state: "not_applicable",
     };
   }
+
+  if (check.evaluationStrategy === "semantic") return null;
+
   if (check.evaluationStrategy === "observation") {
-    return relevantObservations.length
+    const evidenceGroupId = matchingObservations[0]?.evidenceGroupId ?? null;
+    return evidenceGroupId
       ? {
-          evidenceGroupId: relevantObservations[0].evidenceGroupId,
+          applicabilityReason:
+            relevance === true ? "Matching interaction evidence was observed." : null,
+          evidenceGroupId,
+          evidenceSegmentIds: [],
           explanation: "Matching interaction evidence was observed.",
           state: "met",
         }
       : {
+          applicabilityReason: null,
           evidenceGroupId: null,
+          evidenceSegmentIds: [],
           explanation: "Applicable check, but no matching evidence was observed.",
           state: "not_met",
         };
   }
-  if (check.evaluationStrategy === "phrase") {
-    const found = check.phrase && transcript.includes(check.phrase.toLocaleLowerCase());
-    return found
-      ? {
-          evidenceGroupId: null,
-          explanation: "The configured phrase was observed in the transcript.",
-          state: "met",
-        }
-      : {
-          evidenceGroupId: null,
-          explanation: "The configured phrase was not observed in the transcript.",
-          state: "not_met",
-        };
-  }
-  const representativeText = segments
-    .filter((segment) => segment.role === "representative")
-    .map((segment) => segment.text)
-    .join(" ");
-  if (check.key === "customer_greeted") {
-    const greeted = /\b(hello|hi|welcome|namaste|vanakkam)\b/i.test(representativeText);
-    return {
-      evidenceGroupId: null,
-      explanation: greeted ? "A greeting was observed." : "No clear greeting was observed.",
-      state: greeted ? "met" : "not_met",
-    };
-  }
-  if (check.key === "price_objection_handled") {
-    const valueResponse = /\b(bank offer|warranty|availability|alternative|exchange|value)\b/i.test(
-      representativeText,
-    );
-    return {
-      evidenceGroupId: relevantObservations[0]?.evidenceGroupId ?? null,
-      explanation: valueResponse
-        ? "A value response followed the price comparison."
-        : "No clear value response was observed after the price comparison.",
-      state: valueResponse ? "partial" : "not_met",
-    };
-  }
-  if (check.key === "finance_emi_addressed") {
-    const addressed = /\b(emi|bank offer|finance)\b/i.test(representativeText);
-    return {
-      evidenceGroupId: relevantObservations[0]?.evidenceGroupId ?? null,
-      explanation: addressed
-        ? "A finance response was observed."
-        : "No clear finance response was observed.",
-      state: addressed ? "met" : "not_met",
-    };
-  }
-  if (check.key === "customer_questions_addressed") {
-    const addressed =
-      observations.some((item) => item.type === "question") && representativeText.trim().length > 0;
-    return {
-      evidenceGroupId: relevantObservations[0]?.evidenceGroupId ?? null,
-      explanation: addressed
-        ? "A representative response was observed after the customer question."
-        : "The question could not be linked to a clear response.",
-      state: addressed ? "met" : "insufficient_evidence",
-    };
-  }
-  return {
-    evidenceGroupId: null,
-    explanation: "The available evidence is insufficient for this check.",
-    state: "insufficient_evidence",
-  };
+
+  const phrase = check.phrase?.trim().toLocaleLowerCase();
+  const matchingSegment = phrase
+    ? segments.find((segment) => segment.text.toLocaleLowerCase().includes(phrase))
+    : undefined;
+  return matchingSegment
+    ? {
+        applicabilityReason:
+          relevance === true ? "The configured phrase made this check relevant." : null,
+        evidenceGroupId: null,
+        evidenceSegmentIds: [matchingSegment.id],
+        explanation: "The configured phrase was observed in the transcript.",
+        state: "met",
+      }
+    : {
+        applicabilityReason: null,
+        evidenceGroupId: null,
+        evidenceSegmentIds: [],
+        explanation: "The configured phrase was not observed in the transcript.",
+        state: "not_met",
+      };
 }
 
 export function calculateScorecard(results: Array<{ state: CheckState; weight: number }>) {

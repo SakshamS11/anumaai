@@ -5,6 +5,13 @@ export type MetricSegment = {
   start_milliseconds: number;
 };
 
+/**
+ * Provider chunks occasionally leave a tiny timestamp gap within one turn.
+ * The metric reports the full conversational-turn span, so this tolerance is
+ * included in the duration instead of treating provider chunking as a new turn.
+ */
+export const SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS = 250;
+
 function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -20,7 +27,10 @@ export function longestUninterruptedSpeech(segments: MetricSegment[]) {
   for (const segment of ordered) {
     const start = Number(segment.start_milliseconds);
     const end = Number(segment.end_milliseconds);
-    if (segment.role === currentRole && start <= currentEnd) {
+    if (
+      segment.role === currentRole &&
+      start <= currentEnd + SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS
+    ) {
       currentEnd = Math.max(currentEnd, end);
     } else {
       longest = Math.max(longest, Math.max(0, currentEnd - currentStart));
