@@ -117,12 +117,12 @@ test("authenticated interaction foundation persists and presents the Phase 3 aud
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/setup$/);
-  await expect(page.getByRole("heading", { name: "Create your ANUMA organization" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Set up your ANUMA workspace" })).toBeVisible();
   await page.getByLabel("Organization name").fill(organizationName);
   await page.getByLabel("Country").selectOption("IN");
   await page.getByLabel("Default currency").selectOption("INR");
   await page.getByLabel("Display timezone").selectOption("Asia/Kolkata");
-  await page.getByRole("button", { name: "Create organization" }).click();
+  await page.getByRole("button", { name: "Create workspace" }).click();
 
   await expect(page).toHaveURL(/\/administration\?created=organization$/);
   await expect(page.getByText(organizationName, { exact: true }).first()).toBeVisible();

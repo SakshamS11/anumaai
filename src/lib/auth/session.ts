@@ -13,14 +13,11 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
     return null;
   }
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
+  const userId = claimsData.claims.sub;
+  if (typeof userId !== "string") {
     return null;
   }
 
-  return { id: user.id, email: user.email ?? null };
+  const email = claimsData.claims.email;
+  return { id: userId, email: typeof email === "string" ? email : null };
 }

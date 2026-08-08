@@ -14,11 +14,10 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
     <main className="setup-page">
       <section className="setup-card">
         <div>
-          <p className="eyebrow">Secure organization setup</p>
-          <h1>Create your ANUMA organization</h1>
+          <p className="eyebrow">Create your workspace</p>
+          <h1>Set up your ANUMA workspace</h1>
           <p className="section-copy">
-            This creates the tenant boundary for locations, teams, conversations, evidence and
-            future outcomes. You will become its administrator.
+            Set up the organization where your interactions, teams and intelligence will live.
           </p>
         </div>
         {error ? (
@@ -57,13 +56,9 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
             </select>
           </label>
           <button className="button button-primary form-field-wide" type="submit">
-            Create organization
+            Create workspace
           </button>
         </form>
-        <p className="security-note">
-          Organization creation is atomic. Browser-supplied identifiers cannot assign administrator
-          access to an existing tenant.
-        </p>
       </section>
     </main>
   );
