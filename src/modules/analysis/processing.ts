@@ -1,8 +1,10 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getOpenAIEnvironment } from "@/lib/env";
 import type { Json } from "@/lib/supabase/database.generated";
 import { OpenAIAnalysisProvider } from "@/modules/analysis/openai-provider";
+import { amountMajorToMinor } from "@/modules/analysis/types";
 
 type TranscriptSegment = {
   end_milliseconds: number;
@@ -22,7 +24,30 @@ function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function metricRows(segments: MappedSegment[]) {
+export function longestUninterruptedSpeech(segments: MappedSegment[]) {
+  const ordered = [...segments].sort(
+    (left, right) => left.start_milliseconds - right.start_milliseconds,
+  );
+  let longest = 0;
+  let currentRole: MappedSegment["role"] | null = null;
+  let currentStart = 0;
+  let currentEnd = 0;
+  for (const segment of ordered) {
+    const start = Number(segment.start_milliseconds);
+    const end = Number(segment.end_milliseconds);
+    if (segment.role === currentRole && start <= currentEnd) {
+      currentEnd = Math.max(currentEnd, end);
+    } else {
+      longest = Math.max(longest, Math.max(0, currentEnd - currentStart));
+      currentRole = segment.role;
+      currentStart = start;
+      currentEnd = end;
+    }
+  }
+  return Math.max(longest, Math.max(0, currentEnd - currentStart));
+}
+
+export function metricRows(segments: MappedSegment[]) {
   const ordered = [...segments].sort(
     (left, right) => left.start_milliseconds - right.start_milliseconds,
   );
@@ -41,10 +66,7 @@ function metricRows(segments: MappedSegment[]) {
   const representativeDuration = speechDuration(representative);
   const customerDuration = speechDuration(customer);
   const mappedSpeechDuration = speechDuration(ordered);
-  const longest = ordered.reduce(
-    (max, item) => Math.max(max, Math.max(0, item.end_milliseconds - item.start_milliseconds)),
-    0,
-  );
+  const longest = longestUninterruptedSpeech(ordered);
   const wordsPerMinute = (items: MappedSegment[]) => {
     const milliseconds = speechDuration(items);
     return milliseconds === 0
@@ -123,6 +145,7 @@ async function persistDeterministicMetrics(
     })),
   );
   if (valuesError) throw new Error("Deterministic metric values could not be saved.");
+  return metricRun.id;
 }
 
 export async function processAnalysisRun(runId: string) {
@@ -181,15 +204,17 @@ export async function processAnalysisRun(runId: string) {
     role: roles.get(segment.provider_speaker_identifier!)!,
   }));
 
+  const runtimeModel = getOpenAIEnvironment().ANUMA_ANALYSIS_MODEL;
   await db
     .from("analysis_runs")
-    .update({ status: "running", started_at: new Date().toISOString() })
+    .update({ model: runtimeModel, status: "running", started_at: new Date().toISOString() })
     .eq("id", runId);
-  await persistDeterministicMetrics(
+  const metricRunId = await persistDeterministicMetrics(
     db,
     { ...run, speaker_mapping_version_id: run.speaker_mapping_version_id },
     mappedSegments,
   );
+  await db.from("analysis_runs").update({ metric_run_id: metricRunId }).eq("id", runId);
 
   const result = await new OpenAIAnalysisProvider().extract({
     vertical: conversation.vertical,
@@ -251,7 +276,7 @@ export async function processAnalysisRun(runId: string) {
       observation_type: observation.type,
       organization_id: run.organization_id,
       original_model_value: observation as unknown as Json,
-      value_amount_minor: observation.amountMinor,
+      value_amount_minor: amountMajorToMinor(observation.amountMajor, observation.currency),
       value_text: observation.text,
     });
     if (observationError) throw new Error("Structured observation could not be saved.");
@@ -273,4 +298,4 @@ export async function processAnalysisRun(runId: string) {
     .eq("id", run.conversation_id);
 }
 
-export { METRIC_ALGORITHM_VERSION, metricRows };
+export { METRIC_ALGORITHM_VERSION };

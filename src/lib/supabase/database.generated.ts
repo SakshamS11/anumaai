@@ -1,10 +1,35 @@
-﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.15";
+  };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
   public: {
     Tables: {
@@ -21,6 +46,7 @@ export type Database = {
           id: string;
           input_tokens: number | null;
           latency_milliseconds: number | null;
+          metric_run_id: string | null;
           model: string;
           model_version: string | null;
           organization_id: string;
@@ -47,6 +73,7 @@ export type Database = {
           id?: string;
           input_tokens?: number | null;
           latency_milliseconds?: number | null;
+          metric_run_id?: string | null;
           model: string;
           model_version?: string | null;
           organization_id: string;
@@ -73,6 +100,7 @@ export type Database = {
           id?: string;
           input_tokens?: number | null;
           latency_milliseconds?: number | null;
+          metric_run_id?: string | null;
           model?: string;
           model_version?: string | null;
           organization_id?: string;
@@ -101,10 +129,163 @@ export type Database = {
             referencedColumns: ["organization_id", "conversation_id", "transcription_run_id", "id"];
           },
           {
+            foreignKeyName: "analysis_runs_metric_run_fk";
+            columns: ["organization_id", "conversation_id", "metric_run_id"];
+            isOneToOne: false;
+            referencedRelation: "metric_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
             foreignKeyName: "analysis_runs_transcription_fk";
             columns: ["organization_id", "conversation_id", "source_transcription_run_id"];
             isOneToOne: false;
             referencedRelation: "transcription_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+        ];
+      };
+      check_definitions: {
+        Row: {
+          active: boolean;
+          applicability: string;
+          created_at: string;
+          created_by_membership_id: string | null;
+          description: string;
+          evaluation_strategy: string;
+          id: string;
+          is_starter: boolean;
+          key: string;
+          name: string;
+          observation_types: string[];
+          organization_id: string;
+          phrase: string | null;
+          purpose: string;
+          supersedes_definition_id: string | null;
+          version: number;
+          weight: number | null;
+        };
+        Insert: {
+          active?: boolean;
+          applicability: string;
+          created_at?: string;
+          created_by_membership_id?: string | null;
+          description: string;
+          evaluation_strategy: string;
+          id?: string;
+          is_starter?: boolean;
+          key: string;
+          name: string;
+          observation_types?: string[];
+          organization_id: string;
+          phrase?: string | null;
+          purpose: string;
+          supersedes_definition_id?: string | null;
+          version?: number;
+          weight?: number | null;
+        };
+        Update: {
+          active?: boolean;
+          applicability?: string;
+          created_at?: string;
+          created_by_membership_id?: string | null;
+          description?: string;
+          evaluation_strategy?: string;
+          id?: string;
+          is_starter?: boolean;
+          key?: string;
+          name?: string;
+          observation_types?: string[];
+          organization_id?: string;
+          phrase?: string | null;
+          purpose?: string;
+          supersedes_definition_id?: string | null;
+          version?: number;
+          weight?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "check_definitions_created_by_membership_id_fkey";
+            columns: ["created_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "check_definitions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "check_definitions_supersedes_definition_id_fkey";
+            columns: ["supersedes_definition_id"];
+            isOneToOne: false;
+            referencedRelation: "check_definitions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      check_evaluations: {
+        Row: {
+          analysis_run_id: string;
+          applicability_reason: string | null;
+          check_definition_id: string;
+          conversation_id: string;
+          created_at: string;
+          evaluation_version: string;
+          evidence_group_id: string | null;
+          explanation: string;
+          id: string;
+          organization_id: string;
+          result_state: string;
+        };
+        Insert: {
+          analysis_run_id: string;
+          applicability_reason?: string | null;
+          check_definition_id: string;
+          conversation_id: string;
+          created_at?: string;
+          evaluation_version?: string;
+          evidence_group_id?: string | null;
+          explanation: string;
+          id?: string;
+          organization_id: string;
+          result_state: string;
+        };
+        Update: {
+          analysis_run_id?: string;
+          applicability_reason?: string | null;
+          check_definition_id?: string;
+          conversation_id?: string;
+          created_at?: string;
+          evaluation_version?: string;
+          evidence_group_id?: string | null;
+          explanation?: string;
+          id?: string;
+          organization_id?: string;
+          result_state?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "check_evaluations_organization_id_check_definition_id_fkey";
+            columns: ["organization_id", "check_definition_id"];
+            isOneToOne: false;
+            referencedRelation: "check_definitions";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "check_evaluations_organization_id_conversation_id_analysis_fkey";
+            columns: ["organization_id", "conversation_id", "analysis_run_id"];
+            isOneToOne: false;
+            referencedRelation: "analysis_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
+            foreignKeyName: "check_evaluations_organization_id_conversation_id_evidence_fkey";
+            columns: ["organization_id", "conversation_id", "evidence_group_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_groups";
             referencedColumns: ["organization_id", "conversation_id", "id"];
           },
         ];
@@ -1023,6 +1204,114 @@ export type Database = {
           },
         ];
       };
+      scorecard_definitions: {
+        Row: {
+          active: boolean;
+          check_definition_ids: string[];
+          created_at: string;
+          created_by_membership_id: string | null;
+          id: string;
+          key: string;
+          name: string;
+          organization_id: string;
+          version: number;
+        };
+        Insert: {
+          active?: boolean;
+          check_definition_ids: string[];
+          created_at?: string;
+          created_by_membership_id?: string | null;
+          id?: string;
+          key: string;
+          name: string;
+          organization_id: string;
+          version?: number;
+        };
+        Update: {
+          active?: boolean;
+          check_definition_ids?: string[];
+          created_at?: string;
+          created_by_membership_id?: string | null;
+          id?: string;
+          key?: string;
+          name?: string;
+          organization_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scorecard_definitions_created_by_membership_id_fkey";
+            columns: ["created_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scorecard_definitions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      scorecard_evaluations: {
+        Row: {
+          analysis_run_id: string;
+          applicable_check_count: number;
+          conversation_id: string;
+          created_at: string;
+          evaluated_check_count: number;
+          evaluation_version: string;
+          id: string;
+          insufficient_evidence_count: number;
+          organization_id: string;
+          score_percent: number | null;
+          scorecard_definition_id: string;
+        };
+        Insert: {
+          analysis_run_id: string;
+          applicable_check_count?: number;
+          conversation_id: string;
+          created_at?: string;
+          evaluated_check_count?: number;
+          evaluation_version?: string;
+          id?: string;
+          insufficient_evidence_count?: number;
+          organization_id: string;
+          score_percent?: number | null;
+          scorecard_definition_id: string;
+        };
+        Update: {
+          analysis_run_id?: string;
+          applicable_check_count?: number;
+          conversation_id?: string;
+          created_at?: string;
+          evaluated_check_count?: number;
+          evaluation_version?: string;
+          id?: string;
+          insufficient_evidence_count?: number;
+          organization_id?: string;
+          score_percent?: number | null;
+          scorecard_definition_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scorecard_evaluations_organization_id_conversation_id_anal_fkey";
+            columns: ["organization_id", "conversation_id", "analysis_run_id"];
+            isOneToOne: false;
+            referencedRelation: "analysis_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
+            foreignKeyName: "scorecard_evaluations_organization_id_scorecard_definition_fkey";
+            columns: ["organization_id", "scorecard_definition_id"];
+            isOneToOne: false;
+            referencedRelation: "scorecard_definitions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       speaker_mapping_entries: {
         Row: {
           conversation_id: string;
@@ -1459,6 +1748,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      seed_starter_electronics_checks: {
+        Args: { p_organization_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       consent_capture_method: "verbal" | "written" | "digital" | "imported" | "other";
@@ -1603,6 +1896,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       consent_capture_method: ["verbal", "written", "digital", "imported", "other"],
