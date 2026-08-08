@@ -18,7 +18,7 @@ type TranscriptSegment = {
 
 type MappedSegment = TranscriptSegment & MetricSegment;
 
-const METRIC_ALGORITHM_VERSION = "phase4.v2";
+const METRIC_ALGORITHM_VERSION = "phase5.1.v1";
 
 export async function processAnalysisRun(runId: string) {
   "use step";

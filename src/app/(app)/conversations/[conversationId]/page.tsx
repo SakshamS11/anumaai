@@ -5,6 +5,7 @@ import { AudioCapturePanel } from "@/components/conversations/audio-capture-pane
 import { ConversationEvidence } from "@/components/conversations/conversation-evidence";
 import { CustomerConsentPanel } from "@/components/conversations/customer-consent-panel";
 import { InteractionUnderstanding } from "@/components/conversations/interaction-understanding";
+import { InteractionMetrics } from "@/components/conversations/interaction-metrics";
 import { InteractionReview } from "@/components/conversations/interaction-review";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -95,6 +96,7 @@ export default async function ConversationPage({ params }: ConversationPageProps
         mappings={conversation.activeMappings}
         canProcessAudio={canProcessAudio}
       />
+      <InteractionMetrics metrics={conversation.metrics} />
       <InteractionUnderstanding
         canRequest={
           canProcessAudio &&

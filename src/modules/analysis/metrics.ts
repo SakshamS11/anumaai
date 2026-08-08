@@ -1,111 +1,200 @@
+export type MetricRole =
+  "representative" | "customer" | "unknown" | "manager" | "additional_customer";
+
 export type MetricSegment = {
   end_milliseconds: number;
   original_text: string;
-  role: "representative" | "customer" | "unknown" | "manager" | "additional_customer";
+  role: MetricRole;
   start_milliseconds: number;
 };
 
-/**
- * Provider chunks occasionally leave a tiny timestamp gap within one turn.
- * The metric reports the full conversational-turn span, so this tolerance is
- * included in the duration instead of treating provider chunking as a new turn.
- */
+export type MetricRow = {
+  metric_key: string;
+  numeric_value: number;
+  unit: "milliseconds" | "ratio" | "turns" | "words" | "words_per_minute";
+};
+
+/** Provider chunks within this gap are one conversational turn. */
 export const SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS = 250;
 
-function wordCount(text: string) {
+type ParticipantGroup = "representative" | "customer" | null;
+type MergedTurn = { endMilliseconds: number; group: ParticipantGroup; startMilliseconds: number };
+
+function participantGroup(role: MetricRole): ParticipantGroup {
+  if (role === "representative") return "representative";
+  if (role === "customer" || role === "additional_customer") return "customer";
+  return null;
+}
+
+function orderedValidSegments(segments: MetricSegment[]) {
+  return segments
+    .filter(
+      (segment) =>
+        Number.isFinite(segment.start_milliseconds) &&
+        Number.isFinite(segment.end_milliseconds) &&
+        segment.end_milliseconds >= segment.start_milliseconds,
+    )
+    .sort((left, right) => left.start_milliseconds - right.start_milliseconds);
+}
+
+function positiveDurationSegments(segments: MetricSegment[]) {
+  return orderedValidSegments(segments).filter(
+    (segment) => segment.end_milliseconds > segment.start_milliseconds,
+  );
+}
+
+function speechDuration(segments: MetricSegment[]) {
+  return segments.reduce(
+    (total, segment) => total + (segment.end_milliseconds - segment.start_milliseconds),
+    0,
+  );
+}
+
+/** Whitespace tokens are an explicit multilingual approximation. */
+export function countWords(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export function longestUninterruptedSpeech(segments: MetricSegment[]) {
-  const ordered = [...segments].sort(
-    (left, right) => left.start_milliseconds - right.start_milliseconds,
-  );
-  let longest = 0;
-  let currentRole: MetricSegment["role"] | null = null;
-  let currentStart = 0;
-  let currentEnd = 0;
-  for (const segment of ordered) {
-    const start = Number(segment.start_milliseconds);
-    const end = Number(segment.end_milliseconds);
-    if (
-      segment.role === currentRole &&
-      start <= currentEnd + SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS
-    ) {
-      currentEnd = Math.max(currentEnd, end);
-    } else {
-      longest = Math.max(longest, Math.max(0, currentEnd - currentStart));
-      currentRole = segment.role;
-      currentStart = start;
-      currentEnd = end;
-    }
-  }
-  return Math.max(longest, Math.max(0, currentEnd - currentStart));
+function countSegmentWords(segments: MetricSegment[]) {
+  return segments.reduce((total, segment) => total + countWords(segment.original_text), 0);
 }
 
-export function metricRows(segments: MetricSegment[]) {
-  const ordered = [...segments].sort(
-    (left, right) => left.start_milliseconds - right.start_milliseconds,
+export function mergeConversationalTurns(segments: MetricSegment[]): MergedTurn[] {
+  const turns: MergedTurn[] = [];
+  for (const segment of positiveDurationSegments(segments)) {
+    const group = participantGroup(segment.role);
+    const previous = turns.at(-1);
+    if (
+      previous &&
+      previous.group === group &&
+      group !== null &&
+      segment.start_milliseconds <=
+        previous.endMilliseconds + SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS
+    ) {
+      previous.endMilliseconds = Math.max(previous.endMilliseconds, segment.end_milliseconds);
+      continue;
+    }
+    turns.push({
+      endMilliseconds: segment.end_milliseconds,
+      group,
+      startMilliseconds: segment.start_milliseconds,
+    });
+  }
+  return turns;
+}
+
+export function longestUninterruptedSpeech(segments: MetricSegment[]) {
+  return mergeConversationalTurns(segments).reduce(
+    (longest, turn) => Math.max(longest, turn.endMilliseconds - turn.startMilliseconds),
+    0,
   );
-  const duration =
-    Math.max(...ordered.map((segment) => segment.end_milliseconds)) -
-    Math.min(...ordered.map((segment) => segment.start_milliseconds));
-  const byRole = (role: MetricSegment["role"]) =>
-    ordered.filter((segment) => segment.role === role);
-  const speechDuration = (items: MetricSegment[]) =>
-    items.reduce(
-      (total, item) => total + Math.max(0, item.end_milliseconds - item.start_milliseconds),
+}
+
+function participantMetrics(segments: MetricSegment[], group: Exclude<ParticipantGroup, null>) {
+  const participantSegments = positiveDurationSegments(segments).filter(
+    (segment) => participantGroup(segment.role) === group,
+  );
+  const duration = speechDuration(participantSegments);
+  const wordCount = countSegmentWords(participantSegments);
+  const turns = mergeConversationalTurns(segments).filter((turn) => turn.group === group);
+  return {
+    duration,
+    longestMonologue: turns.reduce(
+      (longest, turn) => Math.max(longest, turn.endMilliseconds - turn.startMilliseconds),
       0,
-    );
-  const representative = byRole("representative");
-  const customer = [...byRole("customer"), ...byRole("additional_customer")];
-  const representativeDuration = speechDuration(representative);
-  const customerDuration = speechDuration(customer);
-  const mappedSpeechDuration = speechDuration(ordered);
-  const wordsPerMinute = (items: MetricSegment[]) => {
-    const milliseconds = speechDuration(items);
-    return milliseconds === 0
-      ? 0
-      : (wordCount(items.map((item) => item.original_text).join(" ")) * 60_000) / milliseconds;
+    ),
+    turnCount: turns.length,
+    wordCount,
+    wordsPerMinute: duration === 0 ? null : (wordCount * 60_000) / duration,
   };
-  return [
-    { metric_key: "interaction_duration", numeric_value: duration, unit: "milliseconds" },
+}
+
+export function metricRows(segments: MetricSegment[]): MetricRow[] {
+  const valid = orderedValidSegments(segments);
+  const interactionDuration =
+    valid.length === 0
+      ? 0
+      : Math.max(...valid.map((segment) => segment.end_milliseconds)) -
+        Math.min(...valid.map((segment) => segment.start_milliseconds));
+  const representative = participantMetrics(valid, "representative");
+  const customer = participantMetrics(valid, "customer");
+  const bilateralDuration = representative.duration + customer.duration;
+  const rows: MetricRow[] = [
     {
-      metric_key: "representative_talk_duration",
-      numeric_value: representativeDuration,
+      metric_key: "interaction_duration",
+      numeric_value: interactionDuration,
       unit: "milliseconds",
     },
-    { metric_key: "customer_talk_duration", numeric_value: customerDuration, unit: "milliseconds" },
     {
-      metric_key: "representative_talk_share",
-      numeric_value: mappedSpeechDuration === 0 ? 0 : representativeDuration / mappedSpeechDuration,
-      unit: "ratio",
+      metric_key: "representative_talk_duration",
+      numeric_value: representative.duration,
+      unit: "milliseconds",
     },
     {
-      metric_key: "customer_talk_share",
-      numeric_value: mappedSpeechDuration === 0 ? 0 : customerDuration / mappedSpeechDuration,
-      unit: "ratio",
+      metric_key: "customer_talk_duration",
+      numeric_value: customer.duration,
+      unit: "milliseconds",
     },
-    { metric_key: "turn_count", numeric_value: ordered.length, unit: "turns" },
+    {
+      metric_key: "representative_word_count",
+      numeric_value: representative.wordCount,
+      unit: "words",
+    },
+    { metric_key: "customer_word_count", numeric_value: customer.wordCount, unit: "words" },
     {
       metric_key: "representative_turn_count",
-      numeric_value: representative.length,
+      numeric_value: representative.turnCount,
       unit: "turns",
     },
-    { metric_key: "customer_turn_count", numeric_value: customer.length, unit: "turns" },
+    { metric_key: "customer_turn_count", numeric_value: customer.turnCount, unit: "turns" },
     {
-      metric_key: "representative_words_per_minute",
-      numeric_value: wordsPerMinute(representative),
-      unit: "words_per_minute",
+      metric_key: "representative_longest_monologue",
+      numeric_value: representative.longestMonologue,
+      unit: "milliseconds",
     },
     {
-      metric_key: "customer_words_per_minute",
-      numeric_value: wordsPerMinute(customer),
-      unit: "words_per_minute",
+      metric_key: "customer_longest_monologue",
+      numeric_value: customer.longestMonologue,
+      unit: "milliseconds",
+    },
+    {
+      metric_key: "turn_count",
+      numeric_value: representative.turnCount + customer.turnCount,
+      unit: "turns",
     },
     {
       metric_key: "longest_uninterrupted_speech",
-      numeric_value: longestUninterruptedSpeech(ordered),
+      numeric_value: Math.max(representative.longestMonologue, customer.longestMonologue),
       unit: "milliseconds",
     },
   ];
+  if (bilateralDuration > 0) {
+    rows.push(
+      {
+        metric_key: "representative_talk_share",
+        numeric_value: representative.duration / bilateralDuration,
+        unit: "ratio",
+      },
+      {
+        metric_key: "customer_talk_share",
+        numeric_value: customer.duration / bilateralDuration,
+        unit: "ratio",
+      },
+    );
+  }
+  if (representative.wordsPerMinute !== null) {
+    rows.push({
+      metric_key: "representative_words_per_minute",
+      numeric_value: representative.wordsPerMinute,
+      unit: "words_per_minute",
+    });
+  }
+  if (customer.wordsPerMinute !== null) {
+    rows.push({
+      metric_key: "customer_words_per_minute",
+      numeric_value: customer.wordsPerMinute,
+      unit: "words_per_minute",
+    });
+  }
+  return rows;
 }

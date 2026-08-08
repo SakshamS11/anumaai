@@ -29,6 +29,7 @@ export type ConversationDetail = ConversationListItem & {
   activeTranscriptionRunId: string | null;
   activeSpeakerMappingVersionId: string | null;
   activeAnalysisRunId: string | null;
+  metrics: Array<{ key: string; value: number; unit: string }>;
   observations: Array<{
     id: string;
     type: string;
@@ -278,6 +279,23 @@ export async function getConversationDetail(
   const consent = consentResult.data ?? [];
   const observations = observationsResult.data ?? [];
   const latestReviewRun = reviewRunsResult.data?.[0] ?? null;
+  const { data: analysisMetricLineage, error: analysisMetricLineageError } =
+    conversation.active_analysis_run_id
+      ? await supabase
+          .from("analysis_runs")
+          .select("metric_run_id")
+          .eq("id", conversation.active_analysis_run_id)
+          .maybeSingle()
+      : { data: null, error: null };
+  if (analysisMetricLineageError) throw new Error("Could not load interaction metric lineage.");
+  const { data: metricValues, error: metricValuesError } = analysisMetricLineage?.metric_run_id
+    ? await supabase
+        .from("metric_values")
+        .select("metric_key,numeric_value,unit")
+        .eq("metric_run_id", analysisMetricLineage.metric_run_id)
+        .order("created_at")
+    : { data: [], error: null };
+  if (metricValuesError) throw new Error("Could not load interaction metrics.");
   const [reviewChecksResult, reviewScoresResult] = latestReviewRun
     ? await Promise.all([
         supabase
@@ -378,6 +396,11 @@ export async function getConversationDetail(
     activeTranscriptionRunId: conversation.active_transcription_run_id,
     activeSpeakerMappingVersionId: conversation.active_speaker_mapping_version_id,
     activeAnalysisRunId: conversation.active_analysis_run_id,
+    metrics: (metricValues ?? []).map((metric) => ({
+      key: metric.metric_key,
+      value: metric.numeric_value,
+      unit: metric.unit,
+    })),
     observations: observations.map((observation) => ({
       id: observation.id,
       type: observation.observation_type,

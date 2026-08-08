@@ -856,6 +856,10 @@ a {
   .interaction-status {
     grid-column: auto;
   }
+
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .administration-checks {
@@ -872,6 +876,7 @@ a {
   margin-top: 1.5rem;
 }
 
+.interaction-metrics,
 .interaction-notes,
 .interaction-review,
 .scorecard-review,
@@ -886,6 +891,44 @@ a {
   gap: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0;
+}
+
+.metric-duration {
+  color: var(--carbon);
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.metric-grid div {
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 1rem 0.9rem 0;
+}
+
+.metric-grid dt {
+  color: var(--graphite);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-grid dd {
+  color: var(--carbon);
+  margin: 0.25rem 0 0;
+}
+
+.metric-note {
+  color: var(--graphite);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0.9rem 0 0;
+  max-width: 72ch;
 }
 
 .notes-list div {
