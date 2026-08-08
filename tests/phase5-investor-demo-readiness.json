@@ -100,7 +100,7 @@
     { "feature": "Metric-threshold checks", "status": "deferred", "implementation": "future", "evidence": "explicit Phase 5 scope decision", "decision": "defer", "limitation": "Would require a new metric-lineage check-result contract." },
     { "feature": "Notes and coaching", "status": "working", "implementation": "real", "evidence": "hosted review projection", "decision": "keep", "limitation": "Deterministic strengths/opportunities are intentionally concise." },
     { "feature": "Manual re-evaluation and review history", "status": "working", "implementation": "real", "evidence": "hosted Review Runs A and B", "decision": "keep", "limitation": "Equivalent re-evaluations can differ where a semantic batch is required." },
-    { "feature": "Cross-interaction intelligence, outcomes and surveys", "status": "deferred", "implementation": "future", "evidence": "Phase 6 boundary", "decision": "hide", "limitation": "Not a Phase 5 capability." }
+    { "feature": "Cross-interaction intelligence, outcomes and surveys", "status": "deferred", "implementation": "future", "evidence": "Phase 6 boundary and explicitly honest empty states", "decision": "defer", "limitation": "Not a Phase 5 capability; no aggregates, outcomes, or survey claims are shown." }
   ],
   "phase6Readiness": {
     "atomicData": ["metric_values", "structured_observations", "check_evaluations", "scorecard_evaluations"],
