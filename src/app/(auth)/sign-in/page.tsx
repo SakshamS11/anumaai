@@ -28,6 +28,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       ) : null}
       <AuthForm mode="sign-in" />
       <p className="auth-switch">
+        <Link href="/forgot-password">Forgot password?</Link>
+      </p>
+      <p className="auth-switch">
         New to ANUMA? <Link href="/sign-up">Create an account</Link>.
       </p>
     </div>
