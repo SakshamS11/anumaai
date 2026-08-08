@@ -21,28 +21,33 @@ export function AuthForm({ mode }: AuthFormProps) {
     setMessage(null);
     setPending(true);
 
-    const supabase = createClient();
-    const result =
-      mode === "sign-in"
-        ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
-    setPending(false);
-
-    if (result.error) {
-      setMessage(
+    try {
+      const supabase = createClient();
+      const result =
         mode === "sign-in"
-          ? "We could not sign you in. Check your details and try again."
-          : "We could not create your account. Please try again.",
-      );
-      return;
-    }
-    if (mode === "sign-up" && !result.data.session) {
-      setMessage("Check your email to confirm your account.");
-      return;
-    }
+          ? await supabase.auth.signInWithPassword({ email, password })
+          : await supabase.auth.signUp({ email, password });
 
-    router.replace(mode === "sign-up" ? "/setup" : "/conversations");
-    router.refresh();
+      if (result.error) {
+        setMessage(
+          mode === "sign-in"
+            ? "We could not sign you in. Check your details and try again."
+            : "We could not create your account. Please try again.",
+        );
+        return;
+      }
+      if (mode === "sign-up" && !result.data.session) {
+        setMessage("Check your email to confirm your account.");
+        return;
+      }
+
+      router.replace(mode === "sign-up" ? "/setup" : "/conversations");
+      router.refresh();
+    } catch {
+      setMessage("Authentication is temporarily unavailable. Please try again shortly.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
