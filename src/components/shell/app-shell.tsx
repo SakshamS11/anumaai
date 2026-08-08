@@ -5,16 +5,31 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { applicationRoutes } from "@/modules/application/routes";
-import { developmentContext } from "@/modules/identity/future-boundaries";
+import { roleLabel, type MembershipRole } from "@/modules/identity/roles";
 
-type AppShellProps = {
-  children: ReactNode;
-  signOut: () => Promise<void>;
+type ShellContext = {
+  assignmentCount: number;
+  currentOrganization: { id: string; name: string; role: MembershipRole };
+  organizations: Array<{ id: string; name: string; role: MembershipRole }>;
   userEmail: string | null;
 };
 
-export function AppShell({ children, signOut, userEmail }: AppShellProps) {
+type AppShellProps = {
+  children: ReactNode;
+  context: ShellContext;
+  signOut: () => Promise<void>;
+  switchOrganization: (formData: FormData) => Promise<void>;
+};
+
+export function AppShell({ children, context, signOut, switchOrganization }: AppShellProps) {
   const pathname = usePathname();
+  const { currentOrganization } = context;
+  const assignmentSummary =
+    context.assignmentCount > 0
+      ? `${context.assignmentCount} active scope assignment${context.assignmentCount === 1 ? "" : "s"}`
+      : currentOrganization.role === "admin"
+        ? "Organization-wide administration"
+        : "No active location/team assignment";
 
   return (
     <div className="app-frame">
@@ -29,7 +44,6 @@ export function AppShell({ children, signOut, userEmail }: AppShellProps) {
         <nav aria-label="Primary navigation" className="primary-navigation">
           {applicationRoutes.map((route) => {
             const active = pathname === route.href;
-
             return (
               <Link
                 aria-current={active ? "page" : undefined}
@@ -44,20 +58,43 @@ export function AppShell({ children, signOut, userEmail }: AppShellProps) {
         </nav>
         <div className="sidebar-footer">
           <span className="context-dot" aria-hidden="true" />
-          <span>{developmentContext.label}</span>
+          <span>{currentOrganization.name}</span>
         </div>
       </aside>
 
       <main className="main-content">
         <header className="topbar">
           <div>
-            <p className="context-label">{developmentContext.label}</p>
-            <p className="context-copy">{developmentContext.description}</p>
+            <p className="context-label">{currentOrganization.name}</p>
+            <p className="context-copy">
+              {roleLabel(currentOrganization.role)} {"\u00b7"} {assignmentSummary}
+            </p>
           </div>
           <details className="user-menu">
-            <summary aria-label="Open user menu">{userEmail ?? "Authenticated user"}</summary>
+            <summary aria-label="Open user menu">
+              {context.userEmail ?? "Authenticated user"}
+            </summary>
             <div className="user-menu-panel">
-              <p>{userEmail ?? "Authenticated user"}</p>
+              <p>{context.userEmail ?? "Authenticated user"}</p>
+              {context.organizations.length > 1 ? (
+                <form action={switchOrganization} className="organization-switcher">
+                  <label htmlFor="organization_id">Organization</label>
+                  <select
+                    defaultValue={currentOrganization.id}
+                    id="organization_id"
+                    name="organization_id"
+                  >
+                    {context.organizations.map((organization) => (
+                      <option key={organization.id} value={organization.id}>
+                        {organization.name} {"\u00b7"} {roleLabel(organization.role)}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="button button-secondary" type="submit">
+                    Switch
+                  </button>
+                </form>
+              ) : null}
               <form action={signOut}>
                 <button className="button button-quiet" type="submit">
                   Sign out
@@ -69,7 +106,6 @@ export function AppShell({ children, signOut, userEmail }: AppShellProps) {
         <nav aria-label="Primary navigation on small screens" className="mobile-navigation">
           {applicationRoutes.map((route) => {
             const active = pathname === route.href;
-
             return (
               <Link
                 aria-current={active ? "page" : undefined}

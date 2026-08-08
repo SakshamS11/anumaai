@@ -12,7 +12,7 @@ test("the unauthenticated entry point leads to sign-in", async ({ page }) => {
   await page.goto("/");
 
   await expect(page).toHaveURL(/\/sign-in$/);
-  await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in to ANUMA" })).toBeVisible();
 });
 
 test("sign-in and sign-up expose real credential forms", async ({ page }) => {

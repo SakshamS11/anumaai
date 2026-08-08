@@ -1,0 +1,352 @@
+import { readFileSync } from "node:fs";
+import postgres from "postgres";
+
+function readDatabaseUrl() {
+  const line = readFileSync(".env.local", "utf8")
+    .split(/\r?\n/)
+    .find((candidate) => candidate.startsWith("SUPABASE_DB_URL="));
+
+  if (!line) throw new Error("SUPABASE_DB_URL is missing from .env.local.");
+
+  return line.slice(line.indexOf("=") + 1).trim().replace(/^['\"]|['\"]$/g, "");
+}
+
+const ids = {
+  orgA: "10000000-0000-4000-8000-000000000001",
+  orgB: "10000000-0000-4000-8000-000000000002",
+  adminAUser: "20000000-0000-4000-8000-000000000001",
+  repAUser: "20000000-0000-4000-8000-000000000002",
+  otherRepAUser: "20000000-0000-4000-8000-000000000003",
+  managerAUser: "20000000-0000-4000-8000-000000000004",
+  adminBUser: "20000000-0000-4000-8000-000000000005",
+  repBUser: "20000000-0000-4000-8000-000000000006",
+  bootstrapUser: "20000000-0000-4000-8000-000000000007",
+  adminAMembership: "30000000-0000-4000-8000-000000000001",
+  repAMembership: "30000000-0000-4000-8000-000000000002",
+  otherRepAMembership: "30000000-0000-4000-8000-000000000003",
+  managerAMembership: "30000000-0000-4000-8000-000000000004",
+  adminBMembership: "30000000-0000-4000-8000-000000000005",
+  repBMembership: "30000000-0000-4000-8000-000000000006",
+  locationA1: "40000000-0000-4000-8000-000000000001",
+  locationA2: "40000000-0000-4000-8000-000000000002",
+  locationB: "40000000-0000-4000-8000-000000000003",
+  teamA1: "50000000-0000-4000-8000-000000000001",
+  teamA2: "50000000-0000-4000-8000-000000000002",
+  teamB: "50000000-0000-4000-8000-000000000003",
+  conversationA: "60000000-0000-4000-8000-000000000001",
+  otherConversationA: "60000000-0000-4000-8000-000000000002",
+  conversationB: "60000000-0000-4000-8000-000000000003",
+  recordingA: "70000000-0000-4000-8000-000000000001",
+  recordingB: "70000000-0000-4000-8000-000000000002",
+  transcriptionA: "80000000-0000-4000-8000-000000000001",
+  transcriptionB: "80000000-0000-4000-8000-000000000002",
+  segmentA: "90000000-0000-4000-8000-000000000001",
+  segmentB: "90000000-0000-4000-8000-000000000002",
+};
+
+const sql = postgres(readDatabaseUrl(), {
+  max: 1,
+  prepare: false,
+  ssl: "require",
+  onnotice: () => {},
+});
+const rollbackSignal = new Error("ROLLBACK_SECURITY_TEST_FIXTURES");
+const passed = [];
+
+function pass(name) {
+  passed.push(name);
+  console.log(`PASS ${name}`);
+}
+
+function assertEqual(actual, expected, name) {
+  if (actual !== expected) throw new Error(`${name}: expected ${expected}, received ${actual}`);
+  pass(name);
+}
+
+async function assumeRole(tx, role, userId = null) {
+  await tx.unsafe("reset role");
+  await tx`select set_config('request.jwt.claim.sub', ${userId ?? ""}, true)`;
+  await tx.unsafe(`set local role ${role}`);
+}
+
+async function count(tx, query) {
+  const rows = await query;
+  return Number(rows[0].count);
+}
+
+async function expectDenied(tx, name, action) {
+  const savepoint = `denied_${passed.length}`;
+  await tx.unsafe(`savepoint ${savepoint}`);
+  let denied = false;
+
+  try {
+    await action();
+  } catch {
+    denied = true;
+  }
+
+  await tx.unsafe(`rollback to savepoint ${savepoint}`);
+  await tx.unsafe(`release savepoint ${savepoint}`);
+
+  if (!denied) throw new Error(`${name}: operation unexpectedly succeeded`);
+  pass(name);
+}
+
+try {
+  await sql.begin(async (tx) => {
+    const tenantTables = [
+      "organizations",
+      "organization_memberships",
+      "locations",
+      "teams",
+      "member_assignments",
+      "conversations",
+      "conversation_participants",
+      "consent_records",
+      "recordings",
+      "transcription_runs",
+      "transcript_segments",
+      "speaker_mapping_versions",
+      "speaker_mapping_entries",
+      "analysis_runs",
+      "evidence_groups",
+      "evidence_references",
+      "outcome_events",
+      "conversation_quality_assessments",
+    ];
+
+    const rlsRows = await tx`
+      select relname, relrowsecurity
+      from pg_class
+      join pg_namespace on pg_namespace.oid = pg_class.relnamespace
+      where pg_namespace.nspname = 'public' and relname = any(${tenantTables})
+    `;
+    assertEqual(rlsRows.length, tenantTables.length, "all tenant tables exist");
+    assertEqual(rlsRows.every((row) => row.relrowsecurity), true, "RLS enabled on every tenant table");
+
+    const bucketRows = await tx`
+      select public from storage.buckets where id = 'conversation-audio'
+    `;
+    assertEqual(bucketRows.length, 1, "conversation audio bucket exists");
+    assertEqual(bucketRows[0].public, false, "conversation audio bucket is private");
+
+    const userIds = [
+      ids.adminAUser,
+      ids.repAUser,
+      ids.otherRepAUser,
+      ids.managerAUser,
+      ids.adminBUser,
+      ids.repBUser,
+      ids.bootstrapUser,
+    ];
+    for (const [index, userId] of userIds.entries()) {
+      await tx`
+        insert into auth.users (
+          id, instance_id, aud, role, email, encrypted_password,
+          email_confirmed_at, created_at, updated_at
+        ) values (
+          ${userId}, '00000000-0000-0000-0000-000000000000', 'authenticated',
+          'authenticated', ${`phase2-${index}@anuma.invalid`}, '', now(), now(), now()
+        )
+      `;
+    }
+
+    await tx`
+      insert into public.organizations (id, name, slug) values
+        (${ids.orgA}, 'Security Test Organization A', 'security-test-a'),
+        (${ids.orgB}, 'Security Test Organization B', 'security-test-b')
+    `;
+    await tx`
+      insert into public.organization_memberships (id, organization_id, user_id, role) values
+        (${ids.adminAMembership}, ${ids.orgA}, ${ids.adminAUser}, 'admin'),
+        (${ids.repAMembership}, ${ids.orgA}, ${ids.repAUser}, 'representative'),
+        (${ids.otherRepAMembership}, ${ids.orgA}, ${ids.otherRepAUser}, 'representative'),
+        (${ids.managerAMembership}, ${ids.orgA}, ${ids.managerAUser}, 'manager'),
+        (${ids.adminBMembership}, ${ids.orgB}, ${ids.adminBUser}, 'admin'),
+        (${ids.repBMembership}, ${ids.orgB}, ${ids.repBUser}, 'representative')
+    `;
+    await tx`
+      insert into public.locations (id, organization_id, name, location_type) values
+        (${ids.locationA1}, ${ids.orgA}, 'A Showroom', 'showroom'),
+        (${ids.locationA2}, ${ids.orgA}, 'A Store', 'store'),
+        (${ids.locationB}, ${ids.orgB}, 'B Store', 'store')
+    `;
+    await tx`
+      insert into public.teams (id, organization_id, name) values
+        (${ids.teamA1}, ${ids.orgA}, 'A Showroom Team'),
+        (${ids.teamA2}, ${ids.orgA}, 'A Store Team'),
+        (${ids.teamB}, ${ids.orgB}, 'B Team')
+    `;
+    await tx`
+      insert into public.member_assignments (
+        organization_id, membership_id, location_id, team_id, effective_from
+      ) values
+        (${ids.orgA}, ${ids.repAMembership}, ${ids.locationA1}, ${ids.teamA1}, now() - interval '1 day'),
+        (${ids.orgA}, ${ids.otherRepAMembership}, ${ids.locationA2}, ${ids.teamA2}, now() - interval '1 day'),
+        (${ids.orgA}, ${ids.managerAMembership}, ${ids.locationA1}, ${ids.teamA1}, now() - interval '1 day'),
+        (${ids.orgB}, ${ids.repBMembership}, ${ids.locationB}, ${ids.teamB}, now() - interval '1 day')
+    `;
+    await tx`
+      insert into public.conversations (
+        id, organization_id, created_by_membership_id, representative_membership_id,
+        location_id, team_id, vertical, started_at, lifecycle_status
+      ) values
+        (${ids.conversationA}, ${ids.orgA}, ${ids.repAMembership}, ${ids.repAMembership}, ${ids.locationA1}, ${ids.teamA1}, 'automotive', now(), 'draft'),
+        (${ids.otherConversationA}, ${ids.orgA}, ${ids.otherRepAMembership}, ${ids.otherRepAMembership}, ${ids.locationA2}, ${ids.teamA2}, 'electronics', now(), 'draft'),
+        (${ids.conversationB}, ${ids.orgB}, ${ids.repBMembership}, ${ids.repBMembership}, ${ids.locationB}, ${ids.teamB}, 'electronics', now(), 'draft')
+    `;
+    await tx`
+      insert into public.recordings (
+        id, organization_id, conversation_id, storage_object_path, mime_type,
+        file_size_bytes, status, created_by_membership_id
+      ) values
+        (${ids.recordingA}, ${ids.orgA}, ${ids.conversationA}, ${`${ids.orgA}/${ids.conversationA}/${ids.recordingA}/audio.webm`}, 'audio/webm', 128, 'uploaded', ${ids.repAMembership}),
+        (${ids.recordingB}, ${ids.orgB}, ${ids.conversationB}, ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`}, 'audio/webm', 128, 'uploaded', ${ids.repBMembership})
+    `;
+    await tx`
+      insert into public.transcription_runs (
+        id, organization_id, conversation_id, recording_id, provider, model, status
+      ) values
+        (${ids.transcriptionA}, ${ids.orgA}, ${ids.conversationA}, ${ids.recordingA}, 'fixture', 'fixture-v1', 'completed'),
+        (${ids.transcriptionB}, ${ids.orgB}, ${ids.conversationB}, ${ids.recordingB}, 'fixture', 'fixture-v1', 'completed')
+    `;
+    await tx`
+      insert into public.transcript_segments (
+        id, organization_id, conversation_id, transcription_run_id,
+        sequence_number, provider_speaker_identifier, start_milliseconds,
+        end_milliseconds, original_text
+      ) values
+        (${ids.segmentA}, ${ids.orgA}, ${ids.conversationA}, ${ids.transcriptionA}, 0, 'speaker_0', 0, 1000, 'Fixture A'),
+        (${ids.segmentB}, ${ids.orgB}, ${ids.conversationB}, ${ids.transcriptionB}, 0, 'speaker_0', 0, 1000, 'Fixture B')
+    `;
+    await tx`
+      insert into public.outcome_events (
+        organization_id, conversation_id, event_type, occurred_at,
+        source, created_by_membership_id
+      ) values
+        (${ids.orgA}, ${ids.conversationA}, 'test_drive', now(), 'manual', ${ids.repAMembership}),
+        (${ids.orgB}, ${ids.conversationB}, 'purchased', now(), 'manual', ${ids.repBMembership})
+    `;
+    await tx`
+      insert into storage.objects (bucket_id, name) values
+        ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.recordingA}/audio.webm`}),
+        ('conversation-audio', ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`})
+    `;
+
+    await assumeRole(tx, "authenticated", ids.bootstrapUser);
+    const [bootstrapResult] = await tx`
+      select * from public.bootstrap_organization(
+        'Atomic Bootstrap Organization', 'IN', 'INR', 'Asia/Kolkata'
+      )
+    `;
+    assertEqual(Boolean(bootstrapResult.organization_id), true, "first organization bootstrap succeeds");
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.organization_memberships where organization_id = ${bootstrapResult.organization_id} and role = 'admin'`,
+      ),
+      1,
+      "bootstrap creator becomes administrator",
+    );
+    await expectDenied(tx, "bootstrap cannot grant a second arbitrary administrator tenant", () =>
+      tx`select * from public.bootstrap_organization('Second Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
+    );
+
+    await assumeRole(tx, "anon");
+    await expectDenied(tx, "anonymous cannot read organizations", () =>
+      tx`select count(*) from public.organizations`,
+    );
+    await expectDenied(tx, "anonymous cannot read conversations", () =>
+      tx`select count(*) from public.conversations`,
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from storage.objects where bucket_id = 'conversation-audio'`,
+      ),
+      0,
+      "anonymous cannot read private audio objects",
+    );
+
+    await assumeRole(tx, "authenticated", ids.repAUser);
+    assertEqual(await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgA}`), 1, "representative reads own organization");
+    assertEqual(await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgB}`), 0, "representative cannot read another organization");
+    assertEqual(await count(tx, tx`select count(*) from public.locations where organization_id = ${ids.orgB}`), 0, "representative cannot read another tenant locations");
+    assertEqual(await count(tx, tx`select count(*) from public.teams where organization_id = ${ids.orgB}`), 0, "representative cannot read another tenant teams");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationA}`), 1, "representative reads own conversation");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`), 0, "representative cannot read peer conversation");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationB}`), 0, "representative cannot read cross-tenant conversation");
+    assertEqual(await count(tx, tx`select count(*) from public.recordings where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant recording metadata");
+    assertEqual(await count(tx, tx`select count(*) from public.transcription_runs where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcription run");
+    assertEqual(await count(tx, tx`select count(*) from public.transcript_segments where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcript segment");
+    assertEqual(await count(tx, tx`select count(*) from public.outcome_events where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant outcome");
+    assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgA}/%`}`), 1, "representative reads own authorized audio path");
+    assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgB}/%`}`), 0, "representative cannot read cross-tenant audio path");
+
+    const [{ conversation_id: repConversationId }] = await tx`
+      select public.create_conversation_with_consent(
+        ${ids.orgA}, 'automotive', now(), ${ids.locationA1}, ${ids.teamA1},
+        'Atomic security test conversation', 'granted', 'verbal'
+      ) as conversation_id
+    `;
+    pass("representative atomically creates own assigned-scope conversation");
+    assertEqual(
+      await count(tx, tx`select count(*) from public.consent_records where conversation_id = ${repConversationId} and status = 'granted'`),
+      1,
+      "conversation creation records consent provenance",
+    );
+    await expectDenied(tx, "representative cannot create conversation for another representative", () => tx`
+      insert into public.conversations (
+        organization_id, created_by_membership_id, representative_membership_id,
+        location_id, team_id, vertical, started_at
+      ) values (
+        ${ids.orgA}, ${ids.repAMembership}, ${ids.otherRepAMembership},
+        ${ids.locationA2}, ${ids.teamA2}, 'electronics', now()
+      )
+    `);
+    await expectDenied(tx, "representative cannot create cross-tenant outcome", () => tx`
+      insert into public.outcome_events (
+        organization_id, conversation_id, event_type, occurred_at, source, created_by_membership_id
+      ) values (${ids.orgB}, ${ids.conversationB}, 'lost', now(), 'manual', ${ids.repBMembership})
+    `);
+    await tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/70000000-0000-4000-8000-000000000010/new.webm`})
+    `;
+    pass("representative can insert authorized private audio path");
+    await expectDenied(tx, "representative cannot insert cross-tenant private audio path", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgB}/${ids.conversationB}/70000000-0000-4000-8000-000000000011/attack.webm`})
+    `);
+
+    await assumeRole(tx, "authenticated", ids.managerAUser);
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationA}`), 1, "manager reads assigned location/team conversation");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`), 0, "manager cannot read unassigned location/team conversation");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationB}`), 0, "manager cannot read cross-tenant conversation");
+
+    await assumeRole(tx, "authenticated", ids.adminAUser);
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 3, "admin reads permitted organization conversations");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgB}`), 0, "admin cannot read cross-tenant conversations");
+    await tx`
+      insert into public.locations (organization_id, name, location_type)
+      values (${ids.orgA}, 'Admin-created location', 'other')
+    `;
+    pass("admin manages own organization configuration");
+    await expectDenied(tx, "admin cannot manage another organization configuration", () => tx`
+      insert into public.locations (organization_id, name, location_type)
+      values (${ids.orgB}, 'Cross-tenant attack', 'other')
+    `);
+
+    await assumeRole(tx, "authenticated", ids.adminBUser);
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 0, "organization B admin cannot read organization A conversations");
+    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgB}`), 1, "organization B admin reads own conversation");
+
+    throw rollbackSignal;
+  });
+} catch (error) {
+  if (error !== rollbackSignal && error?.message !== rollbackSignal.message) throw error;
+} finally {
+  await sql.end();
+}
+
+console.log(`Security integration complete: ${passed.length} scenarios passed; fixtures rolled back.`);

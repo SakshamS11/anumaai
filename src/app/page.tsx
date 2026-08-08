@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { getAuthenticatedUser } from "@/lib/auth/session";
+import { getApplicationContext } from "@/modules/identity/application-context";
 
 export default async function Home() {
-  const user = await getAuthenticatedUser();
-  redirect(user ? "/conversations" : "/sign-in");
+  const context = await getApplicationContext();
+  if (!context) redirect("/sign-in");
+  redirect(context.current ? "/conversations" : "/setup");
 }

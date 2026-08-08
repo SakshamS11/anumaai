@@ -2,18 +2,31 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { signOut } from "@/app/(auth)/actions";
+import { switchOrganization } from "@/app/(app)/actions";
 import { AppShell } from "@/components/shell/app-shell";
-import { getAuthenticatedUser } from "@/lib/auth/session";
+import { getApplicationContext } from "@/modules/identity/application-context";
 
 export default async function ApplicationLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const user = await getAuthenticatedUser();
+  const context = await getApplicationContext();
 
-  if (!user) {
+  if (!context) {
     redirect("/sign-in");
   }
 
+  if (!context.current) redirect("/setup");
+  const shellContext = {
+    userEmail: context.user.email,
+    assignmentCount: context.current.assignments.length,
+    currentOrganization: {
+      id: context.current.organization.id,
+      name: context.current.organization.name,
+      role: context.current.membership.role,
+    },
+    organizations: context.organizations,
+  };
+
   return (
-    <AppShell signOut={signOut} userEmail={user.email}>
+    <AppShell context={shellContext} signOut={signOut} switchOrganization={switchOrganization}>
       {children}
     </AppShell>
   );

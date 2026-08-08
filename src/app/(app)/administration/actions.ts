@@ -1,0 +1,60 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { createClient } from "@/lib/supabase/server";
+import { getApplicationContext } from "@/modules/identity/application-context";
+import { locationSchema, teamSchema } from "@/modules/organizations/validation";
+
+export async function createLocation(formData: FormData) {
+  const context = await getApplicationContext();
+  if (!context) redirect("/sign-in");
+  if (!context.current) redirect("/setup");
+  if (context.current.membership.role !== "admin") {
+    redirect("/administration?error=Administrator+access+is+required.");
+  }
+
+  const input = locationSchema.safeParse({
+    name: formData.get("name"),
+    businessCode: formData.get("business_code") || undefined,
+    locationType: formData.get("location_type"),
+    timezone: formData.get("timezone") || undefined,
+  });
+  if (!input.success) redirect("/administration?error=Check+the+location+details.");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("locations").insert({
+    organization_id: context.current.organization.id,
+    name: input.data.name,
+    business_code: input.data.businessCode || null,
+    location_type: input.data.locationType,
+    timezone: input.data.timezone || null,
+  });
+  if (error) redirect("/administration?error=The+location+could+not+be+created.");
+
+  revalidatePath("/", "layout");
+  redirect("/administration?created=location");
+}
+
+export async function createTeam(formData: FormData) {
+  const context = await getApplicationContext();
+  if (!context) redirect("/sign-in");
+  if (!context.current) redirect("/setup");
+  if (context.current.membership.role !== "admin") {
+    redirect("/administration?error=Administrator+access+is+required.");
+  }
+
+  const input = teamSchema.safeParse({ name: formData.get("name") });
+  if (!input.success) redirect("/administration?error=Check+the+team+name.");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("teams").insert({
+    organization_id: context.current.organization.id,
+    name: input.data.name,
+  });
+  if (error) redirect("/administration?error=The+team+could+not+be+created.");
+
+  revalidatePath("/", "layout");
+  redirect("/administration?created=team");
+}
