@@ -19,9 +19,15 @@ test("sign-in and sign-up expose real credential forms", async ({ page }) => {
   await page.goto("/sign-in");
 
   await expect(page.getByText("Illustrative interaction")).toBeVisible();
-  const needFinding = page.getByRole("button", { name: /Need Gaming Source turn/ });
+  const needFinding = page.getByRole("button", { name: /Need Gaming \+ College Source turn/ });
   await needFinding.focus();
   await expect(needFinding).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Gaming aur college ke liye laptop chahiye.")).toHaveClass(
+    /turn-source-active/,
+  );
+  const questionFinding = page.getByRole("button", { name: "Question EMI Source turn" });
+  await questionFinding.click();
+  await expect(page.getByText("EMI kitni padegi?")).toHaveClass(/turn-source-active/);
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
   await expect(page.getByRole("link", { name: "Create an account" })).toBeVisible();

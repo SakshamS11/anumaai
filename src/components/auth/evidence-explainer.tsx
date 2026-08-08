@@ -4,17 +4,30 @@ import { useState } from "react";
 
 import { EvidenceMarker } from "@/components/evidence/evidence-marker";
 
-type Finding = "need" | "budget" | "product" | "graphics" | "competitor" | "price" | "payment";
+type Finding =
+  | "need"
+  | "budget"
+  | "product"
+  | "spec"
+  | "competitor"
+  | "competitorPrice"
+  | "storeQuote"
+  | "question";
 
 const findings: Record<Finding, { label: string; value: string; source: string }> = {
-  need: { label: "Need", value: "Gaming", source: "customer-need" },
+  need: { label: "Need", value: "Gaming + College", source: "customer-need" },
   budget: { label: "Budget", value: "₹80,000", source: "customer-budget" },
   product: { label: "Product", value: "Lenovo LOQ", source: "representative-product" },
-  graphics: { label: "Graphics", value: "RTX 4060", source: "representative-product" },
-  competitor: { label: "Compared with", value: "Amazon", source: "customer-competitor" },
-  price: { label: "Quoted price", value: "₹78,000", source: "customer-competitor" },
-  payment: { label: "Payment question", value: "EMI", source: "customer-emi" },
+  spec: { label: "Spec", value: "RTX 4060", source: "representative-product" },
+  competitor: { label: "Competitor", value: "Amazon", source: "customer-competitor" },
+  competitorPrice: { label: "Competitor price", value: "₹78,000", source: "customer-competitor" },
+  storeQuote: { label: "Store quote", value: "~₹81,000", source: "representative-quote" },
+  question: { label: "Question", value: "EMI", source: "customer-question" },
 };
+
+function sourceClass(activeSource: string, source: string) {
+  return activeSource === source ? "turn-source turn-source-active" : "turn-source";
+}
 
 export function EvidenceExplainer() {
   const [activeFinding, setActiveFinding] = useState<Finding>("need");
@@ -29,35 +42,49 @@ export function EvidenceExplainer() {
       </div>
       <div className="illustration-content">
         <div className="turns" role="group" aria-label="Illustrative electronics conversation">
-          <p
-            className={`turn turn-customer ${active.source === "customer-budget" ? "turn-active" : ""}`}
-            id="customer-budget"
-          >
-            <span>Customer</span>“I need something around ₹80,000 for gaming and college.”
+          <p className="turn turn-customer">
+            <span>Customer</span>
+            <span className={sourceClass(active.source, "customer-need")} id="customer-need">
+              “Gaming aur college ke liye laptop chahiye.”
+            </span>{" "}
+            <span className={sourceClass(active.source, "customer-budget")} id="customer-budget">
+              “Budget around ₹80,000 hai.”
+            </span>
           </p>
-          <p
-            className={`turn turn-representative ${active.source === "representative-product" ? "turn-active" : ""}`}
-            id="representative-product"
-          >
-            <span>Representative</span>“The Lenovo LOQ with RTX 4060 is a strong fit.”
+          <p className="turn turn-representative">
+            <span>Representative</span>
+            <span
+              className={sourceClass(active.source, "representative-product")}
+              id="representative-product"
+            >
+              “Lenovo LOQ RTX 4060 dekh sakte hain.”
+            </span>{" "}
+            “Bank offer bhi available hai.”
           </p>
-          <p
-            className={`turn turn-customer ${active.source === "customer-competitor" ? "turn-active" : ""}`}
-            id="customer-competitor"
-          >
-            <span>Customer</span>“Amazon has it at ₹78,000. Is EMI available?”
+          <p className="turn turn-customer">
+            <span>Customer</span>
+            <span
+              className={sourceClass(active.source, "customer-competitor")}
+              id="customer-competitor"
+            >
+              “Amazon pe around ₹78,000 ka dikh raha tha.”
+            </span>{" "}
+            <span
+              className={sourceClass(active.source, "customer-question")}
+              id="customer-question"
+            >
+              “EMI kitni padegi?”
+            </span>
           </p>
-          <p
-            className={`turn turn-customer ${active.source === "customer-emi" ? "turn-active" : ""}`}
-            id="customer-emi"
-          >
-            <span>Customer</span>“I would need EMI for the purchase.”
-          </p>
-          <p
-            className={`turn turn-customer ${active.source === "customer-need" ? "turn-active" : ""}`}
-            id="customer-need"
-          >
-            <span>Customer</span>“Mostly gaming, but I’ll use it for college too.”
+          <p className="turn turn-representative">
+            <span>Representative</span>
+            <span
+              className={sourceClass(active.source, "representative-quote")}
+              id="representative-quote"
+            >
+              “Bank offer ke baad around ₹81,000 padega.”
+            </span>{" "}
+            “Main exact EMI check karta hoon.”
           </p>
         </div>
         <div

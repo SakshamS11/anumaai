@@ -35,7 +35,7 @@ Prominent visuals must communicate information, hierarchy, product relationship,
 
 Target WCAG 2.2 AA. Controls keep visible focus, semantic names and useful keyboard operation. Primary controls generally have a comfortable 44px target. Hover-only disclosures must also work on focus; motion communicates state change only and is disabled/reduced under `prefers-reduced-motion`. Do not communicate important state by color alone.
 
-Authentication is a warm Porcelain composition with an explicitly labelled illustrative evidence interaction—not a dark/white split SaaS hero. The example conversation is never real customer data. It teaches `structured finding ↔ source turn` through hover, focus and click.
+Authentication is a warm Porcelain composition with an explicitly labelled illustrative evidence interaction—not a dark/white split SaaS hero. The example conversation is never real customer data. It teaches `structured finding ↔ source turn` through hover, focus and click. Where the demonstration uses Hinglish or another code-mixed interaction, keep the surrounding product UI in English and use natural customer/representative phrasing; the composition illustrates ANUMA's language understanding rather than claiming a language restriction or providing translation.
 
 ## Brand tokens
 
