@@ -242,6 +242,14 @@ try {
     `;
 
     await assumeRole(tx, "authenticated", ids.bootstrapUser);
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.organization_memberships where user_id = ${ids.bootstrapUser}`,
+      ),
+      0,
+      "new authenticated user reads an empty membership list",
+    );
     const [bootstrapResult] = await tx`
       select * from public.bootstrap_organization(
         'Atomic Bootstrap Organization', 'IN', 'INR', 'Asia/Kolkata'
@@ -256,11 +264,19 @@ try {
       1,
       "bootstrap creator becomes administrator",
     );
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organizations where id = ${bootstrapResult.organization_id}`),
+      1,
+      "bootstrap creator reads the new organization",
+    );
     await expectDenied(tx, "bootstrap cannot grant a second arbitrary administrator tenant", () =>
       tx`select * from public.bootstrap_organization('Second Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
     );
 
     await assumeRole(tx, "anon");
+    await expectDenied(tx, "anonymous cannot bootstrap an organization", () =>
+      tx`select * from public.bootstrap_organization('Anonymous Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
+    );
     await expectDenied(tx, "anonymous cannot read organizations", () =>
       tx`select count(*) from public.organizations`,
     );

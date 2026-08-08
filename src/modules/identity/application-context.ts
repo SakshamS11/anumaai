@@ -49,18 +49,33 @@ export type ApplicationContext = {
   };
 };
 
+function reportContextDatabaseFailure(
+  stage: "organization_memberships" | "organizations" | "organization_scope",
+  error: { code?: string; message: string },
+) {
+  console.error("ANUMA application context database failure", {
+    code: error.code ?? null,
+    message: error.message,
+    stage,
+  });
+}
+
 export const getApplicationContext = cache(async (): Promise<ApplicationContext | null> => {
   const user = await getAuthenticatedUser();
   if (!user) return null;
 
   const supabase = await createClient();
-  const { data: memberships, error: membershipsError } = await supabase
+  const { data: membershipRows, error: membershipsError } = await supabase
     .from("organization_memberships")
     .select("id, organization_id, role")
     .eq("user_id", user.id)
     .eq("status", "active");
 
-  if (membershipsError) throw new Error("Could not load organization memberships.");
+  if (membershipsError) {
+    reportContextDatabaseFailure("organization_memberships", membershipsError);
+    throw new Error("Could not load organization memberships.");
+  }
+  const memberships = membershipRows ?? [];
   if (memberships.length === 0) return { user, organizations: [], current: null };
 
   const organizationIds = memberships.map((membership) => membership.organization_id);
@@ -70,7 +85,10 @@ export const getApplicationContext = cache(async (): Promise<ApplicationContext 
     .in("id", organizationIds)
     .order("name");
 
-  if (organizationsError) throw new Error("Could not load organizations.");
+  if (organizationsError) {
+    reportContextDatabaseFailure("organizations", organizationsError);
+    throw new Error("Could not load organizations.");
+  }
 
   const membershipByOrganization = new Map(
     memberships.map((membership) => [membership.organization_id, membership]),
@@ -108,6 +126,10 @@ export const getApplicationContext = cache(async (): Promise<ApplicationContext 
   ]);
 
   if (locationsResult.error || teamsResult.error || assignmentsResult.error) {
+    reportContextDatabaseFailure(
+      "organization_scope",
+      locationsResult.error ?? teamsResult.error ?? assignmentsResult.error!,
+    );
     throw new Error("Could not load organization scope.");
   }
 
