@@ -7,30 +7,15 @@
     "deterministicOutput": "interaction notes and coaching projection"
   },
   "fixture": {
-    "organizationId": "79a7975e-7537-479e-becb-abae0092854b",
-    "conversationId": "9801ea67-aa0b-4366-9593-f7a666aa8e05",
-    "analysisRunId": "c4a3fd83-1afa-4424-a814-26019ed1eeb0",
-    "transcriptionRunId": "39e2fb0e-91da-4da2-9810-56d791c9fa59",
+    "organizationId": "58a6cca8-6448-48fb-90e5-475ae4f58f93",
+    "conversationId": "c3f80e99-c8bc-4281-b74c-ac10f41a22c3",
+    "analysisRunId": "f05279a7-8d38-4e16-b45e-dce304b55564",
+    "metricRunId": "dea09856-4ee4-47f0-90a8-ec25ae768f46",
+    "metricAlgorithmVersion": "phase5.1.v1",
     "synthetic": true
   },
   "reviewRunA": {
-    "id": "262e72b8-a04b-46ea-840e-3bda031dc8d2",
-    "status": "completed",
-    "semanticRequestCount": 1,
-    "checks": {
-      "Customer greeted": "insufficient_evidence",
-      "Requirement understood": "met",
-      "Budget identified": "met",
-      "Relevant product discussed": "met",
-      "Customer questions addressed": "met",
-      "Price objection handled when applicable": "partial",
-      "Finance / EMI addressed when applicable": "met",
-      "Next action captured": "met"
-    },
-    "scorecard": { "scorePercent": 90.91, "applicableCheckCount": 8, "evaluatedCheckCount": 7, "insufficientEvidenceCount": 1 }
-  },
-  "reviewRunB": {
-    "id": "bdf6f483-cc5c-4cea-af05-b24a8c4f2fcc",
+    "id": "4336ee3c-073f-4c67-b014-66792a82d948",
     "status": "completed",
     "semanticRequestCount": 1,
     "checks": {
@@ -39,11 +24,27 @@
       "Budget identified": "met",
       "Relevant product discussed": "met",
       "Customer questions addressed": "met",
-      "Price objection handled when applicable": "partial",
-      "Finance / EMI addressed when applicable": "partial",
+      "Price objection handled when applicable": "not_met",
+      "Finance / EMI addressed when applicable": "met",
       "Next action captured": "met"
     },
-    "scorecard": { "scorePercent": 87.5, "applicableCheckCount": 8, "evaluatedCheckCount": 8, "insufficientEvidenceCount": 0 }
+    "scorecard": { "scorePercent": 83.33, "applicableCheckCount": 8, "evaluatedCheckCount": 8, "insufficientEvidenceCount": 0 }
+  },
+  "reviewRunB": {
+    "id": "cd86d43c-1409-4210-9ecb-a836e0eb9349",
+    "status": "completed",
+    "semanticRequestCount": 1,
+    "checks": {
+      "Customer greeted": "insufficient_evidence",
+      "Requirement understood": "met",
+      "Budget identified": "met",
+      "Relevant product discussed": "met",
+      "Customer questions addressed": "met",
+      "Price objection handled when applicable": "not_met",
+      "Finance / EMI addressed when applicable": "met",
+      "Next action captured": "met"
+    },
+    "scorecard": { "scorePercent": 81.82, "applicableCheckCount": 8, "evaluatedCheckCount": 7, "insufficientEvidenceCount": 1 }
   },
   "evaluationArchitecture": {
     "deterministicChecks": ["Requirement understood", "Budget identified", "Relevant product discussed", "Next action captured"],
