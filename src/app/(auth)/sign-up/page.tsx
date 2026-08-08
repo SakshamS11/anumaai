@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { AuthForm } from "@/components/auth/auth-form";
-import { signUp } from "@/app/(auth)/actions";
 
 type SignUpPageProps = {
   searchParams: Promise<{ error?: string; message?: string }>;
@@ -27,7 +26,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
           {message}
         </p>
       ) : null}
-      <AuthForm action={signUp} mode="sign-up" />
+      <AuthForm mode="sign-up" />
       <p className="auth-switch">
         Already have an account? <Link href="/sign-in">Sign in</Link>.
       </p>

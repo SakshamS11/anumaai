@@ -1,26 +1,52 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-type AuthFormProps = {
-  action: (formData: FormData) => void | Promise<void>;
-  mode: "sign-in" | "sign-up";
-};
+import { createClient } from "@/lib/supabase/client";
 
-function SubmitButton({ mode }: Pick<AuthFormProps, "mode">) {
-  const { pending } = useFormStatus();
+type AuthFormProps = { mode: "sign-in" | "sign-up" };
+
+export function AuthForm({ mode }: AuthFormProps) {
+  const router = useRouter();
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const label = mode === "sign-in" ? "Sign in" : "Create account";
 
-  return (
-    <button className="button button-primary auth-submit" disabled={pending} type="submit">
-      {pending ? "Please wait..." : label}
-    </button>
-  );
-}
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    setMessage(null);
+    setPending(true);
 
-export function AuthForm({ action, mode }: AuthFormProps) {
+    const supabase = createClient();
+    const result =
+      mode === "sign-in"
+        ? await supabase.auth.signInWithPassword({ email, password })
+        : await supabase.auth.signUp({ email, password });
+    setPending(false);
+
+    if (result.error) {
+      setMessage(
+        mode === "sign-in"
+          ? "We could not sign you in. Check your details and try again."
+          : "We could not create your account. Please try again.",
+      );
+      return;
+    }
+    if (mode === "sign-up" && !result.data.session) {
+      setMessage("Check your email to confirm your account.");
+      return;
+    }
+
+    router.replace(mode === "sign-up" ? "/setup" : "/conversations");
+    router.refresh();
+  }
+
   return (
-    <form action={action} className="auth-form">
+    <form className="auth-form" onSubmit={submit}>
       <label className="form-field">
         <span>Email address</span>
         <input autoComplete="email" name="email" required type="email" />
@@ -35,7 +61,14 @@ export function AuthForm({ action, mode }: AuthFormProps) {
           type="password"
         />
       </label>
-      <SubmitButton mode={mode} />
+      <button className="button button-primary auth-submit" disabled={pending} type="submit">
+        {pending ? "Please wait..." : label}
+      </button>
+      {message ? (
+        <p className="auth-message auth-message-error" role="alert">
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }

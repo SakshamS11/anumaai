@@ -50,7 +50,11 @@ export type ApplicationContext = {
 };
 
 function reportContextDatabaseFailure(
-  stage: "organization_memberships" | "organizations" | "organization_scope",
+  stage:
+    | "organization_memberships"
+    | "organization_memberships_retry"
+    | "organizations"
+    | "organization_scope",
   error: { code?: string; message: string },
 ) {
   console.error("ANUMA application context database failure", {
@@ -60,16 +64,37 @@ function reportContextDatabaseFailure(
   });
 }
 
+async function loadActiveMemberships(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+) {
+  const query = () =>
+    supabase
+      .from("organization_memberships")
+      .select("id, organization_id, role")
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+  let result = await query();
+  // A fresh JWT can reach PostgREST a fraction of a second before its iat is
+  // valid on that service's clock. Retry once; never mask another DB failure.
+  if (result.error?.code === "PGRST303") {
+    reportContextDatabaseFailure("organization_memberships_retry", result.error);
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    result = await query();
+  }
+  return result;
+}
+
 export const getApplicationContext = cache(async (): Promise<ApplicationContext | null> => {
   const user = await getAuthenticatedUser();
   if (!user) return null;
 
   const supabase = await createClient();
-  const { data: membershipRows, error: membershipsError } = await supabase
-    .from("organization_memberships")
-    .select("id, organization_id, role")
-    .eq("user_id", user.id)
-    .eq("status", "active");
+  const { data: membershipRows, error: membershipsError } = await loadActiveMemberships(
+    supabase,
+    user.id,
+  );
 
   if (membershipsError) {
     reportContextDatabaseFailure("organization_memberships", membershipsError);

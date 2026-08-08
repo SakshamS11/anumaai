@@ -29,30 +29,3 @@ export async function createClient() {
     },
   );
 }
-
-/**
- * Server Actions may mutate the response cookie store. Keep this separate from
- * the Server Component client, where cookie writes are intentionally ignored
- * because Proxy owns token refresh there.
- */
-export async function createAuthActionClient() {
-  const cookieStore = await cookies();
-  const environment = getPublicEnvironment();
-
-  return createServerClient<Database>(
-    environment.NEXT_PUBLIC_SUPABASE_URL,
-    environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        },
-      },
-    },
-  );
-}

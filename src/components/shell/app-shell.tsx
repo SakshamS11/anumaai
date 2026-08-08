@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { applicationRoutes } from "@/modules/application/routes";
 import { roleLabel, type MembershipRole } from "@/modules/identity/roles";
+import { createClient } from "@/lib/supabase/client";
 
 type ShellContext = {
   assignmentCount: number;
@@ -17,12 +18,12 @@ type ShellContext = {
 type AppShellProps = {
   children: ReactNode;
   context: ShellContext;
-  signOut: () => Promise<void>;
   switchOrganization: (formData: FormData) => Promise<void>;
 };
 
-export function AppShell({ children, context, signOut, switchOrganization }: AppShellProps) {
+export function AppShell({ children, context, switchOrganization }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { currentOrganization } = context;
   const navigationGroups = ["Interactions", "Intelligence", "Configure"] as const;
   const assignmentSummary =
@@ -31,6 +32,12 @@ export function AppShell({ children, context, signOut, switchOrganization }: App
       : currentOrganization.role === "admin"
         ? "Organization-wide administration"
         : "No active location/team assignment";
+
+  async function signOut() {
+    await createClient().auth.signOut();
+    router.replace("/sign-in");
+    router.refresh();
+  }
 
   return (
     <div className="app-frame">
@@ -103,7 +110,12 @@ export function AppShell({ children, context, signOut, switchOrganization }: App
                   </button>
                 </form>
               ) : null}
-              <form action={signOut}>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void signOut();
+                }}
+              >
                 <button className="button button-quiet" type="submit">
                   Sign out
                 </button>

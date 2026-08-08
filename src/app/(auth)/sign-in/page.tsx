@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { AuthForm } from "@/components/auth/auth-form";
-import { signIn } from "@/app/(auth)/actions";
 
 type SignInPageProps = {
   searchParams: Promise<{ error?: string; message?: string }>;
@@ -27,7 +26,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           {message}
         </p>
       ) : null}
-      <AuthForm action={signIn} mode="sign-in" />
+      <AuthForm mode="sign-in" />
       <p className="auth-switch">
         New to ANUMA? <Link href="/sign-up">Create an account</Link>.
       </p>

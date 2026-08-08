@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { signOut } from "@/app/(auth)/actions";
 import { switchOrganization } from "@/app/(app)/actions";
 import { AppShell } from "@/components/shell/app-shell";
 import { getApplicationContext } from "@/modules/identity/application-context";
@@ -26,7 +25,7 @@ export default async function ApplicationLayout({ children }: Readonly<{ childre
   };
 
   return (
-    <AppShell context={shellContext} signOut={signOut} switchOrganization={switchOrganization}>
+    <AppShell context={shellContext} switchOrganization={switchOrganization}>
       {children}
     </AppShell>
   );
