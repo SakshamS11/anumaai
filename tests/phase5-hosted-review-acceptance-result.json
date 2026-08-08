@@ -60,16 +60,22 @@
   "interactionNotes": [
     "Customer need: The customer needs a laptop for gaming and college.",
     "Budget: The customer's approximate maximum budget is INR 80,000.",
-    "Products and specs: Lenovo LOQ; RTX 4060.",
+    "Products and specs: The representative recommended the Lenovo LOQ; the Lenovo LOQ has an RTX 4060 GPU.",
     "Prices: Amazon INR 78,000; bank-offer quote INR 81,000.",
-    "Competitors: Amazon.",
-    "Questions: bank offer; EMI payments.",
-    "Objections and barriers: Amazon lower-price concern.",
-    "Next action: representative will check the exact EMI."
+    "Competitors: The customer compared the laptop with Amazon.",
+    "Questions: A bank offer is available; the customer asked about EMI payments.",
+    "Objections and barriers: The customer raised a price concern because Amazon appeared to offer the laptop for less.",
+    "Next action: The representative will check the exact EMI amount and inform the customer."
   ],
   "coaching": {
-    "strengths": ["Next action captured", "Customer greeted"],
-    "opportunities": [],
+    "strengths": ["Budget identified", "Requirement understood"],
+    "opportunities": [
+      {
+        "check": "Price objection handled when applicable",
+        "evidenceSegmentId": "a783ea7f-00c4-4a33-963d-2759fe939e2d",
+        "advice": "After acknowledging the online comparison, make the value difference explicit — for example a bank offer, warranty, immediate availability, or a relevant alternative."
+      }
+    ],
     "language": "English",
     "modelCalls": 0
   },

@@ -37,8 +37,7 @@ try {
     from public.check_evaluations evaluation join public.check_definitions definition on definition.id = evaluation.check_definition_id
     where evaluation.review_run_id = ${reviewRun.id} order by definition.created_at
   `;
-  const { notesFor, coachingFor } =
-    await import("../src/components/conversations/interaction-review");
+  const { notesFor, coachingFor } = await import("../src/modules/review/projections");
   console.log(
     JSON.stringify(
       {
