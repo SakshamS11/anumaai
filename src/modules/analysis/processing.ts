@@ -27,7 +27,7 @@ export async function processAnalysisRun(runId: string) {
   const { data: run, error: runError } = await db
     .from("analysis_runs")
     .select(
-      "id,organization_id,conversation_id,source_transcription_run_id,speaker_mapping_version_id",
+      "id,organization_id,conversation_id,source_transcription_run_id,speaker_mapping_version_id,metric_run_id",
     )
     .eq("id", runId)
     .single();
@@ -76,19 +76,12 @@ export async function processAnalysisRun(runId: string) {
     role: roles.get(segment.provider_speaker_identifier!)!,
   }));
 
-  const existingObservations = await db
-    .from("structured_observations")
-    .select("id")
-    .eq("analysis_run_id", runId)
-    .limit(1);
-  if (existingObservations.error) throw new Error("Analysis result state could not be checked.");
-
   const runtimeModel = getOpenAIEnvironment().ANUMA_ANALYSIS_MODEL;
   await db
     .from("analysis_runs")
     .update({ model: runtimeModel, status: "running", started_at: new Date().toISOString() })
     .eq("id", runId);
-  if (hasPersistedAnalysisResult(existingObservations.data.length)) {
+  if (hasPersistedAnalysisResult(run.metric_run_id)) {
     await db
       .from("analysis_runs")
       .update({ completed_at: new Date().toISOString(), status: "completed" })

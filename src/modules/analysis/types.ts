@@ -35,10 +35,15 @@ export const observationTypes = [
 
 export type ObservationType = (typeof observationTypes)[number];
 
+/** Current POC support is explicit: INR and AED use two minor-unit decimals. */
+const currencyExponents: Readonly<Record<string, number>> = { AED: 2, INR: 2 };
+
 export function amountMajorToMinor(amountMajor: number | null, currency: string | null) {
-  if (amountMajor === null || amountMajor < 0 || !Number.isFinite(amountMajor) || !currency)
+  if (amountMajor === null || amountMajor < 0 || !Number.isFinite(amountMajor) || !currency) {
     return null;
-  return Math.round(amountMajor * 100);
+  }
+  const exponent = currencyExponents[currency];
+  return exponent === undefined ? null : Math.round(amountMajor * 10 ** exponent);
 }
 export interface AnalysisProvider {
   extract(input: {

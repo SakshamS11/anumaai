@@ -18,12 +18,18 @@ describe("analysis money semantics", () => {
   it("does not create money without a currency", () => {
     expect(amountMajorToMinor(80_000, null)).toBeNull();
   });
+
+  it("supports AED and rejects unsupported currency exponents", () => {
+    expect(amountMajorToMinor(81_000, "AED")).toBe(8_100_000);
+    expect(amountMajorToMinor(80_000, "JPY")).toBeNull();
+    expect(amountMajorToMinor(80_000, "BHD")).toBeNull();
+  });
 });
 
 describe("analysis retry idempotency", () => {
-  it("finalizes a persisted result instead of creating a second result set on retry", () => {
-    expect(hasPersistedAnalysisResult(1)).toBe(true);
-    expect(hasPersistedAnalysisResult(0)).toBe(false);
+  it("uses metric lineage as the zero-observation persistence signal on retry", () => {
+    expect(hasPersistedAnalysisResult("00000000-0000-4000-8000-000000000001")).toBe(true);
+    expect(hasPersistedAnalysisResult(null)).toBe(false);
   });
 });
 

@@ -21,6 +21,12 @@ The transcript is treated as hostile input, never as model instructions. OpenAI 
 
 The MVP electronics extractor supports needs/use cases, budgets, products, prices, competitors, questions, objections, barriers, decision drivers, commitments, and next actions when explicitly evidenced.
 
+## POC money scope and retry boundary
+
+Current deterministic major-to-minor conversion supports INR and AED, both with two minor-unit decimals. Unknown currencies return no minor-unit amount until their ISO 4217 exponent is deliberately added and tested; ANUMA does not assume a universal `×100` rule.
+
+`analysis_runs.metric_run_id` is the durable analysis-persistence boundary. Metrics, evidence, and observations are stored atomically, so a retry with a metric-run pointer finalizes the same immutable run even when a valid extraction contains zero observations.
+
 ## Experience rules
 
 The product remains **Evidence Editorial**: finding → context → interaction → evidence. Interaction understanding is rendered as a compact editorial list, not a dashboard wall. Sign-in demonstrates the same evidence relationship with a clearly labelled illustrative electronics conversation; it is never tenant data.
