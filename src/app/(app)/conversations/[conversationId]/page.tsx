@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { AudioCapturePanel } from "@/components/conversations/audio-capture-panel";
 import { ConversationEvidence } from "@/components/conversations/conversation-evidence";
 import { CustomerConsentPanel } from "@/components/conversations/customer-consent-panel";
+import { InteractionUnderstanding } from "@/components/conversations/interaction-understanding";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { deriveConversationState, getConversationDetail } from "@/modules/conversations/data";
@@ -92,6 +93,15 @@ export default async function ConversationPage({ params }: ConversationPageProps
         participants={conversation.participants}
         mappings={conversation.activeMappings}
         canProcessAudio={canProcessAudio}
+      />
+      <InteractionUnderstanding
+        canRequest={
+          canProcessAudio &&
+          Boolean(conversation.activeTranscriptionRunId) &&
+          Boolean(conversation.activeSpeakerMappingVersionId)
+        }
+        conversationId={conversation.id}
+        observations={conversation.observations}
       />
     </>
   );

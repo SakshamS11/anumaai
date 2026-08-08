@@ -14,11 +14,11 @@ export default function AuthLayout({ children }: Readonly<{ children: ReactNode 
       </header>
       <section className="auth-composition">
         <div className="auth-message-block">
-          <p className="eyebrow">Evidence-backed intelligence</p>
-          <h1>Frontline conversations, made measurable.</h1>
+          <p className="eyebrow">Frontline interaction intelligence</p>
+          <h1>Every customer conversation holds a business signal.</h1>
           <p>
-            ANUMA turns real customer interactions into structured, evidence-backed business
-            intelligence.
+            ANUMA turns frontline interactions into structured, evidence-backed intelligence —
+            revealing what customers need, what happened in the interaction, and what happens next.
           </p>
           <EvidenceExplainer />
         </div>

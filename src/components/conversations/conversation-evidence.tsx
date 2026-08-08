@@ -126,7 +126,11 @@ export function ConversationEvidence({
         </section>
       ) : null}
       {segments.length ? (
-        <section className="transcript-document" aria-labelledby="transcript-title">
+        <section
+          className="transcript-document"
+          aria-labelledby="transcript-title"
+          id="source-transcript"
+        >
           <div className="section-heading">
             <div>
               <p className="eyebrow">Source transcript</p>

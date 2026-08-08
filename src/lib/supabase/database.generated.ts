@@ -668,6 +668,161 @@ export type Database = {
           },
         ];
       };
+      metric_runs: {
+        Row: {
+          algorithm_version: string;
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          organization_id: string;
+          source_transcription_run_id: string;
+          speaker_mapping_version_id: string;
+        };
+        Insert: {
+          algorithm_version: string;
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          organization_id: string;
+          source_transcription_run_id: string;
+          speaker_mapping_version_id: string;
+        };
+        Update: {
+          algorithm_version?: string;
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          organization_id?: string;
+          source_transcription_run_id?: string;
+          speaker_mapping_version_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "metric_runs_organization_id_conversation_id_source_transc_fkey1";
+            columns: [
+              "organization_id",
+              "conversation_id",
+              "source_transcription_run_id",
+              "speaker_mapping_version_id",
+            ];
+            isOneToOne: false;
+            referencedRelation: "speaker_mapping_versions";
+            referencedColumns: ["organization_id", "conversation_id", "transcription_run_id", "id"];
+          },
+          {
+            foreignKeyName: "metric_runs_organization_id_conversation_id_source_transcr_fkey";
+            columns: ["organization_id", "conversation_id", "source_transcription_run_id"];
+            isOneToOne: false;
+            referencedRelation: "transcription_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+        ];
+      };
+      metric_values: {
+        Row: {
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          metric_key: string;
+          metric_run_id: string;
+          numeric_value: number;
+          organization_id: string;
+          unit: string;
+        };
+        Insert: {
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          metric_key: string;
+          metric_run_id: string;
+          numeric_value: number;
+          organization_id: string;
+          unit: string;
+        };
+        Update: {
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          metric_key?: string;
+          metric_run_id?: string;
+          numeric_value?: number;
+          organization_id?: string;
+          unit?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "metric_values_organization_id_conversation_id_metric_run_i_fkey";
+            columns: ["organization_id", "conversation_id", "metric_run_id"];
+            isOneToOne: false;
+            referencedRelation: "metric_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+        ];
+      };
+      observation_corrections: {
+        Row: {
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          observation_id: string;
+          organization_id: string;
+          proposed_by_membership_id: string;
+          proposed_value: Json;
+          reason: string | null;
+          review_state: Database["public"]["Enums"]["review_state"];
+          reviewed_at: string | null;
+          reviewed_by_membership_id: string | null;
+        };
+        Insert: {
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          observation_id: string;
+          organization_id: string;
+          proposed_by_membership_id: string;
+          proposed_value: Json;
+          reason?: string | null;
+          review_state?: Database["public"]["Enums"]["review_state"];
+          reviewed_at?: string | null;
+          reviewed_by_membership_id?: string | null;
+        };
+        Update: {
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          observation_id?: string;
+          organization_id?: string;
+          proposed_by_membership_id?: string;
+          proposed_value?: Json;
+          reason?: string | null;
+          review_state?: Database["public"]["Enums"]["review_state"];
+          reviewed_at?: string | null;
+          reviewed_by_membership_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "observation_corrections_organization_id_conversation_id_ob_fkey";
+            columns: ["organization_id", "conversation_id", "observation_id"];
+            isOneToOne: false;
+            referencedRelation: "structured_observations";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
+            foreignKeyName: "observation_corrections_organization_id_proposed_by_member_fkey";
+            columns: ["organization_id", "proposed_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "observation_corrections_organization_id_reviewed_by_member_fkey";
+            columns: ["organization_id", "reviewed_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       organization_memberships: {
         Row: {
           created_at: string;
@@ -978,6 +1133,69 @@ export type Database = {
           },
         ];
       };
+      structured_observations: {
+        Row: {
+          analysis_run_id: string;
+          attributes: Json;
+          conversation_id: string;
+          created_at: string;
+          currency_code: string | null;
+          evidence_group_id: string;
+          id: string;
+          normalized_key: string;
+          observation_type: string;
+          organization_id: string;
+          original_model_value: Json;
+          value_amount_minor: number | null;
+          value_text: string | null;
+        };
+        Insert: {
+          analysis_run_id: string;
+          attributes?: Json;
+          conversation_id: string;
+          created_at?: string;
+          currency_code?: string | null;
+          evidence_group_id: string;
+          id?: string;
+          normalized_key: string;
+          observation_type: string;
+          organization_id: string;
+          original_model_value: Json;
+          value_amount_minor?: number | null;
+          value_text?: string | null;
+        };
+        Update: {
+          analysis_run_id?: string;
+          attributes?: Json;
+          conversation_id?: string;
+          created_at?: string;
+          currency_code?: string | null;
+          evidence_group_id?: string;
+          id?: string;
+          normalized_key?: string;
+          observation_type?: string;
+          organization_id?: string;
+          original_model_value?: Json;
+          value_amount_minor?: number | null;
+          value_text?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "observations_analysis_fk";
+            columns: ["organization_id", "conversation_id", "analysis_run_id"];
+            isOneToOne: false;
+            referencedRelation: "analysis_runs";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+          {
+            foreignKeyName: "observations_evidence_fk";
+            columns: ["organization_id", "conversation_id", "evidence_group_id"];
+            isOneToOne: false;
+            referencedRelation: "evidence_groups";
+            referencedColumns: ["organization_id", "conversation_id", "id"];
+          },
+        ];
+      };
       teams: {
         Row: {
           created_at: string;
@@ -1218,9 +1436,28 @@ export type Database = {
           storage_object_path: string;
         }[];
       };
+      propose_observation_correction: {
+        Args: {
+          p_observation_id: string;
+          p_proposed_value: Json;
+          p_reason?: string;
+        };
+        Returns: string;
+      };
+      request_interaction_understanding: {
+        Args: { p_conversation_id: string };
+        Returns: string;
+      };
       request_transcription_run: {
         Args: { p_recording_id: string };
         Returns: string;
+      };
+      review_observation_correction: {
+        Args: {
+          p_correction_id: string;
+          p_review_state: Database["public"]["Enums"]["review_state"];
+        };
+        Returns: undefined;
       };
     };
     Enums: {

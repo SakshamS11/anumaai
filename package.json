@@ -25,6 +25,7 @@
     "@supabase/supabase-js": "^2.112.2",
     "music-metadata": "^11.14.0",
     "next": "^16.3.0",
+    "openai": "^7.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sarvamai": "^1.1.8",

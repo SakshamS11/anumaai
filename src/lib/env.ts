@@ -12,6 +12,11 @@ const trustedServerEnvironmentSchema = publicEnvironmentSchema.extend({
   SARVAM_API_KEY: z.string().min(1, "SARVAM_API_KEY is required on the server."),
 });
 
+const openAIEnvironmentSchema = trustedServerEnvironmentSchema.extend({
+  OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required on the server."),
+  ANUMA_ANALYSIS_MODEL: z.literal("gpt-5.6-luna").default("gpt-5.6-luna"),
+});
+
 export type PublicEnvironment = z.infer<typeof publicEnvironmentSchema>;
 
 export function parsePublicEnvironment(
@@ -35,5 +40,18 @@ export function getTrustedServerEnvironment(): TrustedServerEnvironment {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
     SARVAM_API_KEY: process.env.SARVAM_API_KEY,
+  });
+}
+
+export type OpenAIEnvironment = z.infer<typeof openAIEnvironmentSchema>;
+
+export function getOpenAIEnvironment(): OpenAIEnvironment {
+  return openAIEnvironmentSchema.parse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
+    SARVAM_API_KEY: process.env.SARVAM_API_KEY,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    ANUMA_ANALYSIS_MODEL: process.env.ANUMA_ANALYSIS_MODEL,
   });
 }

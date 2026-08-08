@@ -436,7 +436,11 @@ a {
 }
 .auth-panel {
   border-left: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 72%, var(--porcelain));
+  background: var(--carbon);
+  color: var(--porcelain);
+}
+.auth-panel .auth-card {
+  color: var(--carbon);
 }
 .auth-card {
   width: min(100%, 390px);
@@ -550,6 +554,42 @@ a {
   height: 7px;
   border-radius: 50%;
   background: var(--signal-coral);
+}
+
+.interaction-understanding {
+  border-top: 2px solid var(--carbon);
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+}
+.observation-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+.observation-list li {
+  align-items: baseline;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr) auto;
+  padding: 0.85rem 0;
+}
+.observation-list span {
+  color: var(--graphite);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.observation-list a {
+  color: var(--carbon);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.empty-inline {
+  color: var(--graphite);
+  line-height: 1.6;
+  max-width: 62ch;
 }
 
 .navigation-group {

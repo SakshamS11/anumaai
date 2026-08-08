@@ -28,6 +28,16 @@ export type ConversationDetail = ConversationListItem & {
   }>;
   activeTranscriptionRunId: string | null;
   activeSpeakerMappingVersionId: string | null;
+  activeAnalysisRunId: string | null;
+  observations: Array<{
+    id: string;
+    type: string;
+    key: string;
+    text: string | null;
+    amountMinor: number | null;
+    currencyCode: string | null;
+    evidenceGroupId: string;
+  }>;
   transcriptSegments: Array<{
     id: string;
     sequenceNumber: number;
@@ -137,7 +147,7 @@ export async function getConversationDetail(
   const { data: conversation, error } = await supabase
     .from("conversations")
     .select(
-      "id, title, vertical, started_at, lifecycle_status, location_id, team_id, representative_membership_id, active_transcription_run_id, active_speaker_mapping_version_id",
+      "id, title, vertical, started_at, lifecycle_status, location_id, team_id, representative_membership_id, active_transcription_run_id, active_speaker_mapping_version_id, active_analysis_run_id",
     )
     .eq("id", conversationId)
     .maybeSingle();
@@ -153,6 +163,7 @@ export async function getConversationDetail(
     segmentsResult,
     mappingsResult,
     runResult,
+    observationsResult,
   ] = await Promise.all([
     supabase
       .from("consent_records")
@@ -197,6 +208,15 @@ export async function getConversationDetail(
           .eq("id", conversation.active_transcription_run_id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    conversation.active_analysis_run_id
+      ? supabase
+          .from("structured_observations")
+          .select(
+            "id,observation_type,normalized_key,value_text,value_amount_minor,currency_code,evidence_group_id",
+          )
+          .eq("analysis_run_id", conversation.active_analysis_run_id)
+          .order("created_at")
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (
     [
@@ -208,6 +228,7 @@ export async function getConversationDetail(
       segmentsResult,
       mappingsResult,
       runResult,
+      observationsResult,
     ].some((result) => result.error)
   ) {
     throw new Error("Could not load interaction evidence.");
@@ -218,6 +239,7 @@ export async function getConversationDetail(
   const segments = segmentsResult.data ?? [];
   const mappings = mappingsResult.data ?? [];
   const consent = consentResult.data ?? [];
+  const observations = observationsResult.data ?? [];
 
   return {
     id: conversation.id,
@@ -248,6 +270,16 @@ export async function getConversationDetail(
     })),
     activeTranscriptionRunId: conversation.active_transcription_run_id,
     activeSpeakerMappingVersionId: conversation.active_speaker_mapping_version_id,
+    activeAnalysisRunId: conversation.active_analysis_run_id,
+    observations: observations.map((observation) => ({
+      id: observation.id,
+      type: observation.observation_type,
+      key: observation.normalized_key,
+      text: observation.value_text,
+      amountMinor: observation.value_amount_minor,
+      currencyCode: observation.currency_code,
+      evidenceGroupId: observation.evidence_group_id,
+    })),
     transcriptSegments: segments.map((segment) => ({
       id: segment.id,
       sequenceNumber: segment.sequence_number,

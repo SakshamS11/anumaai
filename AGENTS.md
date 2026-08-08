@@ -29,6 +29,7 @@ If documentation conflicts, the master product specification and an explicit fou
 - Aggregate analytics must apply the matching conversation-level quality/eligibility assessment and disclose exclusions.
 - Customer organization roles are only `representative`, `manager`, and `admin`; internal ANUMA access is not ordinary tenant membership.
 - Before invoking an AI model, determine whether the required result can be reliably derived from existing structured observations or deterministic computation. Prefer reuse and deterministic computation over repeated model inference.
+- Interaction understanding is a single, versioned semantic extraction from the active confirmed transcript. Validate every model-returned evidence segment against that exact source run before persistence.
 
 ## Architecture boundaries
 
@@ -83,6 +84,7 @@ ANUMA uses an **Evidence Editorial** product language: prioritize a finding, the
 - Use Signal Coral sparingly for primary action, selection, and evidence markers; use Electric Aqua for verified/linked/healthy states; keep most surfaces neutral. Normal-sized text on Coral or Aqua uses Carbon, not white.
 - Use semantic HTML, visible focus, keyboard-accessible interactions, logical source order, labelled forms and status messages, reduced motion, and touch-friendly controls. Target WCAG 2.2 AA and approximately 44px primary touch targets.
 - Keep product language business-centred. Do not make AI the protagonist or expose database/phase/pipeline terminology in ordinary user interfaces.
+- Use an editorial interaction-understanding surface: structured observations lead to a visible evidence path. Staged sign-in examples must remain explicitly illustrative, keyboard-operable, and never resemble real tenant data.
 - Navigation should be stable and grouped by the user's mental model. Consistency does not require every page to use the same card/KPI/chart template.
 
 <!-- BEGIN:nextjs-agent-rules -->
