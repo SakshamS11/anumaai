@@ -85,7 +85,7 @@ ANUMA uses an **Evidence Editorial** product language: prioritize a finding, the
 - Use semantic HTML, visible focus, keyboard-accessible interactions, logical source order, labelled forms and status messages, reduced motion, and touch-friendly controls. Target WCAG 2.2 AA and approximately 44px primary touch targets.
 - Keep product language business-centred. Do not make AI the protagonist or expose database/phase/pipeline terminology in ordinary user interfaces.
 - Use an editorial interaction-understanding surface: structured observations lead to a visible evidence path. Staged sign-in examples must remain explicitly illustrative, keyboard-operable, and never resemble real tenant data.
-- When an illustrative interaction demonstrates code-mixed frontline speech, use natural speech while keeping product UI and headings in English. It demonstrates language understanding, not a language limit, translation feature, or stored customer data.
+- When an illustrative interaction demonstrates code-mixed frontline speech, use natural speech while keeping product UI and headings in English. Small switchable auth-page examples may change only the illustration and must not persist, imply a language preference, translation, universal support, or stored customer data.
 - Navigation should be stable and grouped by the user's mental model. Consistency does not require every page to use the same card/KPI/chart template.
 
 <!-- BEGIN:nextjs-agent-rules -->

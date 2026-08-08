@@ -28,6 +28,13 @@ test("sign-in and sign-up expose real credential forms", async ({ page }) => {
   const questionFinding = page.getByRole("button", { name: "Question EMI Source turn" });
   await questionFinding.click();
   await expect(page.getByText("EMI kitni padegi?")).toHaveClass(/turn-source-active/);
+  await page.getByRole("button", { name: "English", exact: true }).click();
+  await expect(page.getByText("I’m looking for a laptop for gaming and college.")).toBeVisible();
+  const budgetFinding = page.getByRole("button", { name: "Budget ₹80,000 Source turn" });
+  await budgetFinding.click();
+  await expect(page.getByText("My budget is around ₹80,000.")).toHaveClass(/turn-source-active/);
+  await page.getByRole("button", { name: "Tamil + English" }).click();
+  await expect(page.getByText("Gaming-um college-um use panna laptop venum.")).toBeVisible();
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
   await expect(page.getByRole("link", { name: "Create an account" })).toBeVisible();

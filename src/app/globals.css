@@ -475,6 +475,33 @@ a {
   font-size: 0.78rem;
   line-height: 1.45;
 }
+.illustration-language-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.illustration-language-controls button {
+  min-height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--graphite);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.5rem;
+}
+.illustration-language-controls button:hover,
+.illustration-language-controls button:focus-visible {
+  border-color: var(--carbon);
+  color: var(--carbon);
+}
+.illustration-language-controls .illustration-language-active {
+  border-color: var(--carbon);
+  background: var(--carbon);
+  color: var(--porcelain);
+}
 .illustration-content {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(160px, 0.55fr);

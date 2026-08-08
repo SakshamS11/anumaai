@@ -35,20 +35,20 @@ Prominent visuals must communicate information, hierarchy, product relationship,
 
 Target WCAG 2.2 AA. Controls keep visible focus, semantic names and useful keyboard operation. Primary controls generally have a comfortable 44px target. Hover-only disclosures must also work on focus; motion communicates state change only and is disabled/reduced under `prefers-reduced-motion`. Do not communicate important state by color alone.
 
-Authentication is a warm Porcelain composition with an explicitly labelled illustrative evidence interaction—not a dark/white split SaaS hero. The example conversation is never real customer data. It teaches `structured finding ↔ source turn` through hover, focus and click. Where the demonstration uses Hinglish or another code-mixed interaction, keep the surrounding product UI in English and use natural customer/representative phrasing; the composition illustrates ANUMA's language understanding rather than claiming a language restriction or providing translation.
+Authentication is a warm Porcelain composition with an explicitly labelled illustrative evidence interaction—not a dark/white split SaaS hero. The example conversation is never real customer data. It teaches `structured finding ↔ source turn` through hover, focus and click. Where the demonstration uses Hinglish or another code-mixed interaction, keep the surrounding product UI in English and use natural customer/representative phrasing; the composition illustrates ANUMA's language understanding rather than claiming a language restriction or providing translation. Small illustrative controls may switch the example only; they are not product language settings and do not persist a preference.
 
 ## Brand tokens
 
 ### Core color
 
-| Token | Value | Use |
-|---|---|---|
-| `--signal-coral` | `#FF4F3D` | mark, primary action, selection, key insight emphasis |
-| `--carbon` | `#10131A` | navigation, headings, premium/dark surfaces |
+| Token             | Value     | Use                                                        |
+| ----------------- | --------- | ---------------------------------------------------------- |
+| `--signal-coral`  | `#FF4F3D` | mark, primary action, selection, key insight emphasis      |
+| `--carbon`        | `#10131A` | navigation, headings, premium/dark surfaces                |
 | `--electric-aqua` | `#20D6C7` | verified evidence, positive data signal, active processing |
-| `--porcelain` | `#F7F6F2` | application canvas and report surfaces |
-| `--graphite` | `#4C5364` | secondary text, labels, inactive states |
-| `--risk` | `#B42318` | error/risk; visually distinct from Signal Coral |
+| `--porcelain`     | `#F7F6F2` | application canvas and report surfaces                     |
+| `--graphite`      | `#4C5364` | secondary text, labels, inactive states                    |
+| `--risk`          | `#B42318` | error/risk; visually distinct from Signal Coral            |
 
 Supporting neutrals should be derived as explicit accessible tokens, not opacity-only text. Suggested MVP values: white `#FFFFFF`, border `#D9D9D4`, muted surface `#EFEEE9`, muted text `#6A7180`, dark border `#2A2F39`, warning `#9A6700` with a light warning surface.
 
@@ -58,14 +58,14 @@ Signal Coral is intentional and sparse. Carbon and Porcelain carry most large su
 
 Normal-sized text on Signal Coral defaults to Carbon, not white. The calculated contrast of Carbon (`#10131A`) on Signal Coral (`#FF4F3D`) is approximately `5.70:1`, while white on Signal Coral is approximately `3.26:1` and therefore fails WCAG AA for normal text. Carbon is also the default text/icon color on Electric Aqua (`#20D6C7`), with approximately `10.18:1` contrast; white on Aqua is insufficient.
 
-| Interaction token | Value | Foreground | Intended use |
-|---|---|---|---|
-| `--coral-action` | `#FF4F3D` | Carbon | default primary action |
-| `--coral-action-hover` | `#FF695A` | Carbon | pointer hover (`~6.57:1`) |
-| `--coral-action-active` | `#F04435` | Carbon | pressed state (`~4.94:1`) |
-| `--aqua-signal` | `#20D6C7` | Carbon | default verified/active signal |
-| `--aqua-signal-hover` | `#49E0D4` | Carbon | interactive hover (`~11.41:1`) |
-| `--aqua-signal-active` | `#10BFB1` | Carbon | pressed/selected state (`~8.06:1`) |
+| Interaction token       | Value     | Foreground | Intended use                       |
+| ----------------------- | --------- | ---------- | ---------------------------------- |
+| `--coral-action`        | `#FF4F3D` | Carbon     | default primary action             |
+| `--coral-action-hover`  | `#FF695A` | Carbon     | pointer hover (`~6.57:1`)          |
+| `--coral-action-active` | `#F04435` | Carbon     | pressed state (`~4.94:1`)          |
+| `--aqua-signal`         | `#20D6C7` | Carbon     | default verified/active signal     |
+| `--aqua-signal-hover`   | `#49E0D4` | Carbon     | interactive hover (`~11.41:1`)     |
+| `--aqua-signal-active`  | `#10BFB1` | Carbon     | pressed/selected state (`~8.06:1`) |
 
 Interactive states must not rely on color change alone: hover may add underline/elevation, active uses position/border treatment, and disabled states retain readable text while clearly reducing affordance. On light surfaces, keyboard focus uses a 2px Carbon ring with a Porcelain offset; on Carbon surfaces, use a 2px Electric Aqua ring with a Porcelain offset. Phase 1 must verify all token pairs, focus visibility, disabled states, icons, and large/normal text using automated contrast checks plus keyboard review. These accessibility variants preserve the Coral/Carbon/Aqua identity; they are not a reason to substitute a generic blue or purple palette.
 
@@ -75,15 +75,15 @@ Use a precise modern grotesk/sans family with excellent Latin and Devanagari cov
 
 Suggested scale:
 
-| Style | Size / line | Use |
-|---|---|---|
-| Display | 32/40, 650 | rare page-level insight headline |
-| H1 | 26/34, 650 | page title |
-| H2 | 20/28, 650 | major section |
-| H3 | 16/24, 650 | card/section title |
-| Body | 14/21, 400 | product copy |
-| Small | 12/18, 450 | metadata and supporting labels |
-| Data | 24/30, 650, tabular | primary metric |
+| Style   | Size / line         | Use                              |
+| ------- | ------------------- | -------------------------------- |
+| Display | 32/40, 650          | rare page-level insight headline |
+| H1      | 26/34, 650          | page title                       |
+| H2      | 20/28, 650          | major section                    |
+| H3      | 16/24, 650          | card/section title               |
+| Body    | 14/21, 400          | product copy                     |
+| Small   | 12/18, 450          | metadata and supporting labels   |
+| Data    | 24/30, 650, tabular | primary metric                   |
 
 Sentence case is preferred. Avoid all-caps except compact status/eyebrow labels with appropriate letter spacing.
 
