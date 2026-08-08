@@ -41,7 +41,9 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      router.replace(mode === "sign-up" ? "/setup" : "/conversations");
+      // The root route resolves the fresh server-side organization context. This
+      // avoids racing a first account through an application-only destination.
+      router.replace(mode === "sign-up" ? "/setup" : "/");
       router.refresh();
     } catch {
       setMessage("Authentication is temporarily unavailable. Please try again shortly.");

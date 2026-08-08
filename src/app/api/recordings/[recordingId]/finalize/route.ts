@@ -15,8 +15,9 @@ export async function POST(_request: Request, { params }: RouteContext) {
     p_recording_id: recordingId,
   });
   if (error) {
+    console.error("Recording finalization failed", { code: error.code, message: error.message });
     return NextResponse.json(
-      { error: error.message },
+      { error: "The private audio upload could not be finalized." },
       { status: error.code === "42501" ? 403 : 400 },
     );
   }

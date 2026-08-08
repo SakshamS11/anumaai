@@ -21,10 +21,12 @@ export async function POST(request: Request, { params }: RouteContext) {
     p_status: payload.data.status,
     p_capture_method: payload.data.captureMethod,
   });
-  if (error)
+  if (error) {
+    console.error("Consent update failed", { code: error.code, message: error.message });
     return NextResponse.json(
-      { error: error.message },
+      { error: "Customer recording consent could not be recorded." },
       { status: error.code === "42501" ? 403 : 400 },
     );
+  }
   return NextResponse.json({ status: "recorded" });
 }

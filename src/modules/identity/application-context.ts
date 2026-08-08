@@ -76,10 +76,10 @@ async function loadActiveMemberships(
       .eq("status", "active");
 
   let result = await query();
-  // A fresh JWT can reach PostgREST a fraction of a second before its iat is
-  // valid on that service's clock. Retry once; never mask another DB failure.
-  if (result.error?.code === "PGRST303") {
-    reportContextDatabaseFailure("organization_memberships_retry", result.error);
+  // A newly issued token can reach PostgREST before its iat is valid on the
+  // database service's clock. This is a bounded clock-skew retry, not a way
+  // to hide authorization/database failures.
+  for (let retry = 0; result.error?.code === "PGRST303" && retry < 4; retry += 1) {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     result = await query();
   }

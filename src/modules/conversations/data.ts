@@ -38,6 +38,12 @@ export type ConversationDetail = ConversationListItem & {
     amountMinor: number | null;
     currencyCode: string | null;
     evidenceGroupId: string;
+    corrections: Array<{
+      id: string;
+      valueText: string | null;
+      reason: string | null;
+      state: "unreviewed" | "confirmed" | "rejected";
+    }>;
   }>;
   latestReview: {
     id: string;
@@ -278,6 +284,47 @@ export async function getConversationDetail(
   const mappings = mappingsResult.data ?? [];
   const consent = consentResult.data ?? [];
   const observations = observationsResult.data ?? [];
+  const { data: observationCorrections, error: observationCorrectionsError } = observations.length
+    ? await supabase
+        .from("observation_corrections")
+        .select("id,observation_id,proposed_value,reason,review_state,created_at")
+        .in(
+          "observation_id",
+          observations.map((observation) => observation.id),
+        )
+        .order("created_at", { ascending: false })
+    : { data: [], error: null };
+  if (observationCorrectionsError) throw new Error("Could not load interaction corrections.");
+  const correctionsByObservation = new Map<
+    string,
+    Array<{
+      id: string;
+      valueText: string | null;
+      reason: string | null;
+      state: "unreviewed" | "confirmed" | "rejected";
+    }>
+  >();
+  for (const correction of observationCorrections ?? []) {
+    const proposed =
+      correction.proposed_value && typeof correction.proposed_value === "object"
+        ? (correction.proposed_value as Record<string, unknown>)
+        : {};
+    const item = {
+      id: correction.id,
+      reason: correction.reason,
+      state: correction.review_state as "unreviewed" | "confirmed" | "rejected",
+      valueText:
+        typeof proposed.valueText === "string"
+          ? proposed.valueText
+          : typeof proposed.value_text === "string"
+            ? proposed.value_text
+            : null,
+    };
+    correctionsByObservation.set(correction.observation_id, [
+      ...(correctionsByObservation.get(correction.observation_id) ?? []),
+      item,
+    ]);
+  }
   const latestReviewRun = reviewRunsResult.data?.[0] ?? null;
   const { data: analysisMetricLineage, error: analysisMetricLineageError } =
     conversation.active_analysis_run_id
@@ -409,6 +456,7 @@ export async function getConversationDetail(
       amountMinor: observation.value_amount_minor,
       currencyCode: observation.currency_code,
       evidenceGroupId: observation.evidence_group_id,
+      corrections: correctionsByObservation.get(observation.id) ?? [],
     })),
     latestReview: latestReviewRun
       ? {

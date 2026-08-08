@@ -98,6 +98,8 @@ export default async function ConversationPage({ params }: ConversationPageProps
       />
       <InteractionMetrics metrics={conversation.metrics} />
       <InteractionUnderstanding
+        canCorrect={canProcessAudio}
+        canReviewCorrections={membership.role === "admin" || membership.role === "manager"}
         canRequest={
           canProcessAudio &&
           Boolean(conversation.activeTranscriptionRunId) &&

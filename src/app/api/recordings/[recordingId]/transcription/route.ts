@@ -18,8 +18,14 @@ export async function POST(_request: Request, { params }: RouteContext) {
     p_recording_id: recordingId,
   });
   if (error || !runId) {
+    console.error("Transcription request failed", { code: error?.code, message: error?.message });
     return NextResponse.json(
-      { error: error?.message ?? "Transcription could not be requested." },
+      {
+        error:
+          error?.code === "23505"
+            ? "Transcription is already running for this audio."
+            : "Transcription could not be requested.",
+      },
       { status: error?.code === "42501" ? 403 : 400 },
     );
   }

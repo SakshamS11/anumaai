@@ -37,8 +37,9 @@ export async function POST(request: Request, { params }: RouteContext) {
     p_original_filename: payload.data.originalFilename ?? undefined,
   });
   if (error || !data?.[0]) {
+    console.error("Recording preparation failed", { code: error?.code, message: error?.message });
     return NextResponse.json(
-      { error: error?.message ?? "Audio could not be prepared for this interaction." },
+      { error: "Audio could not be prepared for this interaction." },
       { status: error?.code === "42501" ? 403 : 400 },
     );
   }

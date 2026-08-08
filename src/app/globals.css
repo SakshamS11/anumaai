@@ -53,7 +53,7 @@ a {
 
 .button {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
@@ -1521,6 +1521,77 @@ a {
   max-width: 66ch;
 }
 
+.audio-capture-guidance,
+.recording-status {
+  border-left: 3px solid var(--signal-coral);
+  color: var(--graphite);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0.9rem 0 0;
+  padding-left: 0.8rem;
+}
+
+.observation-correction,
+.observation-correction-form {
+  border-left: 2px solid var(--electric-aqua);
+  margin-top: 0.65rem;
+  padding-left: 0.75rem;
+}
+
+.observation-list li > .observation-correction,
+.observation-list li > .observation-correction-form,
+.observation-list li > .text-button {
+  grid-column: 2 / -1;
+}
+
+.observation-correction p {
+  margin: 0.2rem 0;
+}
+
+.observation-correction-form {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.observation-correction-form label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.observation-correction-form label span,
+.muted-copy {
+  color: var(--graphite);
+}
+
+.inline-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.65rem 0 0;
+}
+
+.text-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--carbon);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 750;
+  min-height: 36px;
+  padding: 0.25rem 0;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.recording-status {
+  color: var(--carbon);
+  font-weight: 650;
+}
+
 .audio-capture-controls,
 .audio-preview-actions {
   align-items: center;
@@ -1728,7 +1799,9 @@ a {
 
   .mobile-nav-link {
     flex: 0 0 auto;
-    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     border-bottom: 2px solid transparent;
     border-left: 0;
     color: var(--graphite);

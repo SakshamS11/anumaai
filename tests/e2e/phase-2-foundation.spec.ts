@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import postgres from "postgres";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 test.describe.configure({ mode: "serial" });
 
 const verificationId = crypto.randomUUID().slice(0, 8);
-const userId = crypto.randomUUID();
 const email = `phase2.verify.${verificationId}@gmail.com`;
 const password = `Anuma-${crypto.randomUUID()}!`;
 const organizationName = `ANUMA Phase 2 Verification ${verificationId}`;
@@ -46,55 +46,19 @@ test.afterAll(async () => {
 async function createDevelopmentAccount() {
   process.loadEnvFile(".env.local");
   const databaseUrl = process.env.SUPABASE_DB_URL;
-  if (!databaseUrl) throw new Error("SUPABASE_DB_URL is required for browser verification.");
-
-  const sql = postgres(databaseUrl, { max: 1, prepare: false });
-  try {
-    await sql`
-      insert into auth.users (
-        instance_id, id, aud, role, email, encrypted_password,
-        email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-        created_at, updated_at, confirmation_token, recovery_token,
-        email_change_token_new, email_change
-      ) values (
-        '00000000-0000-0000-0000-000000000000'::uuid,
-        ${userId}::uuid,
-        'authenticated',
-        'authenticated',
-        ${email},
-        extensions.crypt(${password}, extensions.gen_salt('bf')),
-        now(),
-        '{"provider":"email","providers":["email"]}'::jsonb,
-        '{}'::jsonb,
-        now(),
-        now(),
-        '',
-        '',
-        '',
-        ''
-      )
-    `;
-    await sql`
-      insert into auth.identities (
-        provider_id, user_id, identity_data, provider,
-        last_sign_in_at, created_at, updated_at
-      ) values (
-        ${userId}::text,
-        ${userId}::uuid,
-        jsonb_build_object(
-          'sub', ${userId}::text,
-          'email', ${email}::text,
-          'email_verified', true
-        ),
-        'email',
-        now(),
-        now(),
-        now()
-      )
-    `;
-  } finally {
-    await sql.end();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  if (!databaseUrl || !url || !secret) {
+    throw new Error(
+      "SUPABASE_DB_URL, NEXT_PUBLIC_SUPABASE_URL, and SUPABASE_SECRET_KEY are required for browser verification.",
+    );
   }
+
+  const { data, error } = await createSupabaseClient(url, secret, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  }).auth.admin.createUser({ email, email_confirm: true, password });
+  if (error || !data.user)
+    throw new Error(`Browser test user could not be created: ${error?.message}`);
 }
 
 test("authenticated interaction foundation persists and presents the Phase 3 audio entry point", async ({
@@ -125,7 +89,7 @@ test("authenticated interaction foundation persists and presents the Phase 3 aud
   await page.getByRole("button", { name: "Create workspace" }).click();
 
   await expect(page).toHaveURL(/\/administration\?created=organization$/);
-  await expect(page.getByText(organizationName, { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: organizationName, exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Admin", exact: true })).toBeVisible();
 
   await page.getByLabel("Name", { exact: true }).fill(locationName);

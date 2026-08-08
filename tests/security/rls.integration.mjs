@@ -50,6 +50,10 @@ const ids = {
   analysisA: "a0000000-0000-4000-8000-000000000001",
   analysisOtherA: "a0000000-0000-4000-8000-000000000002",
   analysisB: "a0000000-0000-4000-8000-000000000003",
+  evidenceA: "a1000000-0000-4000-8000-000000000001",
+  evidenceB: "a1000000-0000-4000-8000-000000000002",
+  observationA: "a2000000-0000-4000-8000-000000000001",
+  observationB: "a2000000-0000-4000-8000-000000000002",
   checkA: "b0000000-0000-4000-8000-000000000001",
   checkB: "b0000000-0000-4000-8000-000000000002",
   scorecardA: "c0000000-0000-4000-8000-000000000001",
@@ -124,6 +128,8 @@ try {
       "speaker_mapping_versions",
       "speaker_mapping_entries",
       "analysis_runs",
+      "structured_observations",
+      "observation_corrections",
       "evidence_groups",
       "evidence_references",
       "outcome_events",
@@ -268,6 +274,21 @@ try {
         (${ids.analysisB}, ${ids.orgB}, ${ids.conversationB}, ${ids.transcriptionB}, 'fixture', 'fixture-v1', 'fixture', 'fixture', 'fixture', 'completed')
     `;
     await tx`
+      insert into public.evidence_groups (id, organization_id, conversation_id, purpose, source_analysis_run_id) values
+        (${ids.evidenceA}, ${ids.orgA}, ${ids.conversationA}, 'security-observation', ${ids.analysisA}),
+        (${ids.evidenceB}, ${ids.orgB}, ${ids.conversationB}, 'security-observation', ${ids.analysisB})
+    `;
+    await tx`
+      insert into public.structured_observations (
+        id, organization_id, conversation_id, analysis_run_id, observation_type, normalized_key,
+        value_text, attributes, original_model_value, evidence_group_id
+      ) values
+        (${ids.observationA}, ${ids.orgA}, ${ids.conversationA}, ${ids.analysisA}, 'need', 'fixture-a-need',
+          'Fixture need A', '{}'::jsonb, '{}'::jsonb, ${ids.evidenceA}),
+        (${ids.observationB}, ${ids.orgB}, ${ids.conversationB}, ${ids.analysisB}, 'need', 'fixture-b-need',
+          'Fixture need B', '{}'::jsonb, '{}'::jsonb, ${ids.evidenceB})
+    `;
+    await tx`
       insert into public.check_definitions (
         id, organization_id, key, name, description, purpose, applicability,
         evaluation_strategy, observation_types, weight, created_by_membership_id
@@ -318,6 +339,8 @@ try {
         ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.recordingA}/audio.webm`}),
         ('conversation-audio', ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`})
     `;
+
+    let correctionA;
 
     await assumeRole(tx, "authenticated", ids.bootstrapUser);
     assertEqual(
@@ -386,6 +409,8 @@ try {
     assertEqual(await count(tx, tx`select count(*) from public.transcription_runs where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcription run");
     assertEqual(await count(tx, tx`select count(*) from public.transcript_segments where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcript segment");
     assertEqual(await count(tx, tx`select count(*) from public.outcome_events where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant outcome");
+    assertEqual(await count(tx, tx`select count(*) from public.structured_observations where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant observations");
+    assertEqual(await count(tx, tx`select count(*) from public.observation_corrections where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant corrections");
     assertEqual(await count(tx, tx`select count(*) from public.check_definitions where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B check definitions");
     await expectDenied(tx, "non-admin cannot create organization check configuration", () => tx`
       insert into public.check_definitions (
@@ -399,6 +424,21 @@ try {
     `);
     assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B check evaluations");
     assertEqual(await count(tx, tx`select count(*) from public.scorecard_evaluations where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B scorecard evaluations");
+    const [{ correction_id: proposedCorrectionId }] = await tx`
+      select public.propose_observation_correction(
+        ${ids.observationA}, '{"valueText":"Corrected fixture need A"}'::jsonb, 'Security test correction'
+      ) as correction_id
+    `;
+    correctionA = proposedCorrectionId;
+    assertEqual(Boolean(correctionA), true, "representative can propose an append-only correction to own observation");
+    await expectDenied(tx, "representative cannot propose correction for cross-tenant observation", () => tx`
+      select public.propose_observation_correction(
+        ${ids.observationB}, '{"valueText":"Cross-tenant attack"}'::jsonb, null
+      )
+    `);
+    await expectDenied(tx, "representative cannot confirm a correction", () => tx`
+      select public.review_observation_correction(${correctionA}, 'confirmed')
+    `);
     assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgA}/%`}`), 1, "representative reads own authorized audio path");
     assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgB}/%`}`), 0, "representative cannot read cross-tenant audio path");
 
@@ -536,6 +576,15 @@ try {
         ${ids.conversationA}, 'audio/webm', 128, 1000, 'browser_recording', 'manager.webm'
       )
     `);
+    await tx`select public.review_observation_correction(${correctionA}, 'confirmed')`;
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.observation_corrections where id = ${correctionA} and review_state = 'confirmed'`,
+      ),
+      1,
+      "manager confirms an in-scope correction without overwriting source observation",
+    );
 
     await assumeRole(tx, "authenticated", ids.adminAUser);
     assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 3, "admin reads permitted organization conversations");

@@ -29,8 +29,9 @@ export async function POST(request: Request, { params }: RouteContext) {
     p_entries: payload.data.entries,
   });
   if (error || !data) {
+    console.error("Speaker mapping save failed", { code: error?.code, message: error?.message });
     return NextResponse.json(
-      { error: error?.message ?? "Speaker mapping could not be saved." },
+      { error: "Speaker mapping could not be saved for this transcript." },
       { status: error?.code === "42501" ? 403 : 400 },
     );
   }

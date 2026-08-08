@@ -17,6 +17,24 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "android-phone",
+      use: {
+        ...devices["Pixel 5"],
+      },
+    },
+    {
+      name: "android-tablet",
+      use: {
+        browserName: "chromium",
+        deviceScaleFactor: 1,
+        hasTouch: true,
+        isMobile: true,
+        userAgent:
+          "Mozilla/5.0 (Linux; Android 14; Tablet) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        viewport: { width: 768, height: 1024 },
+      },
+    },
   ],
   webServer: {
     command: "npm.cmd run start",
