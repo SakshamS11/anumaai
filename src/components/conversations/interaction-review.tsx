@@ -49,7 +49,7 @@ function observationValue(observation: Observation) {
   return null;
 }
 
-function notesFor(observations: Observation[]) {
+export function notesFor(observations: Observation[]) {
   const labels: Array<[string, string[]]> = [
     ["Customer need", ["need"]],
     ["Budget", ["budget"]],
@@ -69,7 +69,7 @@ function notesFor(observations: Observation[]) {
   });
 }
 
-function coachingFor(review: Review, observations: Observation[]) {
+export function coachingFor(review: Review, observations: Observation[]) {
   const strengths = review.checks
     .filter((check) => check.state === "met" || check.state === "partial")
     .slice(0, 2);
