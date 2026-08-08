@@ -16,29 +16,40 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
   const { organization, membership, assignments, locations, teams } = context.current;
   const conversations = await listConversations(organization.id);
   const assignedLocationIds = new Set(
-    assignments.flatMap((assignment) => (assignment.locationId ? [assignment.locationId] : [])),
+    assignments.flatMap((item) => (item.locationId ? [item.locationId] : [])),
   );
   const assignedTeamIds = new Set(
-    assignments.flatMap((assignment) => (assignment.teamId ? [assignment.teamId] : [])),
+    assignments.flatMap((item) => (item.teamId ? [item.teamId] : [])),
   );
   const allowedLocations =
     membership.role === "admin"
       ? locations
-      : locations.filter((location) => assignedLocationIds.has(location.id));
+      : locations.filter((item) => assignedLocationIds.has(item.id));
   const allowedTeams =
-    membership.role === "admin" ? teams : teams.filter((team) => assignedTeamIds.has(team.id));
+    membership.role === "admin" ? teams : teams.filter((item) => assignedTeamIds.has(item.id));
   const canCreate = membership.role === "admin" || assignments.length > 0;
-  const locationNames = new Map(locations.map((location) => [location.id, location.name]));
-  const teamNames = new Map(teams.map((team) => [team.id, team.name]));
-  const formatter = new Intl.DateTimeFormat("en", {
+  const locationNames = new Map(locations.map((item) => [item.id, item.name]));
+  const teamNames = new Map(teams.map((item) => [item.id, item.name]));
+  const dateFormatter = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
-    timeStyle: "short",
+    timeZone: organization.timezone,
+  });
+  const timeFormatter = new Intl.DateTimeFormat("en", {
+    hour: "2-digit",
+    minute: "2-digit",
     timeZone: organization.timezone,
   });
 
   return (
     <>
-      <PageHeader eyebrow="Persistent interaction records" title="Conversations" />
+      <div className="page-heading-row">
+        <PageHeader eyebrow="Interactions" title="Conversations" />
+        {canCreate ? (
+          <a className="button button-primary" href="#new-interaction">
+            New interaction
+          </a>
+        ) : null}
+      </div>
       {message.error ? (
         <p className="auth-message auth-message-error" role="alert">
           {message.error}
@@ -46,27 +57,28 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
       ) : null}
       {message.created ? (
         <p className="auth-message" role="status">
-          Conversation shell created. No audio is attached yet.
+          New interaction created. No audio is attached yet.
         </p>
       ) : null}
 
-      <section className="product-panel conversation-create-panel">
-        <div className="section-heading">
+      {canCreate ? (
+        <section
+          className="interaction-creation"
+          id="new-interaction"
+          aria-labelledby="new-interaction-title"
+        >
           <div>
-            <p className="eyebrow">Phase 2 foundation</p>
-            <h2>Create a conversation shell</h2>
+            <p className="eyebrow">Prepare an interaction</p>
+            <h2 id="new-interaction-title">Set the context before recording becomes available.</h2>
+            <p>
+              Record the interaction details and the customer’s recording-consent decision. No audio
+              or intelligence is created here.
+            </p>
           </div>
-          <StatusBadge label="No recording yet" />
-        </div>
-        <p className="section-copy">
-          Create the secure business record that Phase 3 will attach audio to. No transcript or
-          intelligence is fabricated.
-        </p>
-        {canCreate ? (
           <form action={createConversation} className="product-form">
             <label className="form-field form-field-wide">
-              <span>Label (optional)</span>
-              <input maxLength={160} name="title" placeholder="Saturday showroom visit" />
+              <span>Interaction label (optional)</span>
+              <input maxLength={160} name="title" placeholder="Saturday laptop enquiry" />
             </label>
             <label className="form-field">
               <span>Vertical</span>
@@ -79,9 +91,9 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
               <span>Location</span>
               <select defaultValue="" name="location_id">
                 <option value="">No location</option>
-                {allowedLocations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.name}
+                {allowedLocations.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
@@ -90,15 +102,15 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
               <span>Team</span>
               <select defaultValue="" name="team_id">
                 <option value="">No team</option>
-                {allowedTeams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name}
+                {allowedTeams.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
             </label>
             <label className="form-field">
-              <span>Consent status</span>
+              <span>Customer recording consent</span>
               <select defaultValue="unknown" name="consent_status">
                 <option value="granted">Granted</option>
                 <option value="declined">Declined</option>
@@ -107,7 +119,7 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
               </select>
             </label>
             <label className="form-field">
-              <span>Capture method</span>
+              <span>How was consent captured?</span>
               <select defaultValue="verbal" name="consent_capture_method">
                 <option value="verbal">Verbal</option>
                 <option value="written">Written</option>
@@ -115,73 +127,82 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
                 <option value="other">Other</option>
               </select>
             </label>
+            <p className="consent-note form-field-wide">
+              This records product-level consent provenance. Legal requirements remain specific to
+              the organization and jurisdiction.
+            </p>
             <button className="button button-primary form-field-wide" type="submit">
-              Create conversation
+              Create interaction
             </button>
           </form>
-        ) : (
-          <p className="security-note">
-            An administrator must assign your membership to a location or team before you can create
-            conversations.
-          </p>
-        )}
-      </section>
+        </section>
+      ) : (
+        <p className="security-note">
+          An administrator must assign your membership to a location or team before you can prepare
+          an interaction.
+        </p>
+      )}
 
-      <section className="conversation-section">
+      <section className="conversation-section" aria-labelledby="conversation-list-title">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Visible in your scope</p>
-            <h2>Conversation records</h2>
+            <p className="eyebrow">Your authorized scope</p>
+            <h2 id="conversation-list-title">Interaction record</h2>
           </div>
           <span className="count-label">{conversations.length}</span>
         </div>
         {conversations.length ? (
-          <div className="conversation-list">
+          <ol className="interaction-list">
             {conversations.map((conversation) => (
-              <article className="conversation-card" key={conversation.id}>
-                <div className="conversation-card-heading">
-                  <div>
-                    <p className="eyebrow">{conversation.vertical}</p>
-                    <h3>{conversation.title ?? "Untitled interaction"}</h3>
-                  </div>
-                  <StatusBadge label={conversation.lifecycleStatus.replaceAll("_", " ")} />
+              <li key={conversation.id}>
+                <time dateTime={conversation.startedAt}>
+                  <strong>{timeFormatter.format(new Date(conversation.startedAt))}</strong>
+                  <span>{dateFormatter.format(new Date(conversation.startedAt))}</span>
+                </time>
+                <div className="interaction-main">
+                  <h3>{conversation.title ?? "Untitled interaction"}</h3>
+                  <p>
+                    {conversation.vertical} <span aria-hidden="true">·</span>{" "}
+                    {conversation.locationId
+                      ? (locationNames.get(conversation.locationId) ?? "Scoped location")
+                      : "No location"}
+                    {conversation.teamId ? (
+                      <>
+                        <span aria-hidden="true">·</span>{" "}
+                        {teamNames.get(conversation.teamId) ?? "Scoped team"}
+                      </>
+                    ) : null}
+                  </p>
                 </div>
-                <dl className="metadata-grid">
-                  <div>
-                    <dt>Started</dt>
-                    <dd>{formatter.format(new Date(conversation.startedAt))}</dd>
-                  </div>
-                  <div>
-                    <dt>Location</dt>
-                    <dd>
-                      {conversation.locationId
-                        ? (locationNames.get(conversation.locationId) ?? "Scoped location")
-                        : "Not set"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Team</dt>
-                    <dd>
-                      {conversation.teamId
-                        ? (teamNames.get(conversation.teamId) ?? "Scoped team")
-                        : "Not set"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Consent</dt>
-                    <dd>{conversation.consentStatus?.replaceAll("_", " ") ?? "Not recorded"}</dd>
-                  </div>
-                </dl>
-                <p className="audio-state">
-                  {conversation.recordingCount
-                    ? `${conversation.recordingCount} recording record${conversation.recordingCount === 1 ? "" : "s"}`
-                    : "No audio attached — recording begins in Phase 3."}
-                </p>
-              </article>
+                <div className="interaction-status">
+                  <span>
+                    Customer recording consent:{" "}
+                    {conversation.consentStatus?.replaceAll("_", " ") ?? "not recorded"}
+                  </span>
+                  <StatusBadge
+                    label={
+                      conversation.recordingCount ? "Audio metadata present" : "No audio attached"
+                    }
+                    tone={conversation.recordingCount ? "verified" : "neutral"}
+                  />
+                </div>
+              </li>
             ))}
-          </div>
+          </ol>
         ) : (
-          <p className="section-copy">No conversation records exist in your authorized scope.</p>
+          <div className="editorial-empty">
+            <p className="eyebrow">No interactions yet</p>
+            <h3>This is where prepared customer interactions will appear.</h3>
+            <p>
+              Start a new interaction to record its business context and customer recording consent.
+              Audio is not available yet.
+            </p>
+            {canCreate ? (
+              <a className="button button-secondary" href="#new-interaction">
+                Prepare an interaction
+              </a>
+            ) : null}
+          </div>
         )}
       </section>
     </>

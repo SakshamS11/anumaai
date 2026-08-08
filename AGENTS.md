@@ -71,6 +71,18 @@ After each implementation phase, run the configured formatter, lint, TypeScript 
 
 Every phase handoff must summarize changed files, architecture decisions, assumptions, unresolved risks, and founder decisions required. Do not advance to the next phase without explicit instruction.
 
+## Product design rules
+
+ANUMA uses an **Evidence Editorial** product language: prioritize a finding, then its context, then the interaction, then source evidence. The transcript is evidence infrastructure, not the product protagonist.
+
+- Do not produce generic AI/SaaS styling: no gradients, glow, floating decoration, stock/generated imagery, brain/robot/sparkle motifs, decorative waveforms, fake KPI dashboards, or card-inside-card layouts.
+- Every prominent visual element must communicate information, hierarchy, a product relationship, an action, system status, or interaction feedback. Remove decorative elements without a product meaning.
+- Use ANUMA-native structures where useful: speaker turns, evidence markers, timestamps, annotations, quality states, outcome relationships, and processing state descriptions. Do not stage them as real product data outside clearly labelled illustrative explanation.
+- Use Signal Coral sparingly for primary action, selection, and evidence markers; use Electric Aqua for verified/linked/healthy states; keep most surfaces neutral. Normal-sized text on Coral or Aqua uses Carbon, not white.
+- Use semantic HTML, visible focus, keyboard-accessible interactions, logical source order, labelled forms and status messages, reduced motion, and touch-friendly controls. Target WCAG 2.2 AA and approximately 44px primary touch targets.
+- Keep product language business-centred. Do not make AI the protagonist or expose database/phase/pipeline terminology in ordinary user interfaces.
+- Navigation should be stable and grouped by the user's mental model. Consistency does not require every page to use the same card/KPI/chart template.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

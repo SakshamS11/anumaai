@@ -13,11 +13,9 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   return (
     <div className="auth-card">
       <div>
-        <p className="eyebrow">Development access</p>
+        <p className="eyebrow">Organization access</p>
         <h2>Create your ANUMA account</h2>
-        <p className="auth-copy">
-          This creates a real Supabase email/password account for development use.
-        </p>
+        <p className="auth-copy">Create an account to set up or join an organization.</p>
       </div>
       {error ? (
         <p className="auth-message auth-message-error" role="alert">

@@ -18,13 +18,17 @@ test("the unauthenticated entry point leads to sign-in", async ({ page }) => {
 test("sign-in and sign-up expose real credential forms", async ({ page }) => {
   await page.goto("/sign-in");
 
+  await expect(page.getByText("Illustrative interaction")).toBeVisible();
+  const needFinding = page.getByRole("button", { name: /Need Gaming Source turn/ });
+  await needFinding.focus();
+  await expect(needFinding).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByLabel("Email address")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create a development account" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Create an account" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Create a development account" }).click();
+  await page.getByRole("link", { name: "Create an account" }).click();
   await expect(page).toHaveURL(/\/sign-up$/);
-  await expect(page.getByRole("button", { name: "Create development account" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
 });
 
 for (const route of protectedRoutes) {

@@ -13,11 +13,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <div className="auth-card">
       <div>
-        <p className="eyebrow">Welcome back</p>
+        <p className="eyebrow">Account access</p>
         <h2>Sign in to ANUMA</h2>
-        <p className="auth-copy">
-          Use your development account to enter the application foundation.
-        </p>
+        <p className="auth-copy">Sign in to continue to your organization.</p>
       </div>
       {error ? (
         <p className="auth-message auth-message-error" role="alert">
@@ -31,7 +29,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       ) : null}
       <AuthForm action={signIn} mode="sign-in" />
       <p className="auth-switch">
-        New to ANUMA? <Link href="/sign-up">Create a development account</Link>.
+        New to ANUMA? <Link href="/sign-up">Create an account</Link>.
       </p>
     </div>
   );

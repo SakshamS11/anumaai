@@ -12,6 +12,31 @@ The interface communicates trust, evidence, intelligence, clarity, and action. I
 - Every semantic claim should offer an evidence path.
 - Uncertainty and sample size are visible, never buried.
 
+## Evidence Editorial
+
+ANUMA is an editorial intelligence product, not a generic dashboard or AI marketing surface. The primary disclosure order is:
+
+```text
+finding → context → interaction → evidence
+```
+
+Use typography, whitespace, rules, concise labels and structured comparison to establish hierarchy. Cards are reserved for genuine self-contained units; lists, annotations, columns and separators are usually better for scans of related interactions. Do not repeat a universal header + KPI cards + chart + table template across product areas.
+
+Prominent visuals must communicate information, hierarchy, product relationship, evidence, action, system status or interaction feedback. Do not use gradients, glow, floating shapes, robot/brain/sparkle symbols, decorative waveforms, stock/generated imagery, gamification, fake KPI data, or chart decoration.
+
+### Product-native primitives
+
+- **Evidence marker:** restrained Coral dot plus a timestamp/source label. It indicates a link to source evidence; it does not claim evidence exists when used in an illustrative composition.
+- **Conversation turns:** speaker labels, aligned turn rails and timestamps describe conversational structure, never audio loudness.
+- **Processing grammar:** concise named lifecycle states, not generic spinners. Do not show staged processing on persisted data before that processing exists.
+- **Status treatment:** text and color/shape together. Aqua means verified/linked/healthy; Coral is priority/selection/evidence; risk red is failure; neutral and warning remain semantically distinct.
+
+### Accessibility and interaction
+
+Target WCAG 2.2 AA. Controls keep visible focus, semantic names and useful keyboard operation. Primary controls generally have a comfortable 44px target. Hover-only disclosures must also work on focus; motion communicates state change only and is disabled/reduced under `prefers-reduced-motion`. Do not communicate important state by color alone.
+
+Authentication is a warm Porcelain composition with an explicitly labelled illustrative evidence interaction—not a dark/white split SaaS hero. The example conversation is never real customer data. It teaches `structured finding ↔ source turn` through hover, focus and click.
+
 ## Brand tokens
 
 ### Core color

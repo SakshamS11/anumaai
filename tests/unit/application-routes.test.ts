@@ -14,8 +14,6 @@ describe("application route registry", () => {
   });
 
   it("provides the intended empty state for a registered route", () => {
-    expect(getApplicationRoute("/conversations").description).toContain(
-      "Recorded and uploaded interactions",
-    );
+    expect(getApplicationRoute("/conversations").description).toContain("Prepared interactions");
   });
 });

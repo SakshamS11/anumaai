@@ -140,12 +140,12 @@ test("authenticated Phase 2 foundation persists and remains honest", async ({ pa
   await page.getByLabel("Vertical").selectOption("automotive");
   await page.getByLabel("Location").selectOption({ label: locationName });
   await page.getByLabel("Team").selectOption({ label: teamName });
-  await page.getByLabel("Consent status").selectOption("granted");
-  await page.getByLabel("Capture method").selectOption("verbal");
-  await page.getByRole("button", { name: "Create conversation" }).click();
+  await page.getByLabel("Customer recording consent").selectOption("granted");
+  await page.getByLabel("How was consent captured?").selectOption("verbal");
+  await page.getByRole("button", { name: "Create interaction" }).click();
 
   await expect(page.getByRole("heading", { name: conversationTitle })).toBeVisible();
-  await expect(page.getByText("No audio attached — recording begins in Phase 3.")).toBeVisible();
+  await expect(page.getByText("No audio attached")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: conversationTitle })).toBeVisible();
 

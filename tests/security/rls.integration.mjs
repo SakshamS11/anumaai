@@ -38,6 +38,10 @@ const ids = {
   conversationB: "60000000-0000-4000-8000-000000000003",
   recordingA: "70000000-0000-4000-8000-000000000001",
   recordingB: "70000000-0000-4000-8000-000000000002",
+  otherRecordingA: "70000000-0000-4000-8000-000000000003",
+  managerAttemptRecordingA: "70000000-0000-4000-8000-000000000004",
+  adminRecordingA: "70000000-0000-4000-8000-000000000005",
+  representativeUploadRecordingA: "70000000-0000-4000-8000-000000000006",
   transcriptionA: "80000000-0000-4000-8000-000000000001",
   transcriptionB: "80000000-0000-4000-8000-000000000002",
   segmentA: "90000000-0000-4000-8000-000000000001",
@@ -201,7 +205,11 @@ try {
         file_size_bytes, status, created_by_membership_id
       ) values
         (${ids.recordingA}, ${ids.orgA}, ${ids.conversationA}, ${`${ids.orgA}/${ids.conversationA}/${ids.recordingA}/audio.webm`}, 'audio/webm', 128, 'uploaded', ${ids.repAMembership}),
-        (${ids.recordingB}, ${ids.orgB}, ${ids.conversationB}, ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`}, 'audio/webm', 128, 'uploaded', ${ids.repBMembership})
+        (${ids.recordingB}, ${ids.orgB}, ${ids.conversationB}, ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`}, 'audio/webm', 128, 'uploaded', ${ids.repBMembership}),
+        (${ids.otherRecordingA}, ${ids.orgA}, ${ids.otherConversationA}, ${`${ids.orgA}/${ids.otherConversationA}/${ids.otherRecordingA}/audio.webm`}, 'audio/webm', 128, 'pending', ${ids.otherRepAMembership}),
+        (${ids.managerAttemptRecordingA}, ${ids.orgA}, ${ids.conversationA}, ${`${ids.orgA}/${ids.conversationA}/${ids.managerAttemptRecordingA}/audio.webm`}, 'audio/webm', 128, 'pending', ${ids.repAMembership}),
+        (${ids.adminRecordingA}, ${ids.orgA}, ${ids.conversationA}, ${`${ids.orgA}/${ids.conversationA}/${ids.adminRecordingA}/audio.webm`}, 'audio/webm', 128, 'pending', ${ids.adminAMembership}),
+        (${ids.representativeUploadRecordingA}, ${ids.orgA}, ${ids.conversationA}, ${`${ids.orgA}/${ids.conversationA}/${ids.representativeUploadRecordingA}/audio.webm`}, 'audio/webm', 128, 'pending', ${ids.repAMembership})
     `;
     await tx`
       insert into public.transcription_runs (
@@ -267,6 +275,10 @@ try {
       0,
       "anonymous cannot read private audio objects",
     );
+    await expectDenied(tx, "anonymous cannot upload private audio", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.recordingA}/audio.webm`})
+    `);
 
     await assumeRole(tx, "authenticated", ids.repAUser);
     assertEqual(await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgA}`), 1, "representative reads own organization");
@@ -290,10 +302,40 @@ try {
       ) as conversation_id
     `;
     pass("representative atomically creates own assigned-scope conversation");
+    const createdParticipants = await tx`
+      select role, membership_id, display_label
+      from public.conversation_participants
+      where conversation_id = ${repConversationId}
+      order by role
+    `;
+    assertEqual(createdParticipants.length, 2, "conversation creation creates representative and customer participants");
+    const customerParticipant = createdParticipants.find((participant) => participant.role === "customer");
+    const representativeParticipant = createdParticipants.find(
+      (participant) => participant.role === "representative",
+    );
+    assertEqual(customerParticipant?.membership_id, null, "anonymous customer participant has no membership");
+    assertEqual(customerParticipant?.display_label, "Customer", "customer participant has no PII label");
+    assertEqual(representativeParticipant?.membership_id, ids.repAMembership, "representative participant keeps authenticated membership");
+    assertEqual(representativeParticipant?.display_label, "Representative", "representative participant label is correct");
     assertEqual(
       await count(tx, tx`select count(*) from public.consent_records where conversation_id = ${repConversationId} and status = 'granted'`),
       1,
       "conversation creation records consent provenance",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`
+          select count(*)
+          from public.consent_records as consent
+          join public.conversation_participants as participant on participant.id = consent.participant_id
+          where consent.conversation_id = ${repConversationId}
+            and participant.role = 'customer'
+            and participant.membership_id is null
+        `,
+      ),
+      1,
+      "customer recording consent references the anonymous customer participant",
     );
     await expectDenied(tx, "representative cannot create conversation for another representative", () => tx`
       insert into public.conversations (
@@ -311,18 +353,38 @@ try {
     `);
     await tx`
       insert into storage.objects (bucket_id, name)
-      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/70000000-0000-4000-8000-000000000010/new.webm`})
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.representativeUploadRecordingA}/audio.webm`})
     `;
-    pass("representative can insert authorized private audio path");
-    await expectDenied(tx, "representative cannot insert cross-tenant private audio path", () => tx`
+    pass("representative uploads valid own-conversation recording path");
+    await expectDenied(tx, "representative cannot upload orphan recording path", () => tx`
       insert into storage.objects (bucket_id, name)
-      values ('conversation-audio', ${`${ids.orgB}/${ids.conversationB}/70000000-0000-4000-8000-000000000011/attack.webm`})
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/70000000-0000-4000-8000-000000000010/audio.webm`})
+    `);
+    await expectDenied(tx, "representative cannot upload recording from another conversation", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.otherRecordingA}/audio.webm`})
+    `);
+    await expectDenied(tx, "representative cannot upload cross-tenant recording", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`})
+    `);
+    await expectDenied(tx, "representative cannot upload with an incorrect organization path", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgB}/${ids.conversationA}/${ids.representativeUploadRecordingA}/audio.webm`})
+    `);
+    await expectDenied(tx, "representative cannot upload with an incorrect conversation path", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgA}/${ids.otherConversationA}/${ids.representativeUploadRecordingA}/audio.webm`})
     `);
 
     await assumeRole(tx, "authenticated", ids.managerAUser);
     assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationA}`), 1, "manager reads assigned location/team conversation");
     assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`), 0, "manager cannot read unassigned location/team conversation");
     assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationB}`), 0, "manager cannot read cross-tenant conversation");
+    await expectDenied(tx, "manager review access does not grant audio upload authority", () => tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.managerAttemptRecordingA}/audio.webm`})
+    `);
 
     await assumeRole(tx, "authenticated", ids.adminAUser);
     assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 3, "admin reads permitted organization conversations");
@@ -332,6 +394,11 @@ try {
       values (${ids.orgA}, 'Admin-created location', 'other')
     `;
     pass("admin manages own organization configuration");
+    await tx`
+      insert into storage.objects (bucket_id, name)
+      values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.adminRecordingA}/audio.webm`})
+    `;
+    pass("admin uploads authorized organization recording path");
     await expectDenied(tx, "admin cannot manage another organization configuration", () => tx`
       insert into public.locations (organization_id, name, location_type)
       values (${ids.orgB}, 'Cross-tenant attack', 'other')

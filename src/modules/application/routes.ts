@@ -6,6 +6,7 @@ export type ApplicationRoute = {
     | "/outcome-intelligence"
     | "/administration";
   label: string;
+  group: "Interactions" | "Intelligence" | "Configure";
   eyebrow: string;
   title: string;
   description: string;
@@ -16,15 +17,17 @@ export const applicationRoutes: ApplicationRoute[] = [
   {
     href: "/conversations",
     label: "Conversations",
+    group: "Interactions",
     eyebrow: "Interaction evidence",
     title: "Conversations",
     description:
-      "Recorded and uploaded interactions will appear here. Evidence, processing status, and interaction intelligence will become available in later phases.",
+      "Prepared interactions appear here. Evidence and structured intelligence will become available after real interactions can be processed.",
     signal: "evidence",
   },
   {
     href: "/customer-intelligence",
     label: "Customer Intelligence",
+    group: "Intelligence",
     eyebrow: "Customer intelligence",
     title: "Customer Intelligence",
     description:
@@ -34,6 +37,7 @@ export const applicationRoutes: ApplicationRoute[] = [
   {
     href: "/frontline-performance",
     label: "Frontline Performance",
+    group: "Intelligence",
     eyebrow: "Frontline intelligence",
     title: "Frontline Performance",
     description:
@@ -43,6 +47,7 @@ export const applicationRoutes: ApplicationRoute[] = [
   {
     href: "/outcome-intelligence",
     label: "Outcome Intelligence",
+    group: "Intelligence",
     eyebrow: "Outcome intelligence",
     title: "Outcome Intelligence",
     description:
@@ -52,10 +57,11 @@ export const applicationRoutes: ApplicationRoute[] = [
   {
     href: "/administration",
     label: "Administration",
-    eyebrow: "Application foundation",
+    group: "Configure",
+    eyebrow: "Organization settings",
     title: "Administration",
     description:
-      "Organization configuration, teams, trackers and scorecards will be managed here in later phases.",
+      "Manage the organization context that supports frontline interactions. Additional configuration will appear when it is available.",
     signal: "administration",
   },
 ];

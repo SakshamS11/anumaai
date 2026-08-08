@@ -24,6 +24,7 @@ type AppShellProps = {
 export function AppShell({ children, context, signOut, switchOrganization }: AppShellProps) {
   const pathname = usePathname();
   const { currentOrganization } = context;
+  const navigationGroups = ["Interactions", "Intelligence", "Configure"] as const;
   const assignmentSummary =
     context.assignmentCount > 0
       ? `${context.assignmentCount} active scope assignment${context.assignmentCount === 1 ? "" : "s"}`
@@ -34,31 +35,38 @@ export function AppShell({ children, context, signOut, switchOrganization }: App
   return (
     <div className="app-frame">
       <aside className="sidebar">
-        <Link className="brand" href="/conversations">
-          <span aria-hidden="true" className="brand-mark">
-            A
-          </span>
-          <span>ANUMA</span>
+        <Link className="wordmark wordmark-inverse" href="/conversations">
+          ANUMA
         </Link>
         <p className="sidebar-kicker">Frontline Interaction Intelligence</p>
         <nav aria-label="Primary navigation" className="primary-navigation">
-          {applicationRoutes.map((route) => {
-            const active = pathname === route.href;
-            return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className={active ? "nav-link nav-link-active" : "nav-link"}
-                href={route.href}
-                key={route.href}
-              >
-                {route.label}
-              </Link>
-            );
-          })}
+          {navigationGroups.map((group) => (
+            <div className="navigation-group" key={group}>
+              <p>{group}</p>
+              {applicationRoutes
+                .filter((route) => route.group === group)
+                .map((route) => {
+                  const active = pathname === route.href;
+                  return (
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className={active ? "nav-link nav-link-active" : "nav-link"}
+                      href={route.href}
+                      key={route.href}
+                    >
+                      {route.label}
+                    </Link>
+                  );
+                })}
+            </div>
+          ))}
         </nav>
         <div className="sidebar-footer">
           <span className="context-dot" aria-hidden="true" />
-          <span>{currentOrganization.name}</span>
+          <span>
+            <strong>{currentOrganization.name}</strong>
+            <small>{roleLabel(currentOrganization.role)}</small>
+          </span>
         </div>
       </aside>
 

@@ -16,6 +16,6 @@ describe("AuthForm", () => {
     render(<AuthForm action={vi.fn()} mode="sign-up" />);
 
     expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "new-password");
-    expect(screen.getByRole("button", { name: "Create development account" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Create account" })).toBeEnabled();
   });
 });

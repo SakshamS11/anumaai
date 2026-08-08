@@ -1,24 +1,29 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { EvidenceExplainer } from "@/components/auth/evidence-explainer";
+
 export default function AuthLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <main className="auth-layout">
-      <section className="auth-introduction">
-        <Link className="brand brand-dark" href="/sign-in">
-          <span aria-hidden="true" className="brand-mark">
-            A
-          </span>
-          <span>ANUMA</span>
+      <header className="auth-brandbar">
+        <Link className="wordmark" href="/sign-in">
+          ANUMA
         </Link>
-        <p className="eyebrow">Frontline Interaction Intelligence</p>
-        <h1>Understand the conversation that shaped the outcome.</h1>
-        <p>
-          ANUMA turns frontline interaction evidence into structured, reviewable business
-          intelligence.
-        </p>
+        <p>Frontline Interaction Intelligence</p>
+      </header>
+      <section className="auth-composition">
+        <div className="auth-message-block">
+          <p className="eyebrow">Evidence-backed intelligence</p>
+          <h1>Frontline conversations, made measurable.</h1>
+          <p>
+            ANUMA turns real customer interactions into structured, evidence-backed business
+            intelligence.
+          </p>
+          <EvidenceExplainer />
+        </div>
+        <section className="auth-panel">{children}</section>
       </section>
-      <section className="auth-panel">{children}</section>
     </main>
   );
 }

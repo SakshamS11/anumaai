@@ -9,7 +9,7 @@ type AuthFormProps = {
 
 function SubmitButton({ mode }: Pick<AuthFormProps, "mode">) {
   const { pending } = useFormStatus();
-  const label = mode === "sign-in" ? "Sign in" : "Create development account";
+  const label = mode === "sign-in" ? "Sign in" : "Create account";
 
   return (
     <button className="button button-primary auth-submit" disabled={pending} type="submit">
