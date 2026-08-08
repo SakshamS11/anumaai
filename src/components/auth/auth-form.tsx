@@ -26,12 +26,18 @@ export function AuthForm({ mode }: AuthFormProps) {
       const result =
         mode === "sign-in"
           ? await supabase.auth.signInWithPassword({ email, password })
-          : await supabase.auth.signUp({ email, password });
+          : await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                emailRedirectTo: `${window.location.origin}/auth/callback?next=/setup`,
+              },
+            });
 
       if (result.error) {
         setMessage(
           mode === "sign-in"
-            ? "We could not sign you in. Check your details and try again."
+            ? "We could not sign you in. Check your details or reset your password."
             : "We could not create your account. Please try again.",
         );
         return;
