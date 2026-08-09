@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSiteOrigin, getSiteUrl } from "@/lib/site-url";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 function redirectWithMessage(request: NextRequest, key: "error" | "message", value: string) {
@@ -18,8 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const callback = new URL("/auth/callback", getSiteOrigin(request));
-  callback.searchParams.set("next", "/reset-password");
+  const callback = getSiteUrl(request, "/auth/recovery");
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: callback.toString(),
