@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server";
 
+const ANUMA_PRODUCTION_ORIGIN = "https://anumaai-ten.vercel.app";
+
 function isLocalHost(host: string): boolean {
   const hostname = host.split(":")[0]?.toLowerCase() ?? "";
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
@@ -22,19 +24,18 @@ export function getSiteOrigin(request: NextRequest): string {
     return normalizeOrigin(configured);
   }
 
+  if (process.env.NODE_ENV === "production") {
+    const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+    return normalizeOrigin(vercelProductionUrl || ANUMA_PRODUCTION_ORIGIN);
+  }
+
   const forwardedHost =
     request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ??
     request.headers.get("host")?.trim();
 
   if (forwardedHost) {
-    if (isLocalHost(forwardedHost)) {
-      const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
-      return `${forwardedProtocol === "https" ? "https" : "http"}://${forwardedHost}`;
-    }
-
-    // Hosted ANUMA traffic is HTTPS. Do not allow an internal proxy URL to downgrade
-    // email confirmations, password recovery links, or post-auth redirects to HTTP.
-    return `https://${forwardedHost}`;
+    const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+    return `${forwardedProtocol === "https" ? "https" : "http"}://${forwardedHost}`;
   }
 
   return normalizeOrigin(new URL(request.url).origin);
