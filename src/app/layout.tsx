@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans, Noto_Sans_Devanagari } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { AuthFragmentGuard } from "@/components/auth/auth-fragment-guard";
+
 import "./globals.css";
 
 const plex = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-plex", display: "swap" });
@@ -22,7 +24,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${plex.variable} ${devanagari.variable}`}>{children}</body>
+      <body className={`${plex.variable} ${devanagari.variable}`}>
+        <AuthFragmentGuard />
+        {children}
+      </body>
     </html>
   );
 }

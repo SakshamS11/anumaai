@@ -41,7 +41,7 @@ export async function createLocation(formData: FormData) {
     locationType: formData.get("location_type"),
     timezone: formData.get("timezone") || undefined,
   });
-  if (!input.success) redirect("/administration?error=Check+the+location+details.");
+  if (!input.success) redirect("/administration/structure?error=Check+the+location+details.");
 
   const supabase = await createClient();
   const { error } = await supabase.from("locations").insert({
@@ -51,10 +51,10 @@ export async function createLocation(formData: FormData) {
     location_type: input.data.locationType,
     timezone: input.data.timezone || null,
   });
-  if (error) redirect("/administration?error=The+location+could+not+be+created.");
+  if (error) redirect("/administration/structure?error=The+location+could+not+be+created.");
 
-  revalidatePath("/", "layout");
-  redirect("/administration?created=location");
+  revalidatePath("/administration/structure");
+  redirect("/administration/structure?created=location");
 }
 
 export async function createTeam(formData: FormData) {
@@ -66,17 +66,17 @@ export async function createTeam(formData: FormData) {
   }
 
   const input = teamSchema.safeParse({ name: formData.get("name") });
-  if (!input.success) redirect("/administration?error=Check+the+team+name.");
+  if (!input.success) redirect("/administration/structure?error=Check+the+team+name.");
 
   const supabase = await createClient();
   const { error } = await supabase.from("teams").insert({
     organization_id: context.current.organization.id,
     name: input.data.name,
   });
-  if (error) redirect("/administration?error=The+team+could+not+be+created.");
+  if (error) redirect("/administration/structure?error=The+team+could+not+be+created.");
 
-  revalidatePath("/", "layout");
-  redirect("/administration?created=team");
+  revalidatePath("/administration/structure");
+  redirect("/administration/structure?created=team");
 }
 
 async function requireAdmin() {
@@ -95,9 +95,9 @@ export async function seedStarterElectronicsChecks() {
   const { error } = await supabase.rpc("seed_starter_electronics_checks", {
     p_organization_id: current.organization.id,
   });
-  if (error) redirect("/administration?error=Starter+checks+could+not+be+created.");
-  revalidatePath("/administration");
-  redirect("/administration?created=starter+checks");
+  if (error) redirect("/administration/checks?error=Starter+checks+could+not+be+created.");
+  revalidatePath("/administration/checks");
+  redirect("/administration/checks?created=starter+checks");
 }
 
 export async function createOrganizationCheck(formData: FormData) {
@@ -111,7 +111,7 @@ export async function createOrganizationCheck(formData: FormData) {
     phrase: formData.get("phrase") || undefined,
     weight: formData.get("weight") || undefined,
   });
-  if (!parsed.success) redirect("/administration?error=Check+the+new+check+details.");
+  if (!parsed.success) redirect("/administration/checks?error=Check+the+new+check+details.");
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("create_organization_check", {
@@ -124,7 +124,7 @@ export async function createOrganizationCheck(formData: FormData) {
     p_purpose: parsed.data.purpose,
     p_weight: parsed.data.purpose === "scorecard" ? parsed.data.weight : undefined,
   });
-  if (error) redirect("/administration?error=The+check+could+not+be+created.");
-  revalidatePath("/administration");
-  redirect("/administration?created=check");
+  if (error) redirect("/administration/checks?error=The+check+could+not+be+created.");
+  revalidatePath("/administration/checks");
+  redirect("/administration/checks?created=check");
 }

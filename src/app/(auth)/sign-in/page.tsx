@@ -31,9 +31,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <Link href="/forgot-password">Forgot password?</Link>
       </p>
       <p className="auth-switch">
-        <strong>New to ANUMA?</strong>
+        <strong>New organization?</strong>
         <br />
-        <Link href="/sign-up">Sign up</Link>.
+        <Link href="/sign-up">Create an ANUMA workspace</Link>
       </p>
       <p className="auth-switch">
         <strong>Joining an existing organization?</strong>

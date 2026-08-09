@@ -1,9 +1,11 @@
 import Link from "next/link";
+
+import { PublicNavigation } from "@/components/public/public-navigation";
 import { SignalTheatre } from "@/components/public/signal-theatre";
 
 const questions = [
   [
-    "What are customers asking for that you do not currently offer?",
+    "What are customers asking for that we do not currently offer?",
     "Needs · questions · product gaps",
   ],
   [
@@ -21,36 +23,19 @@ const questions = [
   ],
   ["What happened before the outcome?", "Interaction context · traceable source"],
 ];
+
 export default function HomePage() {
   return (
     <main className="marketing-page">
-      <header className="marketing-nav">
-        <Link className="wordmark" href="/">
-          ANUMA
-        </Link>
-        <nav aria-label="Public navigation">
-          <a href="#product">Product</a>
-          <a href="#how-it-works">How it works</a>
-        </nav>
-        <div>
-          <Link href="/sign-in">Sign in</Link>
-          <a className="button button-primary" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
-            Book a demo
-          </a>
-        </div>
-      </header>
+      <PublicNavigation />
+
       <section className="marketing-hero" id="product">
         <div className="hero-copy">
           <p className="eyebrow">Frontline interaction intelligence</p>
-          <h1>
-            Your frontline is already telling you what customers want.
-            <br />
-            ANUMA makes it visible.
-          </h1>
+          <h1>Every conversation leaves a signal. ANUMA turns it into intelligence.</h1>
           <p>
-            Every day, customers reveal needs, budgets, objections, competitor comparisons and
-            buying signals in conversation. ANUMA turns them into structured business truth—without
-            losing the source evidence.
+            ANUMA turns frontline customer interactions into structured, evidence-backed
+            intelligence — revealing what customers need, how teams respond, and what happens next.
           </p>
           <div className="hero-actions">
             <a className="button button-primary" href="#evidence-canvas">
@@ -63,7 +48,8 @@ export default function HomePage() {
         </div>
         <SignalTheatre />
       </section>
-      <section className="record-comparison" id="how-it-works">
+
+      <section className="record-comparison">
         <div className="record-side">
           <p className="eyebrow">The transaction tells you what happened.</p>
           <h2>System of record</h2>
@@ -98,9 +84,33 @@ export default function HomePage() {
             <dt>Next action</dt>
             <dd>Confirm offer + EMI</dd>
           </dl>
-          <p>ANUMA adds the missing interaction context around the outcome.</p>
+          <p>ANUMA adds the interaction context around the outcome.</p>
         </div>
       </section>
+
+      <section className="how-it-works" id="how-it-works">
+        <div>
+          <p className="eyebrow">How it works</p>
+          <h2>From a human interaction to evidence-backed understanding.</h2>
+          <p>Each step preserves the source while making the interaction more useful.</p>
+        </div>
+        <ol>
+          {[
+            ["01", "Capture", "What was said"],
+            ["02", "Structure", "What it meant"],
+            ["03", "Measure", "How the interaction happened"],
+            ["04", "Evaluate", "What expectations were met"],
+            ["05", "Learn", "What the organization can learn"],
+          ].map(([number, label, meaning]) => (
+            <li key={number}>
+              <span>{number}</span>
+              <strong>{label}</strong>
+              <small>{meaning}</small>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section className="business-questions">
         <p className="eyebrow">What could your business know?</p>
         <div>
@@ -118,6 +128,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       <section className="intelligence-pillars">
         <p className="eyebrow">From conversations to decisions</p>
         <div>
@@ -130,12 +141,12 @@ export default function HomePage() {
             [
               "02",
               "Frontline execution",
-              "Talk dynamics, expected behaviours, questions addressed, scorecards and coaching.",
+              "Talk dynamics, configured expectations, questions addressed, scorecards and coaching.",
             ],
             [
               "03",
               "Outcome intelligence",
-              "Aggregate intelligence is the next product direction, built only from trustworthy interaction evidence.",
+              "Planned aggregate intelligence will connect trustworthy interaction patterns to what happened next.",
             ],
           ].map(([number, title, copy]) => (
             <article key={number}>
@@ -146,35 +157,7 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-      <section className="trace-proof">
-        <div>
-          <p className="eyebrow">Intelligence you can trace</p>
-          <div className="trace-proof-grid">
-            <article>
-              <span>Finding</span>
-              <strong>
-                Customer budget
-                <br />
-                ₹80,000
-              </strong>
-              <small>
-                <i /> Verified
-              </small>
-            </article>
-            <svg viewBox="0 0 100 170" aria-hidden="true">
-              <path d="M50 0 V170" />
-            </svg>
-            <article>
-              <span>Source</span>
-              <strong>
-                Customer · <time>00:42</time>
-              </strong>
-              <blockquote>“Budget around ₹80,000 hai.”</blockquote>
-              <a href="#evidence-canvas">View surrounding context →</a>
-            </article>
-          </div>
-        </div>
-      </section>
+
       <section className="dynamics">
         <div>
           <p className="eyebrow">Conversation dynamics</p>
@@ -206,6 +189,68 @@ export default function HomePage() {
           </dl>
         </div>
       </section>
+
+      <section className="trace-proof">
+        <div>
+          <p className="eyebrow">Intelligence you can trace</p>
+          <div className="trace-proof-grid">
+            <article>
+              <span>Finding</span>
+              <strong>
+                Customer budget
+                <br />
+                ₹80,000
+              </strong>
+              <small>
+                <i /> Verified
+              </small>
+            </article>
+            <svg viewBox="0 0 100 170" aria-hidden="true">
+              <path d="M50 0 V170" />
+            </svg>
+            <article>
+              <span>Source</span>
+              <strong>
+                Customer · <time>00:42</time>
+              </strong>
+              <blockquote>“Budget around ₹80,000 hai.”</blockquote>
+              <a href="#evidence-canvas">View surrounding context →</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="language-story">
+        <div>
+          <p className="eyebrow">Built for how people actually speak</p>
+          <h2>Natural conversations do not follow perfect scripts.</h2>
+          <p>
+            ANUMA is designed to structure business meaning from natural, code-mixed interactions
+            while preserving the original source evidence. Language quality is validated through
+            controlled pilot evaluation, not a universal language claim.
+          </p>
+        </div>
+        <div
+          className="language-trace"
+          aria-label="Illustrative source phrase linked to a normalized finding"
+        >
+          <article>
+            <span>How it was said</span>
+            <blockquote>“Budget around eighty thousand hai.”</blockquote>
+          </article>
+          <i aria-hidden="true" />
+          <article>
+            <span>How ANUMA structures it</span>
+            <strong>
+              Budget
+              <br />
+              ₹80,000
+            </strong>
+          </article>
+          <small>Different words. Consistent business meaning.</small>
+        </div>
+      </section>
+
       <section className="expectations">
         <p className="eyebrow">Your business. Your expectations.</p>
         <h2>Evaluate the behaviours your organization chooses.</h2>
@@ -213,7 +258,7 @@ export default function HomePage() {
           {[
             "Requirement discovery",
             "Budget discovery",
-            "Product discussed",
+            "Relevant product discussed",
             "Finance explained",
             "Warranty discussed",
             "Customer question addressed",
@@ -227,9 +272,10 @@ export default function HomePage() {
           the interaction.
         </p>
       </section>
+
       <section className="marketing-final">
-        <p className="eyebrow">Your customers are already giving you the signals.</p>
-        <h2>ANUMA makes them usable.</h2>
+        <p className="eyebrow">Every conversation leaves a signal.</p>
+        <h2>Make the next one usable.</h2>
         <a className="button button-primary" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
           Book a demo
         </a>
@@ -237,6 +283,18 @@ export default function HomePage() {
           Sign in →
         </Link>
       </section>
+
+      <footer className="marketing-footer">
+        <Link className="wordmark" href="/">
+          ANUMA
+        </Link>
+        <nav aria-label="Footer navigation">
+          <a href="#product">Product</a>
+          <a href="#how-it-works">How it works</a>
+          <Link href="/sign-in">Sign in</Link>
+          <a href="mailto:hello@anuma.ai?subject=ANUMA%20demo">Book a demo</a>
+        </nav>
+      </footer>
     </main>
   );
 }

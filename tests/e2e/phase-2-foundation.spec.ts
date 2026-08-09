@@ -63,7 +63,11 @@ async function createDevelopmentAccount() {
 
 test("authenticated interaction foundation persists and presents the Phase 3 audio entry point", async ({
   page,
-}) => {
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium",
+    "The hosted Auth journey runs once; viewport coverage is deterministic.",
+  );
   test.setTimeout(60_000);
   const consoleErrors: string[] = [];
   const failedResponses: string[] = [];
@@ -76,8 +80,8 @@ test("authenticated interaction foundation persists and presents the Phase 3 aud
 
   await createDevelopmentAccount();
   await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill(email);
-  await page.getByLabel("Password").fill(password);
+  await page.getByLabel("Work email").fill(email);
+  await page.locator('input[name="password"]').fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL(/\/setup$/);
@@ -86,19 +90,24 @@ test("authenticated interaction foundation persists and presents the Phase 3 aud
   await page.getByLabel("Country").selectOption("IN");
   await page.getByLabel("Default currency").selectOption("INR");
   await page.getByLabel("Display timezone").selectOption("Asia/Kolkata");
-  await page.getByRole("button", { name: "Create workspace" }).click();
+  await page.getByRole("button", { name: "Create organization" }).click();
 
-  await expect(page).toHaveURL(/\/administration\?created=organization$/);
-  await expect(page.getByRole("heading", { name: organizationName, exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Admin", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/administration\?created=organization$/, { timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
+  await expect(page.getByText("Organization created", { exact: false })).toBeVisible();
 
-  await page.getByLabel("Name", { exact: true }).fill(locationName);
-  await page.getByLabel("Type").selectOption("showroom");
+  await page.getByRole("link", { name: "Structure", exact: true }).first().click();
   await page.getByRole("button", { name: "Add location" }).click();
-  await expect(page.getByText(locationName, { exact: true })).toBeVisible();
+  const locationDialog = page.getByRole("dialog").filter({ hasText: "Add location" });
+  await locationDialog.getByLabel("Name", { exact: true }).fill(locationName);
+  await locationDialog.getByLabel("Type").selectOption("showroom");
+  await locationDialog.getByRole("button", { name: "Add location" }).click();
+  await expect(page.getByText(locationName, { exact: false })).toBeVisible();
 
-  await page.getByLabel("Team name").fill(teamName);
   await page.getByRole("button", { name: "Add team" }).click();
+  const teamDialog = page.getByRole("dialog").filter({ hasText: "Add team" });
+  await teamDialog.getByLabel("Team name").fill(teamName);
+  await teamDialog.getByRole("button", { name: "Add team" }).click();
   await expect(page.getByText(teamName, { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Conversations" }).first().click();

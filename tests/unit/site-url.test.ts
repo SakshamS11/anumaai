@@ -58,4 +58,19 @@ describe("getSiteOrigin", () => {
       ),
     ).toBe("http://localhost:3000");
   });
+
+  it("keeps a local production build on its local origin", () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    delete process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
+    expect(
+      getSiteOrigin(
+        request("http://127.0.0.1:3000/sign-in", {
+          host: "127.0.0.1:3000",
+          "x-forwarded-proto": "http",
+        }),
+      ),
+    ).toBe("http://127.0.0.1:3000");
+  });
 });

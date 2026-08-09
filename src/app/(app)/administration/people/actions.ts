@@ -1,8 +1,11 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import {
+  createInvitationCredential,
+  sendOrganizationInvitation,
+} from "@/modules/identity/invitations";
 import { getApplicationContext } from "@/modules/identity/application-context";
 
 async function adminContext() {
@@ -27,6 +30,7 @@ export async function invitePerson(formData: FormData) {
   const role = String(formData.get("role") ?? "representative");
   const locationId = String(formData.get("location_id") ?? "") || null;
   const teamId = String(formData.get("team_id") ?? "") || null;
+  const credential = createInvitationCredential();
   const supabase = await createClient();
   const result = await (supabase as unknown as UntypedClient).rpc(
     "create_organization_invitation",
@@ -36,32 +40,65 @@ export async function invitePerson(formData: FormData) {
       p_role: role,
       p_location_id: locationId,
       p_team_id: teamId,
+      p_token_hash: credential.tokenHash,
     },
   );
   if (result.error)
     redirect(`/administration/people?error=${encodeURIComponent(result.error.message)}`);
   const invitation = (
-    result.data as Array<{ invitation_id: string; existing_user_id: string | null }>
+    result.data as Array<{
+      invitation_id: string;
+      existing_user_id: string | null;
+      requires_first_access: boolean;
+    }>
   )[0];
-  if (!invitation?.existing_user_id) {
-    try {
-      const admin = createAdminClient();
-      const invite = await admin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?next=/auth/accept-invite?invitation=${invitation.invitation_id}`,
-      });
-      if (invite.error) throw invite.error;
-      await (supabase as unknown as UntypedClient).rpc("attach_organization_invitation_user", {
-        p_invitation_id: invitation.invitation_id,
-        p_user_id: invite.data.user.id,
-      });
-    } catch {
-      redirect(
-        "/administration/people?error=The+invitation+was+saved+but+the+access+email+could+not+be+sent.+Please+try+again.",
-      );
-    }
+  if (!invitation) redirect("/administration/people?error=The+invitation+could+not+be+created.");
+  const delivery = await sendOrganizationInvitation({
+    email,
+    invitationId: invitation.invitation_id,
+    rawToken: credential.rawToken,
+    existingUserId: invitation.existing_user_id,
+  });
+  if (delivery.error) {
+    redirect(
+      "/administration/people?error=The+invitation+was+saved+but+the+email+could+not+be+sent.+Use+Resend+to+try+again.",
+    );
   }
   revalidatePath("/administration/people");
   redirect("/administration/people?created=invite");
+}
+
+export async function resendInvitation(formData: FormData) {
+  await adminContext();
+  const invitationId = String(formData.get("invitation_id") ?? "");
+  const credential = createInvitationCredential();
+  const supabase = await createClient();
+  const result = await (supabase as unknown as UntypedClient).rpc(
+    "rotate_organization_invitation",
+    { p_invitation_id: invitationId, p_token_hash: credential.tokenHash },
+  );
+  if (result.error) {
+    redirect("/administration/people?error=This+invitation+could+not+be+resent.");
+  }
+  const invitation = (
+    result.data as Array<{
+      invitation_id: string;
+      email: string;
+      existing_user_id: string | null;
+    }>
+  )[0];
+  if (!invitation) redirect("/administration/people?error=This+invitation+could+not+be+resent.");
+  const delivery = await sendOrganizationInvitation({
+    email: invitation.email,
+    invitationId: invitation.invitation_id,
+    rawToken: credential.rawToken,
+    existingUserId: invitation.existing_user_id,
+  });
+  if (delivery.error) {
+    redirect("/administration/people?error=The+invitation+email+could+not+be+sent.");
+  }
+  revalidatePath("/administration/people");
+  redirect("/administration/people?created=resent");
 }
 export async function updateMember(formData: FormData) {
   const current = await adminContext();

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { getApplicationContext } from "@/modules/identity/application-context";
+import { AdminNavigation } from "@/components/administration/admin-navigation";
 
 const sections = [
   ["People", "Manage access, roles and operating scope.", "/administration/people"],
@@ -32,13 +33,7 @@ export default async function AdministrationPage() {
     <>
       <PageHeader eyebrow="Organization foundation" title="Administration" />
       <p className="section-copy">Is your ANUMA organization ready for frontline interactions?</p>
-      <nav className="admin-subnav" aria-label="Administration">
-        <Link href="/administration">Overview</Link>
-        <Link href="/administration/people">People</Link>
-        <Link href="/administration/structure">Structure</Link>
-        <Link href="/administration/checks">Checks</Link>
-        <Link href="/administration/settings">Settings</Link>
-      </nav>
+      <AdminNavigation />
       <section className="directory-summary">
         <span>People {people ?? 0}</span>
         <span>Locations {current.locations.length}</span>

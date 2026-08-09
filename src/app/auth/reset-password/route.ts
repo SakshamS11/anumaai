@@ -32,5 +32,5 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.redirect(getSiteUrl(request, "/setup"), { status: 303 });
+  return NextResponse.redirect(getSiteUrl(request, "/conversations"), { status: 303 });
 }

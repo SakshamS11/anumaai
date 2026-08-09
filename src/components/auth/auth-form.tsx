@@ -12,10 +12,10 @@ export function AuthForm({ mode }: AuthFormProps) {
         <span>Work email</span>
         <input autoComplete="email" name="email" required type="email" />
       </label>
-      <label className="form-field" htmlFor="password">
-        <span>Password</span>
+      <div className="form-field">
+        <label htmlFor="password">Password</label>
         <PasswordInput autoComplete={mode === "sign-in" ? "current-password" : "new-password"} />
-      </label>
+      </div>
       <button className="button button-primary auth-submit" type="submit">
         {label}
       </button>

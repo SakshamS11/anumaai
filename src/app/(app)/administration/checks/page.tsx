@@ -3,6 +3,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { createClient } from "@/lib/supabase/server";
 import { getApplicationContext } from "@/modules/identity/application-context";
 import { createOrganizationCheck, seedStarterElectronicsChecks } from "../actions";
+import { AdminNavigation } from "@/components/administration/admin-navigation";
+import { ActionDialog } from "@/components/ui/action-dialog";
 export default async function ChecksPage() {
   const context = await getApplicationContext();
   if (!context) redirect("/sign-in");
@@ -18,6 +20,10 @@ export default async function ChecksPage() {
   return (
     <>
       <PageHeader eyebrow="Interaction review" title="Checks" />
+      <p className="section-copy">
+        Choose what ANUMA should monitor or include in your organization&apos;s evaluation.
+      </p>
+      <AdminNavigation />
       {checks?.length ? (
         <section className="product-panel">
           {checks.map((check) => (
@@ -39,8 +45,7 @@ export default async function ChecksPage() {
           </button>
         </form>
       )}
-      <details className="admin-drawer">
-        <summary className="button button-primary">Add check</summary>
+      <ActionDialog buttonLabel="Add check" eyebrow="Custom expectation" title="Add check">
         <form action={createOrganizationCheck} className="product-form">
           <label className="form-field">
             <span>Check name</span>
@@ -83,7 +88,7 @@ export default async function ChecksPage() {
             Add check
           </button>
         </form>
-      </details>
+      </ActionDialog>
     </>
   );
 }

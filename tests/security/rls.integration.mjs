@@ -71,6 +71,7 @@ const sql = postgres(readDatabaseUrl(), {
 });
 const rollbackSignal = new Error("ROLLBACK_SECURITY_TEST_FIXTURES");
 const passed = [];
+const invitationTokenHash = "a".repeat(64);
 
 function pass(name) {
   passed.push(name);
@@ -115,6 +116,8 @@ try {
   await sql.begin(async (tx) => {
     const tenantTables = [
       "organizations",
+      "user_profiles",
+      "organization_invitations",
       "organization_memberships",
       "locations",
       "teams",
@@ -374,6 +377,31 @@ try {
       tx`select * from public.bootstrap_organization('Second Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
     );
 
+    await assumeRole(tx, "service_role");
+    const [provisionedCustomer] = await tx`
+      select * from public.provision_customer_organization(
+        'Platform Provisioning Security Test', 'platform-provisioning-security-test',
+        'AE', 'AED', 'Asia/Dubai', 'initial-admin@anuma.invalid', ${"b".repeat(64)}, 'test'
+      )
+    `;
+    assertEqual(Boolean(provisionedCustomer.organization_id), true, "platform provision creates an organization atomically");
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.organization_memberships where organization_id = ${provisionedCustomer.organization_id}`,
+      ),
+      0,
+      "platform provision does not grant membership before invitation acceptance",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.organization_invitations where id = ${provisionedCustomer.invitation_id} and role = 'admin' and status = 'pending'`,
+      ),
+      1,
+      "platform provision creates one pending initial-admin invitation",
+    );
+
     await assumeRole(tx, "anon");
     await expectDenied(tx, "anonymous cannot bootstrap an organization", () =>
       tx`select * from public.bootstrap_organization('Anonymous Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
@@ -438,6 +466,19 @@ try {
     `);
     await expectDenied(tx, "representative cannot confirm a correction", () => tx`
       select public.review_observation_correction(${correctionA}, 'confirmed')
+    `);
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgA}`),
+      0,
+      "representative cannot read organization invitations",
+    );
+    await expectDenied(tx, "representative cannot invite organization people", () => tx`
+      select * from public.create_organization_invitation(
+        ${ids.orgA}, 'blocked-representative@anuma.invalid', 'representative', null, null, ${invitationTokenHash}
+      )
+    `);
+    await expectDenied(tx, "representative cannot change organization roles", () => tx`
+      select public.update_organization_member(${ids.otherRepAMembership}, 'manager', 'active', ${ids.locationA2}, ${ids.teamA2})
     `);
     assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgA}/%`}`), 1, "representative reads own authorized audio path");
     assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgB}/%`}`), 0, "representative cannot read cross-tenant audio path");
@@ -576,6 +617,19 @@ try {
         ${ids.conversationA}, 'audio/webm', 128, 1000, 'browser_recording', 'manager.webm'
       )
     `);
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgA}`),
+      0,
+      "manager cannot read organization invitations",
+    );
+    await expectDenied(tx, "manager cannot invite organization people", () => tx`
+      select * from public.create_organization_invitation(
+        ${ids.orgA}, 'blocked-manager@anuma.invalid', 'representative', null, null, ${invitationTokenHash}
+      )
+    `);
+    await expectDenied(tx, "manager cannot change organization roles", () => tx`
+      select public.update_organization_member(${ids.repAMembership}, 'manager', 'active', ${ids.locationA1}, ${ids.teamA1})
+    `);
     await tx`select public.review_observation_correction(${correctionA}, 'confirmed')`;
     assertEqual(
       await count(
@@ -594,6 +648,41 @@ try {
       values (${ids.orgA}, 'Admin-created location', 'other')
     `;
     pass("admin manages own organization configuration");
+    assertEqual(
+      await count(tx, tx`select count(*) from public.user_profiles where user_id = ${ids.adminBUser}`),
+      0,
+      "organization admin cannot read another tenant person profile",
+    );
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgB}`),
+      0,
+      "organization admin cannot read another tenant invitations",
+    );
+    await expectDenied(tx, "organization admin cannot write another tenant invitation", () => tx`
+      select * from public.create_organization_invitation(
+        ${ids.orgB}, 'cross-tenant-invite@anuma.invalid', 'representative', null, null, ${invitationTokenHash}
+      )
+    `);
+    await expectDenied(tx, "last active administrator cannot be demoted", () => tx`
+      select public.update_organization_member(${ids.adminAMembership}, 'manager', 'active', null, null)
+    `);
+    await expectDenied(tx, "organization assignment cannot reference another tenant location", () => tx`
+      select public.update_organization_member(${ids.repAMembership}, 'representative', 'active', ${ids.locationB}, null)
+    `);
+    const [createdInvitation] = await tx`
+      select * from public.create_organization_invitation(
+        ${ids.orgA}, 'phase2-6@anuma.invalid', 'representative', ${ids.locationA1}, ${ids.teamA1}, ${invitationTokenHash}
+      )
+    `;
+    assertEqual(Boolean(createdInvitation.invitation_id), true, "administrator creates a scoped organization invitation");
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.organization_invitations where id = ${createdInvitation.invitation_id} and status = 'pending'`,
+      ),
+      1,
+      "administrator reads the pending invitation in own organization",
+    );
     await tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.adminRecordingA}/audio.webm`})
@@ -603,6 +692,44 @@ try {
       insert into public.locations (organization_id, name, location_type)
       values (${ids.orgB}, 'Cross-tenant attack', 'other')
     `);
+
+    await assumeRole(tx, "authenticated", ids.adminBUser);
+    await expectDenied(tx, "invitation acceptance rejects a different authenticated email", () => tx`
+      select * from public.accept_organization_invitation(${createdInvitation.invitation_id}, ${invitationTokenHash})
+    `);
+
+    await assumeRole(tx, "authenticated", ids.bootstrapUser);
+    const [acceptedInvitation] = await tx`
+      select * from public.accept_organization_invitation(${createdInvitation.invitation_id}, ${invitationTokenHash})
+    `;
+    assertEqual(acceptedInvitation.organization_id, ids.orgA, "invited existing user accepts the intended organization");
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.organization_memberships where organization_id = ${ids.orgA} and user_id = ${ids.bootstrapUser} and status = 'active'`,
+      ),
+      1,
+      "accepted invitation activates exactly one membership for the invited identity",
+    );
+
+    await assumeRole(tx, "authenticated", ids.adminAUser);
+    await tx`select public.update_organization_member(${ids.repAMembership}, 'representative', 'inactive', null, null)`;
+    await assumeRole(tx, "authenticated", ids.repAUser);
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgA}`),
+      0,
+      "inactive membership cannot read its former organization",
+    );
+    await assumeRole(tx, "authenticated", ids.adminAUser);
+    await tx`select public.update_organization_member(${ids.repAMembership}, 'representative', 'active', ${ids.locationA1}, ${ids.teamA1})`;
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.member_assignments where membership_id = ${ids.repAMembership} and effective_to is null and location_id = ${ids.locationA1}`,
+      ),
+      1,
+      "administrator role and assignment update preserves an active scoped assignment",
+    );
 
     await assumeRole(tx, "authenticated", ids.adminBUser);
     assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 0, "organization B admin cannot read organization A conversations");

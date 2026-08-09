@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { getApplicationContext } from "@/modules/identity/application-context";
 import { createLocation, createTeam } from "../actions";
+import { AdminNavigation } from "@/components/administration/admin-navigation";
+import { ActionDialog } from "@/components/ui/action-dialog";
 export default async function StructurePage() {
   const context = await getApplicationContext();
   if (!context) redirect("/sign-in");
@@ -15,6 +17,7 @@ export default async function StructurePage() {
         Locations and teams give interactions the scope they need without rewriting historical
         assignments.
       </p>
+      <AdminNavigation />
       <div className="administration-grid">
         <section className="product-panel">
           <h2>Locations</h2>
@@ -23,8 +26,11 @@ export default async function StructurePage() {
               {x.name} <small>{x.locationType}</small>
             </p>
           ))}
-          <details className="admin-drawer">
-            <summary className="button button-secondary">Add location</summary>
+          <ActionDialog
+            buttonLabel="Add location"
+            eyebrow="Operating structure"
+            title="Add location"
+          >
             <form action={createLocation} className="compact-form">
               <label className="form-field">
                 <span>Name</span>
@@ -43,7 +49,7 @@ export default async function StructurePage() {
                 Add location
               </button>
             </form>
-          </details>
+          </ActionDialog>
         </section>
         <section className="product-panel">
           <h2>Teams</h2>
@@ -52,8 +58,7 @@ export default async function StructurePage() {
               {x.name}
             </p>
           ))}
-          <details className="admin-drawer">
-            <summary className="button button-secondary">Add team</summary>
+          <ActionDialog buttonLabel="Add team" eyebrow="Operating structure" title="Add team">
             <form action={createTeam} className="compact-form">
               <label className="form-field">
                 <span>Team name</span>
@@ -63,7 +68,7 @@ export default async function StructurePage() {
                 Add team
               </button>
             </form>
-          </details>
+          </ActionDialog>
         </section>
       </div>
     </>

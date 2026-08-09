@@ -24,14 +24,22 @@ export function getSiteOrigin(request: NextRequest): string {
     return normalizeOrigin(configured);
   }
 
+  const forwardedHost =
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ??
+    request.headers.get("host")?.trim();
+
+  // A locally served production build must remain local for release testing.
+  // Hosted production still ignores untrusted forwarded hosts and uses its
+  // configured canonical origin below.
+  if (forwardedHost && isLocalHost(forwardedHost)) {
+    const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+    return `${forwardedProtocol === "https" ? "https" : "http"}://${forwardedHost}`;
+  }
+
   if (process.env.NODE_ENV === "production") {
     const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
     return normalizeOrigin(vercelProductionUrl || ANUMA_PRODUCTION_ORIGIN);
   }
-
-  const forwardedHost =
-    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ??
-    request.headers.get("host")?.trim();
 
   if (forwardedHost) {
     const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();

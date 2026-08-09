@@ -4,6 +4,7 @@ import { createConversation } from "@/app/(app)/conversations/actions";
 import { PageHeader } from "@/components/ui/page-header";
 import { deriveConversationState, listConversations } from "@/modules/conversations/data";
 import { getApplicationContext } from "@/modules/identity/application-context";
+import { createClient } from "@/lib/supabase/server";
 
 type ConversationsPageProps = { searchParams: Promise<{ created?: string; error?: string }> };
 
@@ -13,7 +14,15 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
   if (!context.current) redirect("/setup");
 
   const { organization, membership, assignments, locations, teams } = context.current;
-  const conversations = await listConversations(organization.id);
+  const supabase = await createClient();
+  const [conversations, profileResult] = await Promise.all([
+    listConversations(organization.id),
+    supabase
+      .from("user_profiles")
+      .select("display_name")
+      .eq("user_id", context.user.id)
+      .maybeSingle(),
+  ]);
   const assignedLocationIds = new Set(
     assignments.flatMap((item) => (item.locationId ? [item.locationId] : [])),
   );
@@ -26,7 +35,8 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
       : locations.filter((item) => assignedLocationIds.has(item.id));
   const allowedTeams =
     membership.role === "admin" ? teams : teams.filter((item) => assignedTeamIds.has(item.id));
-  const canCreate = membership.role === "admin" || assignments.length > 0;
+  const canCreate =
+    membership.role === "admin" || (membership.role === "representative" && assignments.length > 0);
   const locationNames = new Map(locations.map((item) => [item.id, item.name]));
   const teamNames = new Map(teams.map((item) => [item.id, item.name]));
   const dateFormatter = new Intl.DateTimeFormat("en", {
@@ -38,14 +48,33 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
     minute: "2-digit",
     timeZone: organization.timezone,
   });
+  const hour = Number(
+    new Intl.DateTimeFormat("en", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: organization.timezone,
+    }).format(new Date()),
+  );
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const displayName =
+    profileResult.data?.display_name ?? context.user.email?.split("@")[0] ?? "there";
+  const localDate = new Intl.DateTimeFormat("en-CA", { timeZone: organization.timezone });
+  const today = localDate.format(new Date());
+  const todayCount = conversations.filter(
+    (conversation) => localDate.format(new Date(conversation.startedAt)) === today,
+  ).length;
+  const representativeView = membership.role === "representative";
 
   return (
     <>
       <div className="page-heading-row">
-        <PageHeader eyebrow="Interactions" title="Conversations" />
+        <PageHeader
+          eyebrow={representativeView ? "Your frontline work" : "Interactions"}
+          title={representativeView ? `${greeting}, ${displayName}.` : "Conversations"}
+        />
         {canCreate ? (
           <a className="button button-primary" href="#new-interaction">
-            New interaction
+            {representativeView ? "Start interaction" : "New interaction"}
           </a>
         ) : null}
       </div>
@@ -60,6 +89,15 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
         </p>
       ) : null}
 
+      {representativeView ? (
+        <section className="representative-today">
+          <span>Today</span>
+          <strong>
+            {todayCount} interaction{todayCount === 1 ? "" : "s"}
+          </strong>
+        </section>
+      ) : null}
+
       {canCreate ? (
         <section
           className="interaction-creation"
@@ -68,10 +106,10 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
         >
           <div>
             <p className="eyebrow">Prepare an interaction</p>
-            <h2 id="new-interaction-title">Set the context before recording becomes available.</h2>
+            <h2 id="new-interaction-title">Prepare the interaction before recording.</h2>
             <p>
-              Record the interaction details and the customer’s recording-consent decision. No audio
-              or intelligence is created here.
+              Record the interaction context and the customer&apos;s recording-consent decision. You
+              can record or upload audio after this step.
             </p>
           </div>
           <form action={createConversation} className="product-form">
@@ -86,28 +124,48 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
                 <option value="automotive">Automotive</option>
               </select>
             </label>
-            <label className="form-field">
-              <span>Location</span>
-              <select defaultValue="" name="location_id">
-                <option value="">No location</option>
-                {allowedLocations.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="form-field">
-              <span>Team</span>
-              <select defaultValue="" name="team_id">
-                <option value="">No team</option>
-                {allowedTeams.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {representativeView && allowedLocations.length === 1 ? (
+              <>
+                <input name="location_id" type="hidden" value={allowedLocations[0].id} />
+                <p className="form-context">
+                  <span>Location</span>
+                  <strong>{allowedLocations[0].name}</strong>
+                </p>
+              </>
+            ) : (
+              <label className="form-field">
+                <span>Location</span>
+                <select defaultValue="" name="location_id">
+                  <option value="">No location</option>
+                  {allowedLocations.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {representativeView && allowedTeams.length === 1 ? (
+              <>
+                <input name="team_id" type="hidden" value={allowedTeams[0].id} />
+                <p className="form-context">
+                  <span>Team</span>
+                  <strong>{allowedTeams[0].name}</strong>
+                </p>
+              </>
+            ) : (
+              <label className="form-field">
+                <span>Team</span>
+                <select defaultValue="" name="team_id">
+                  <option value="">No team</option>
+                  {allowedTeams.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label className="form-field">
               <span>Customer recording consent</span>
               <select defaultValue="unknown" name="consent_status">
@@ -131,7 +189,7 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
               the organization and jurisdiction.
             </p>
             <button className="button button-primary form-field-wide" type="submit">
-              Create interaction
+              {representativeView ? "Start interaction" : "Create interaction"}
             </button>
           </form>
         </section>
@@ -146,7 +204,9 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
         <div className="section-heading">
           <div>
             <p className="eyebrow">Your authorized scope</p>
-            <h2 id="conversation-list-title">Interaction record</h2>
+            <h2 id="conversation-list-title">
+              {representativeView ? "Recent interactions" : "Interaction record"}
+            </h2>
           </div>
           <span className="count-label">{conversations.length}</span>
         </div>
@@ -194,12 +254,12 @@ export default async function ConversationsPage({ searchParams }: ConversationsP
             <p className="eyebrow">No interactions yet</p>
             <h3>This is where prepared customer interactions will appear.</h3>
             <p>
-              Start a new interaction to record its business context and customer recording consent.
-              Audio is not available yet.
+              Start a new interaction to record its business context and customer recording consent,
+              then record or upload its audio.
             </p>
             {canCreate ? (
               <a className="button button-secondary" href="#new-interaction">
-                Prepare an interaction
+                Start interaction
               </a>
             ) : null}
           </div>

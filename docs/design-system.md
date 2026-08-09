@@ -35,7 +35,11 @@ Prominent visuals must communicate information, hierarchy, product relationship,
 
 Target WCAG 2.2 AA. Controls keep visible focus, semantic names and useful keyboard operation. Primary controls generally have a comfortable 44px target. Hover-only disclosures must also work on focus; motion communicates state change only and is disabled/reduced under `prefers-reduced-motion`. Do not communicate important state by color alone.
 
-Authentication is a warm Porcelain composition with an explicitly labelled illustrative evidence interaction—not a dark/white split SaaS hero. The example conversation is never real customer data. It teaches `structured finding ↔ source turn` through hover, focus and click. Where the demonstration uses Hinglish or another code-mixed interaction, keep the surrounding product UI in English and use natural customer/representative phrasing; the composition illustrates ANUMA's language understanding rather than claiming a language restriction or providing translation. Small illustrative controls may switch the example only; they are not product language settings and do not persist a preference.
+Public explanation, authentication, customer product, and internal ANUMA platform operations are distinct environments with one brand system. Authentication stays calm and task-focused; it may use a restrained signal-trace motif but not the full product theatre.
+
+The public signal theatre is explicitly illustrative, never tenant data. It teaches `structured finding ↔ source turn` through hover, focus and tap. Its natural code-mixed conversation demonstrates that source language may vary while normalized business meaning remains stable. Do not present a language dropdown, language setting, translation claim, or universal-support claim.
+
+Customer product navigation follows role and job: representatives see a frontline-first interaction surface; managers see scoped interaction review; only administrators see organization configuration. Internal platform operations use a separate Carbon shell and must never be exposed as a customer role.
 
 ## Brand tokens
 

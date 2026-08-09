@@ -87,6 +87,9 @@ ANUMA uses an **Evidence Editorial** product language: prioritize a finding, the
 - Use an editorial interaction-understanding surface: structured observations lead to a visible evidence path. Staged sign-in examples must remain explicitly illustrative, keyboard-operable, and never resemble real tenant data.
 - When an illustrative interaction demonstrates code-mixed frontline speech, use natural speech while keeping product UI and headings in English. Small switchable auth-page examples may change only the illustration and must not persist, imply a language preference, translation, universal support, or stored customer data.
 - Navigation should be stable and grouped by the user's mental model. Consistency does not require every page to use the same card/KPI/chart template.
+- Keep public explanation, authentication, customer product, and internal ANUMA platform operations as distinct environments with a shared brand language. Internal platform access is server-authorized by configured operator identity and is never a customer membership role.
+- Organization invitations must be email-bound, time-limited, resendable, and explicitly accepted. A page GET or link prefetch must never activate membership or consume the application invitation credential; acceptance creates membership and assignment atomically while preserving history.
+- Representatives receive a frontline-first interaction experience; managers receive scoped review access; only customer admins see organization configuration. Do not expose future intelligence pages or administrative controls merely to make navigation look fuller.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

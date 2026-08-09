@@ -12,11 +12,11 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   return (
     <div className="auth-card">
       <div>
-        <p className="eyebrow">Organization access</p>
-        <h2>Sign up to ANUMA</h2>
+        <p className="eyebrow">Create your ANUMA workspace</p>
+        <h2>Start a new organization</h2>
         <p className="auth-copy">
-          Create a new organization workspace. If your organization invited you, use the invitation
-          sent by your administrator.
+          For organizations starting a new ANUMA environment. If your organization invited you, use
+          the invitation sent by your administrator instead.
         </p>
       </div>
       {error ? (

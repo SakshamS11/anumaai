@@ -6,31 +6,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.15";
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
       analysis_runs: {
@@ -1028,6 +1003,101 @@ export type Database = {
           },
         ];
       };
+      organization_invitations: {
+        Row: {
+          accepted_at: string | null;
+          created_at: string;
+          delivery_status: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by_membership_id: string | null;
+          invited_user_id: string | null;
+          last_sent_at: string | null;
+          location_id: string | null;
+          organization_id: string;
+          requires_first_access: boolean;
+          revoked_at: string | null;
+          role: Database["public"]["Enums"]["membership_role"];
+          send_attempt_count: number;
+          status: Database["public"]["Enums"]["organization_invitation_status"];
+          team_id: string | null;
+          token_hash: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          created_at?: string;
+          delivery_status?: string;
+          email: string;
+          expires_at?: string;
+          id?: string;
+          invited_by_membership_id?: string | null;
+          invited_user_id?: string | null;
+          last_sent_at?: string | null;
+          location_id?: string | null;
+          organization_id: string;
+          requires_first_access?: boolean;
+          revoked_at?: string | null;
+          role: Database["public"]["Enums"]["membership_role"];
+          send_attempt_count?: number;
+          status?: Database["public"]["Enums"]["organization_invitation_status"];
+          team_id?: string | null;
+          token_hash?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          created_at?: string;
+          delivery_status?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by_membership_id?: string | null;
+          invited_user_id?: string | null;
+          last_sent_at?: string | null;
+          location_id?: string | null;
+          organization_id?: string;
+          requires_first_access?: boolean;
+          revoked_at?: string | null;
+          role?: Database["public"]["Enums"]["membership_role"];
+          send_attempt_count?: number;
+          status?: Database["public"]["Enums"]["organization_invitation_status"];
+          team_id?: string | null;
+          token_hash?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_invited_by_membership_id_fkey";
+            columns: ["invited_by_membership_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_memberships";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "organization_invitations_scope_location_fk";
+            columns: ["organization_id", "location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "organization_invitations_scope_team_fk";
+            columns: ["organization_id", "team_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       organization_memberships: {
         Row: {
           created_at: string;
@@ -1071,6 +1141,7 @@ export type Database = {
           country_code: string;
           created_at: string;
           default_currency: string;
+          environment_type: string;
           id: string;
           name: string;
           slug: string;
@@ -1081,6 +1152,7 @@ export type Database = {
           country_code?: string;
           created_at?: string;
           default_currency?: string;
+          environment_type?: string;
           id?: string;
           name: string;
           slug: string;
@@ -1091,6 +1163,7 @@ export type Database = {
           country_code?: string;
           created_at?: string;
           default_currency?: string;
+          environment_type?: string;
           id?: string;
           name?: string;
           slug?: string;
@@ -1806,11 +1879,42 @@ export type Database = {
           },
         ];
       };
+      user_profiles: {
+        Row: {
+          created_at: string;
+          display_name: string | null;
+          email: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          display_name?: string | null;
+          email: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          display_name?: string | null;
+          email?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      accept_organization_invitation: {
+        Args: { p_invitation_id: string; p_token_hash: string };
+        Returns: {
+          membership_id: string;
+          organization_id: string;
+        }[];
+      };
       append_customer_recording_consent: {
         Args: {
           p_capture_method: Database["public"]["Enums"]["consent_capture_method"];
@@ -1818,6 +1922,10 @@ export type Database = {
           p_status: Database["public"]["Enums"]["consent_status"];
         };
         Returns: string;
+      };
+      attach_organization_invitation_user: {
+        Args: { p_invitation_id: string; p_user_id: string };
+        Returns: undefined;
       };
       bootstrap_organization: {
         Args: {
@@ -1856,6 +1964,21 @@ export type Database = {
           p_weight?: number;
         };
         Returns: string;
+      };
+      create_organization_invitation: {
+        Args: {
+          p_email: string;
+          p_location_id?: string;
+          p_organization_id: string;
+          p_role: Database["public"]["Enums"]["membership_role"];
+          p_team_id?: string;
+          p_token_hash?: string;
+        };
+        Returns: {
+          existing_user_id: string;
+          invitation_id: string;
+          requires_first_access: boolean;
+        }[];
       };
       create_speaker_mapping_version: {
         Args: {
@@ -1912,6 +2035,23 @@ export type Database = {
         };
         Returns: string;
       };
+      provision_customer_organization: {
+        Args: {
+          p_country_code: string;
+          p_default_currency: string;
+          p_environment_type?: string;
+          p_initial_admin_email: string;
+          p_name: string;
+          p_slug: string;
+          p_timezone: string;
+          p_token_hash: string;
+        };
+        Returns: {
+          existing_user_id: string;
+          invitation_id: string;
+          organization_id: string;
+        }[];
+      };
       request_interaction_review: {
         Args: { p_conversation_id: string; p_trigger_reason?: string };
         Returns: string;
@@ -1931,8 +2071,27 @@ export type Database = {
         };
         Returns: undefined;
       };
+      rotate_organization_invitation: {
+        Args: { p_invitation_id: string; p_token_hash: string };
+        Returns: {
+          email: string;
+          existing_user_id: string;
+          invitation_id: string;
+          requires_first_access: boolean;
+        }[];
+      };
       seed_starter_electronics_checks: {
         Args: { p_organization_id: string };
+        Returns: undefined;
+      };
+      update_organization_member: {
+        Args: {
+          p_location_id?: string;
+          p_membership_id: string;
+          p_role: Database["public"]["Enums"]["membership_role"];
+          p_status: Database["public"]["Enums"]["membership_status"];
+          p_team_id?: string;
+        };
         Returns: undefined;
       };
     };
@@ -1951,6 +2110,7 @@ export type Database = {
       location_type: "store" | "showroom" | "office" | "other";
       membership_role: "representative" | "manager" | "admin";
       membership_status: "active" | "inactive";
+      organization_invitation_status: "pending" | "accepted" | "expired" | "revoked";
       outcome_source: "manual" | "import";
       participant_role:
         "representative" | "customer" | "additional_customer" | "manager" | "unknown";
@@ -2079,9 +2239,6 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       consent_capture_method: ["verbal", "written", "digital", "imported", "other"],
@@ -2099,6 +2256,7 @@ export const Constants = {
       location_type: ["store", "showroom", "office", "other"],
       membership_role: ["representative", "manager", "admin"],
       membership_status: ["active", "inactive"],
+      organization_invitation_status: ["pending", "accepted", "expired", "revoked"],
       outcome_source: ["manual", "import"],
       participant_role: ["representative", "customer", "additional_customer", "manager", "unknown"],
       quality_state: ["adequate", "limited", "insufficient", "unknown", "not_assessed"],

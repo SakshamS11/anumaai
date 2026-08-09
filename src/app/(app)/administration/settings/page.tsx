@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/ui/page-header";
 import { getApplicationContext } from "@/modules/identity/application-context";
+import { AdminNavigation } from "@/components/administration/admin-navigation";
 export default async function SettingsPage() {
   const context = await getApplicationContext();
   if (!context) redirect("/sign-in");
@@ -10,6 +11,10 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader eyebrow="Organization context" title="Settings" />
+      <p className="section-copy">
+        Review the defaults used when new interaction context is created.
+      </p>
+      <AdminNavigation />
       <section className="product-panel settings-list">
         <p>
           <span>Organization name</span>

@@ -6,14 +6,20 @@ This guide covers the Phase 1–5 responsive-web release candidate. It is not a 
 
 ### Production deployment
 
-No ANUMA Vercel project is currently linked to this repository in the available Vercel account context. Do not use the unrelated `excenor-ai-maturity-poc` project.
+Production: `https://anumaai-ten.vercel.app`
 
-To create or reconnect the correct deployment:
+The Vercel project must deploy the `main` branch from `SakshamS11/anumaai`. Before testing invitations, confirm these Production variables exist with their real server-side values:
 
-1. In Vercel, import `SakshamS11/anumaai`, or select the existing ANUMA project if it already exists under a different team.
-2. Link its production branch to `main`.
-3. Add the existing secure values to the Production environment using these names only: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SARVAM_API_KEY`, `OPENAI_API_KEY`, and `ANUMA_ANALYSIS_MODEL`. Add `SUPABASE_DB_URL` only if the deployment’s server-side acceptance tooling explicitly needs it; it is never a browser value.
-4. Deploy `main`, then confirm that the production URL opens and that a new Supabase confirmation link returns to that URL.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SITE_URL=https://anumaai-ten.vercel.app`
+- `SUPABASE_SECRET_KEY`
+- `SARVAM_API_KEY`
+- `OPENAI_API_KEY`
+- `ANUMA_ANALYSIS_MODEL`
+- `ANUMA_PLATFORM_ADMIN_EMAILS` (comma-separated internal ANUMA operator emails; never expose it client-side)
+
+`SUPABASE_DB_URL` is only needed by the hosted integration test harness. It is not a browser variable and should not be added to a client-visible environment.
 
 Do not paste any credential into source code, GitHub, or a normal chat prompt.
 
@@ -26,6 +32,31 @@ npm.cmd run dev
 ```
 
 Open `http://localhost:3000`. Use a current Chromium-based browser. Local development is the appropriate fallback until the correct Vercel project is linked.
+
+### One-time Supabase Auth configuration
+
+In Supabase Dashboard → **Authentication → URL Configuration** set:
+
+- **Site URL:** `https://anumaai-ten.vercel.app`
+- **Redirect URLs:**
+  - `https://anumaai-ten.vercel.app/auth/callback`
+  - `https://anumaai-ten.vercel.app/auth/invite`
+  - `http://localhost:3000/auth/callback`
+  - `http://localhost:3000/auth/invite`
+
+In **Authentication → Email Templates → Invite user**, keep the surrounding branded HTML as desired, but make the invitation action link exactly:
+
+```html
+<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=invite">Review and accept invitation</a>
+```
+
+Existing ANUMA users receive a passwordless verification email when invited to another organization. In **Email Templates → Magic Link**, use:
+
+```html
+<a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=magiclink">Review and accept invitation</a>
+```
+
+These links open ANUMA's invitation context first. Membership is created only after the person deliberately chooses **Join organization** and the invited email identity is verified.
 
 ## Part B — Android phone test
 

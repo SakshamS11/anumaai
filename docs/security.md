@@ -1,5 +1,11 @@
 # Security and Privacy Architecture
 
+## Organization and platform access
+
+Internal ANUMA platform operations are not a tenant role. `/platform` is authorized server-side against `ANUMA_PLATFORM_ADMIN_EMAILS` after validating the live Auth user. Customer roles remain `admin`, `manager`, and `representative` and retain PostgreSQL RLS scope.
+
+Organization invitations are durable, email-bound records. The database stores only a SHA-256 hash of the application invitation credential. A GET request may display safe organization, role, and scope context, but membership is created only by the explicit acceptance action after Auth verifies the intended email. Acceptance creates or reactivates the membership and appends the current assignment atomically. Resend rotates the application credential and expiry; accepted invitations cannot be replayed. Direct invitation writes remain closed by RLS and guarded RPCs enforce admin and tenant checks. The final active administrator cannot be demoted or deactivated.
+
 ## Scope and principle
 
 ANUMA stores private human conversations and derived judgments. Security controls reduce risk but do not by themselves establish legal or regulatory compliance. Privacy, consent, labor, recording, retention, and cross-border obligations require jurisdiction- and client-specific review before pilots.

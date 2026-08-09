@@ -8,40 +8,65 @@ const protectedRoutes = [
   "/administration",
 ];
 
-test("the unauthenticated entry point leads to sign-in", async ({ page }) => {
+test("the public entry point explains ANUMA and links to access routes", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page).toHaveURL(/\/sign-in$/);
-  await expect(page.getByRole("heading", { name: "Sign in to ANUMA" })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(
+    page.getByRole("heading", {
+      name: "Every conversation leaves a signal. ANUMA turns it into intelligence.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "See ANUMA in action" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in", exact: true }).first()).toBeVisible();
 });
 
-test("sign-in and sign-up expose real credential forms", async ({ page }) => {
+test("the public mobile menu is keyboard accessible and closes after navigation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const menu = page.locator(".public-menu-trigger");
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
+  await page.locator(".public-mobile-menu").getByRole("link", { name: "How it works" }).click();
+  await expect(page).toHaveURL(/#how-it-works$/);
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+});
+
+test("sign-in and workspace sign-up expose dedicated credential forms", async ({ page }) => {
   await page.goto("/sign-in");
 
-  await expect(page.getByText("Illustrative interaction")).toBeVisible();
-  const needFinding = page.getByRole("button", { name: /Need Gaming \+ College Source turn/ });
-  await needFinding.focus();
-  await expect(needFinding).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("Gaming aur college ke liye laptop chahiye.")).toHaveClass(
-    /turn-source-active/,
+  await expect(page.getByRole("heading", { name: "Sign in to ANUMA" })).toBeVisible();
+  await expect(page.getByLabel("Work email")).toHaveAttribute("autocomplete", "email");
+  await expect(page.locator('input[name="password"]')).toHaveAttribute(
+    "autocomplete",
+    "current-password",
   );
-  const questionFinding = page.getByRole("button", { name: "Question EMI Source turn" });
-  await questionFinding.click();
-  await expect(page.getByText("EMI kitni padegi?")).toHaveClass(/turn-source-active/);
-  await page.getByRole("button", { name: "English", exact: true }).click();
-  await expect(page.getByText("I’m looking for a laptop for gaming and college.")).toBeVisible();
-  const budgetFinding = page.getByRole("button", { name: "Budget ₹80,000 Source turn" });
-  await budgetFinding.click();
-  await expect(page.getByText("My budget is around ₹80,000.")).toHaveClass(/turn-source-active/);
-  await page.getByRole("button", { name: "Tamil + English" }).click();
-  await expect(page.getByText("Gaming-um college-um use panna laptop venum.")).toBeVisible();
-  await expect(page.getByLabel("Email address")).toBeVisible();
-  await expect(page.getByLabel("Password")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create an account" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Forgot password?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Create an ANUMA workspace" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Create an account" }).click();
+  await page.getByRole("link", { name: "Create an ANUMA workspace" }).click();
   await expect(page).toHaveURL(/\/sign-up$/);
-  await expect(page.getByRole("button", { name: "Create account" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign up" })).toBeVisible();
+  await expect(page.getByText(/For organizations starting a new ANUMA environment/)).toBeVisible();
+});
+
+test("an invitation cannot be accepted without a valid application credential", async ({
+  page,
+}) => {
+  await page.goto("/auth/invite");
+  await expect(
+    page.getByRole("heading", { name: "This invitation is no longer valid" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Return to sign in" })).toBeVisible();
+});
+
+test("customer users cannot discover the internal platform surface", async ({ page }) => {
+  const response = await page.goto("/platform");
+  expect(response?.status()).toBe(404);
 });
 
 for (const route of protectedRoutes) {

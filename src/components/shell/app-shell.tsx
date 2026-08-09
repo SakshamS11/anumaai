@@ -13,6 +13,7 @@ type ShellContext = {
   currentOrganization: { id: string; name: string; role: MembershipRole };
   organizations: Array<{ id: string; name: string; role: MembershipRole }>;
   userEmail: string | null;
+  isPlatformAdmin: boolean;
 };
 
 type AppShellProps = {
@@ -26,9 +27,9 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
   const router = useRouter();
   const { currentOrganization } = context;
   const navigationGroups =
-    currentOrganization.role === "representative"
-      ? (["Interactions"] as const)
-      : (["Interactions", "Intelligence", "Configure"] as const);
+    currentOrganization.role === "admin"
+      ? (["Interactions", "Intelligence", "Configure"] as const)
+      : (["Interactions"] as const);
   const assignmentSummary =
     context.assignmentCount > 0
       ? `${context.assignmentCount} active scope assignment${context.assignmentCount === 1 ? "" : "s"}`
@@ -68,13 +69,24 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
                       href={route.href}
                       key={route.href}
                     >
-                      {route.label}
+                      {currentOrganization.role === "representative" &&
+                      route.href === "/conversations"
+                        ? "Interactions"
+                        : route.label}
                     </Link>
                   );
                 })}
             </div>
           ))}
         </nav>
+        {currentOrganization.role === "representative" ? (
+          <Link
+            className="button button-primary sidebar-start"
+            href="/conversations#new-interaction"
+          >
+            Start interaction
+          </Link>
+        ) : null}
         <div className="sidebar-footer">
           <span className="context-dot" aria-hidden="true" />
           <span>
@@ -117,6 +129,11 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
                   </button>
                 </form>
               ) : null}
+              {context.isPlatformAdmin ? (
+                <Link className="button button-secondary" href="/platform">
+                  ANUMA Platform
+                </Link>
+              ) : null}
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
@@ -133,8 +150,7 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
         <nav aria-label="Primary navigation on small screens" className="mobile-navigation">
           {applicationRoutes
             .filter(
-              (route) =>
-                currentOrganization.role !== "representative" || route.group === "Interactions",
+              (route) => currentOrganization.role === "admin" || route.group === "Interactions",
             )
             .filter(
               (route) => currentOrganization.role === "admin" || route.href !== "/administration",
@@ -148,7 +164,9 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
                   href={route.href}
                   key={route.href}
                 >
-                  {route.label}
+                  {currentOrganization.role === "representative" && route.href === "/conversations"
+                    ? "Interactions"
+                    : route.label}
                 </Link>
               );
             })}

@@ -1,5 +1,13 @@
 # Data Model
 
+## Company and people foundation
+
+- `organizations.environment_type` explicitly classifies `customer` and `test` environments. Product code never infers this from an organization name.
+- `user_profiles` contains minimal application-facing identity metadata; Supabase Auth remains authoritative for credentials.
+- `organization_invitations` records invited email, role, intended scope, lifecycle, delivery state, expiry, and a hashed application credential. Pending invitations do not grant tenant access.
+- `organization_memberships` remains the only customer access relationship. Invitation acceptance activates membership; assignment changes close the prior `member_assignments` row and append a new effective row.
+- Internal ANUMA platform authorization is environment-configured and is not represented as an organization membership.
+
 ## Modeling rules
 
 - UUID primary keys; `timestamptz` in UTC; `created_at` on every record and `updated_at` only on genuinely mutable records.

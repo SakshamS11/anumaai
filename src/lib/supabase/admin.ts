@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { getTrustedServerEnvironment } from "@/lib/env";
+import { getAdminEnvironment } from "@/lib/env";
 import type { Database } from "@/lib/supabase/database.generated";
 
 /**
@@ -10,7 +10,7 @@ import type { Database } from "@/lib/supabase/database.generated";
  * validate every organization/conversation/recording relationship themselves.
  */
 export function createAdminClient() {
-  const environment = getTrustedServerEnvironment();
+  const environment = getAdminEnvironment();
 
   return createClient<Database>(
     environment.NEXT_PUBLIC_SUPABASE_URL,

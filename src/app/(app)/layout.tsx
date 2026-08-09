@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { switchOrganization } from "@/app/(app)/actions";
 import { AppShell } from "@/components/shell/app-shell";
 import { getApplicationContext } from "@/modules/identity/application-context";
+import { isPlatformAdminEmail } from "@/lib/platform/authorization";
 
 export default async function ApplicationLayout({ children }: Readonly<{ children: ReactNode }>) {
   const context = await getApplicationContext();
@@ -22,6 +23,7 @@ export default async function ApplicationLayout({ children }: Readonly<{ childre
       role: context.current.membership.role,
     },
     organizations: context.organizations,
+    isPlatformAdmin: isPlatformAdminEmail(context.user.email),
   };
 
   return (

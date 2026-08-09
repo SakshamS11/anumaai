@@ -12,6 +12,10 @@ const trustedServerEnvironmentSchema = publicEnvironmentSchema.extend({
   SARVAM_API_KEY: z.string().min(1, "SARVAM_API_KEY is required on the server."),
 });
 
+const adminEnvironmentSchema = publicEnvironmentSchema.extend({
+  SUPABASE_SECRET_KEY: z.string().min(1, "SUPABASE_SECRET_KEY is required on the server."),
+});
+
 const platformEnvironmentSchema = publicEnvironmentSchema.extend({
   SUPABASE_SECRET_KEY: z.string().min(1, "SUPABASE_SECRET_KEY is required on the server."),
   ANUMA_PLATFORM_ADMIN_EMAILS: z
@@ -40,6 +44,14 @@ export function getPublicEnvironment(): PublicEnvironment {
 }
 
 export type TrustedServerEnvironment = z.infer<typeof trustedServerEnvironmentSchema>;
+
+export function getAdminEnvironment() {
+  return adminEnvironmentSchema.parse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
+  });
+}
 
 export function getTrustedServerEnvironment(): TrustedServerEnvironment {
   return trustedServerEnvironmentSchema.parse({
