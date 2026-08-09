@@ -17,8 +17,8 @@ for (const viewport of viewports) {
     await page.goto("/sign-in");
 
     await expect(page.getByRole("heading", { name: "Sign in to ANUMA" })).toBeVisible();
-    await expect(page.getByLabel("Email address")).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
+    await expect(page.getByLabel("Work email")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Password" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
     expect(
       await page.locator("html").evaluate((element) => element.scrollWidth <= element.clientWidth),

@@ -56,7 +56,7 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
             </select>
           </label>
           <button className="button button-primary form-field-wide" type="submit">
-            Create workspace
+            Create organization
           </button>
         </form>
       </section>

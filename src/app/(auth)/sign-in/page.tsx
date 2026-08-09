@@ -12,7 +12,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   return (
     <div className="auth-card">
       <div>
-        <p className="eyebrow">Account access</p>
+        <p className="eyebrow">Welcome back</p>
         <h2>Sign in to ANUMA</h2>
         <p className="auth-copy">Sign in to continue to your organization.</p>
       </div>
@@ -31,7 +31,14 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         <Link href="/forgot-password">Forgot password?</Link>
       </p>
       <p className="auth-switch">
-        New to ANUMA? <Link href="/sign-up">Create an account</Link>.
+        <strong>New to ANUMA?</strong>
+        <br />
+        <Link href="/sign-up">Sign up</Link>.
+      </p>
+      <p className="auth-switch">
+        <strong>Joining an existing organization?</strong>
+        <br />
+        Use the invitation sent by your administrator.
       </p>
     </div>
   );

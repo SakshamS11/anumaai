@@ -11,7 +11,7 @@ describe("AuthForm", () => {
   it("renders sign-in credentials with accessible labels", () => {
     render(<AuthForm mode="sign-in" />);
 
-    expect(screen.getByLabelText("Email address")).toHaveAttribute("autocomplete", "email");
+    expect(screen.getByLabelText("Work email")).toHaveAttribute("autocomplete", "email");
     expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "current-password");
     expect(screen.getByRole("button", { name: "Sign in" })).toBeEnabled();
   });
@@ -20,6 +20,6 @@ describe("AuthForm", () => {
     render(<AuthForm mode="sign-up" />);
 
     expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "new-password");
-    expect(screen.getByRole("button", { name: "Create account" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sign up" })).toBeEnabled();
   });
 });

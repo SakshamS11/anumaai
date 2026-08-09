@@ -1,11 +1,30 @@
 import Link from "next/link";
-
 import { SignalTheatre } from "@/components/public/signal-theatre";
 
+const questions = [
+  [
+    "What are customers asking for that you do not currently offer?",
+    "Needs · questions · product gaps",
+  ],
+  [
+    "Which competitors keep entering your conversations?",
+    "Competitor · price comparison · objection",
+  ],
+  ["Where are price objections going unresolved?", "Concern · response · supporting evidence"],
+  [
+    "What questions appear before customers walk away?",
+    "Question · decision barrier · next action",
+  ],
+  [
+    "What are stronger representatives doing differently?",
+    "Talk dynamics · expected behaviours · evidence",
+  ],
+  ["What happened before the outcome?", "Interaction context · traceable source"],
+];
 export default function HomePage() {
   return (
-    <main className="public-page">
-      <header className="public-nav">
+    <main className="marketing-page">
+      <header className="marketing-nav">
         <Link className="wordmark" href="/">
           ANUMA
         </Link>
@@ -14,42 +33,40 @@ export default function HomePage() {
           <a href="#how-it-works">How it works</a>
         </nav>
         <div>
-          <Link className="public-sign-in" href="/sign-in">
-            Sign in
-          </Link>
-          <Link className="button button-primary" href="/sign-up">
-            Create workspace
-          </Link>
+          <Link href="/sign-in">Sign in</Link>
+          <a className="button button-primary" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
+            Book a demo
+          </a>
         </div>
       </header>
-      <section className="public-hero" id="product">
-        <div>
+      <section className="marketing-hero" id="product">
+        <div className="hero-copy">
           <p className="eyebrow">Frontline interaction intelligence</p>
           <h1>
             Your frontline is already telling you what customers want.
             <br />
             ANUMA makes it visible.
           </h1>
-          <p className="public-lede">
-            Every day, customers reveal their needs, budgets, objections, competitor comparisons and
-            buying signals in conversation. ANUMA turns those interactions into structured,
-            evidence-backed intelligence your organization can use.
+          <p>
+            Every day, customers reveal needs, budgets, objections, competitor comparisons and
+            buying signals in conversation. ANUMA turns them into structured business truth—without
+            losing the source evidence.
           </p>
-          <p className="public-actions">
-            <a className="button button-primary" href="#how-it-works">
-              See how ANUMA works
+          <div className="hero-actions">
+            <a className="button button-primary" href="#evidence-canvas">
+              See ANUMA in action
             </a>
-            <Link className="button button-secondary" href="/sign-up">
-              Create workspace
-            </Link>
-          </p>
+            <a className="text-link" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
+              Book a demo <span aria-hidden="true">→</span>
+            </a>
+          </div>
         </div>
         <SignalTheatre />
       </section>
-      <section className="editorial-comparison" id="how-it-works">
-        <div>
+      <section className="record-comparison" id="how-it-works">
+        <div className="record-side">
           <p className="eyebrow">The transaction tells you what happened.</p>
-          <h2>The conversation tells you why.</h2>
+          <h2>System of record</h2>
           <dl>
             <dt>Product</dt>
             <dd>Lenovo LOQ</dd>
@@ -61,80 +78,163 @@ export default function HomePage() {
             <dd>4:18 PM</dd>
           </dl>
         </div>
-        <div className="comparison-signal">
-          <p className="eyebrow">What ANUMA adds</p>
+        <span className="comparison-plus" aria-hidden="true">
+          +
+        </span>
+        <div className="anuma-side">
+          <p className="eyebrow">The conversation tells you why.</p>
+          <h2>ANUMA</h2>
           <dl>
             <dt>Need</dt>
             <dd>College + gaming</dd>
             <dt>Budget</dt>
             <dd>₹80,000</dd>
             <dt>Compared</dt>
-            <dd>Amazon ₹78,000</dd>
+            <dd>Amazon · ₹78,000</dd>
+            <dt>Concern</dt>
+            <dd>Online price</dd>
             <dt>Finance</dt>
             <dd>HDFC EMI</dd>
             <dt>Next action</dt>
             <dd>Confirm offer + EMI</dd>
           </dl>
-          <p>
-            ANUMA complements systems of record by preserving the interaction context around the
-            outcome.
-          </p>
+          <p>ANUMA adds the missing interaction context around the outcome.</p>
         </div>
       </section>
-      <section className="question-section">
-        <p className="eyebrow">Business questions</p>
-        <h2>What happened in the conversation before the outcome?</h2>
-        <ul>
-          <li>What are customers asking for that we do not currently offer?</li>
-          <li>Which competitors keep entering our conversations?</li>
-          <li>Where are price objections going unresolved?</li>
-          <li>What questions appear before customers walk away?</li>
-        </ul>
-        <p>ANUMA structures the interaction data required to answer these questions.</p>
+      <section className="business-questions">
+        <p className="eyebrow">What could your business know?</p>
+        <div>
+          <h2>The questions already inside your conversations.</h2>
+          <div className="question-list">
+            {questions.map(([question, signals], index) => (
+              <details key={question}>
+                <summary>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  {question}
+                </summary>
+                <p>{signals}</p>
+              </details>
+            ))}
+          </div>
+        </div>
       </section>
-      <section className="public-pillars">
+      <section className="intelligence-pillars">
         <p className="eyebrow">From conversations to decisions</p>
         <div>
-          <article>
-            <h2>Customer truth</h2>
-            <p>
-              Needs, budgets, preferences, competitor references, questions and decision barriers.
-            </p>
-          </article>
-          <article>
-            <h2>Frontline execution</h2>
-            <p>Talk dynamics, expected behaviours, questions addressed, scorecards and coaching.</p>
-          </article>
-          <article>
-            <h2>Outcome intelligence</h2>
-            <p>
-              Connect interaction patterns to what happened next. Planned as organizations build
-              sufficient evidence.
-            </p>
-          </article>
+          {[
+            [
+              "01",
+              "Customer truth",
+              "Needs, budgets, preferences, competitor references, questions and decision barriers.",
+            ],
+            [
+              "02",
+              "Frontline execution",
+              "Talk dynamics, expected behaviours, questions addressed, scorecards and coaching.",
+            ],
+            [
+              "03",
+              "Outcome intelligence",
+              "Aggregate intelligence is the next product direction, built only from trustworthy interaction evidence.",
+            ],
+          ].map(([number, title, copy]) => (
+            <article key={number}>
+              <span>{number}</span>
+              <h2>{title}</h2>
+              <p>{copy}</p>
+            </article>
+          ))}
         </div>
       </section>
-      <section className="trace-section">
-        <p className="eyebrow">Intelligence you can trace</p>
+      <section className="trace-proof">
         <div>
-          <strong>
-            Customer budget
-            <br />
-            ₹80,000
-          </strong>
-          <span aria-hidden="true">↕</span>
-          <blockquote>“Budget around ₹80,000 hai.”</blockquote>
+          <p className="eyebrow">Intelligence you can trace</p>
+          <div className="trace-proof-grid">
+            <article>
+              <span>Finding</span>
+              <strong>
+                Customer budget
+                <br />
+                ₹80,000
+              </strong>
+              <small>
+                <i /> Verified
+              </small>
+            </article>
+            <svg viewBox="0 0 100 170" aria-hidden="true">
+              <path d="M50 0 V170" />
+            </svg>
+            <article>
+              <span>Source</span>
+              <strong>
+                Customer · <time>00:42</time>
+              </strong>
+              <blockquote>“Budget around ₹80,000 hai.”</blockquote>
+              <a href="#evidence-canvas">View surrounding context →</a>
+            </article>
+          </div>
         </div>
-        <p>ANUMA findings remain connected to the source interaction that produced them.</p>
       </section>
-      <section className="public-cta">
+      <section className="dynamics">
+        <div>
+          <p className="eyebrow">Conversation dynamics</p>
+          <h2>How the interaction behaved.</h2>
+          <p>Objective measures describe the interaction. They do not judge it.</p>
+        </div>
+        <div className="dynamics-data">
+          <div className="speech-lines">
+            <p>
+              <span>Customer</span>
+              <i className="customer-line" />
+            </p>
+            <p>
+              <span>Representative</span>
+              <i className="rep-line" />
+            </p>
+          </div>
+          <dl>
+            <dt>Duration</dt>
+            <dd>4:18</dd>
+            <dt>Customer talk</dt>
+            <dd>52%</dd>
+            <dt>Representative talk</dt>
+            <dd>48%</dd>
+            <dt>Turns</dt>
+            <dd>37</dd>
+            <dt>Longest rep stretch</dt>
+            <dd>22 sec</dd>
+          </dl>
+        </div>
+      </section>
+      <section className="expectations">
+        <p className="eyebrow">Your business. Your expectations.</p>
+        <h2>Evaluate the behaviours your organization chooses.</h2>
+        <ul>
+          {[
+            "Requirement discovery",
+            "Budget discovery",
+            "Product discussed",
+            "Finance explained",
+            "Warranty discussed",
+            "Customer question addressed",
+            "Next action captured",
+          ].map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        <p>
+          ANUMA evaluates the expectations an organization chooses against what actually happened in
+          the interaction.
+        </p>
+      </section>
+      <section className="marketing-final">
         <p className="eyebrow">Your customers are already giving you the signals.</p>
         <h2>ANUMA makes them usable.</h2>
-        <Link className="button button-primary" href="/sign-up">
-          Create workspace
-        </Link>
-        <Link className="public-sign-in" href="/sign-in">
-          Sign in
+        <a className="button button-primary" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
+          Book a demo
+        </a>
+        <Link className="text-link" href="/sign-in">
+          Sign in →
         </Link>
       </section>
     </main>
