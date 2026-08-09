@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 function safeNext(value: string | null): string {
@@ -17,16 +18,16 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next, request.url));
+    if (!error) return NextResponse.redirect(getSiteUrl(request, next), { status: 303 });
   } else if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-    if (!error) return NextResponse.redirect(new URL(next, request.url));
+    if (!error) return NextResponse.redirect(getSiteUrl(request, next), { status: 303 });
   }
 
-  const destination = new URL("/sign-in", request.url);
+  const destination = getSiteUrl(request, "/sign-in");
   destination.searchParams.set(
     "error",
     "This authentication link is invalid or has expired. Please try again.",
   );
-  return NextResponse.redirect(destination);
+  return NextResponse.redirect(destination, { status: 303 });
 }
