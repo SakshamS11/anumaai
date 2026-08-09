@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getSiteOrigin, getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 function redirectWithMessage(request: NextRequest, key: "error" | "message", value: string) {
-  const destination = new URL("/forgot-password", request.url);
+  const destination = getSiteUrl(request, "/forgot-password");
   destination.searchParams.set(key, value);
   return NextResponse.redirect(destination, { status: 303 });
 }
@@ -17,9 +18,11 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const origin = new URL(request.url).origin;
+  const callback = new URL("/auth/callback", getSiteOrigin(request));
+  callback.searchParams.set("next", "/reset-password");
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    redirectTo: callback.toString(),
   });
 
   if (error) {
