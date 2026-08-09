@@ -4,17 +4,21 @@ import { useState } from "react";
 
 export function PasswordInput({
   autoComplete,
+  id = "password",
+  name = "password",
 }: {
   autoComplete: "current-password" | "new-password";
+  id?: string;
+  name?: string;
 }) {
   const [visible, setVisible] = useState(false);
   return (
     <span className="password-wrap">
       <input
         autoComplete={autoComplete}
-        id="password"
+        id={id}
         minLength={8}
-        name="password"
+        name={name}
         required
         type={visible ? "text" : "password"}
       />

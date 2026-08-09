@@ -1903,7 +1903,7 @@ a {
   background: #fff0ed;
 }
 .canvas-turn-muted {
-  opacity: 0.52;
+  opacity: 0.82;
 }
 .turn-meta {
   display: flex;
@@ -1920,7 +1920,7 @@ a {
   line-height: 1.55;
 }
 .canvas-turn mark {
-  background: var(--electric-aqua);
+  background: var(--signal-coral);
   color: var(--carbon);
   padding: 0 0.08em;
 }
@@ -2045,7 +2045,7 @@ a {
   font-size: 0.72rem;
 }
 .how-it-works li span {
-  color: var(--signal-coral);
+  color: var(--carbon);
   font-weight: 800;
 }
 .record-comparison h2 {
@@ -2115,7 +2115,7 @@ a {
 }
 .question-list summary span {
   font-family: var(--font-plex-mono), monospace;
-  color: var(--signal-coral);
+  color: var(--carbon);
   font-size: 0.75rem;
 }
 .question-list p {
@@ -2144,7 +2144,7 @@ a {
 }
 .intelligence-pillars article > span {
   font-family: var(--font-plex-mono), monospace;
-  color: var(--signal-coral);
+  color: var(--carbon);
   font-size: 0.8rem;
   font-weight: 800;
 }
@@ -2388,6 +2388,7 @@ a {
   font-weight: 650;
 }
 .auth-layout {
+  display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(430px, 0.85fr);
   grid-template-rows: 1fr;
   background: var(--porcelain);
@@ -2620,7 +2621,7 @@ a {
     padding: 0.65rem;
   }
   .canvas-turn-muted {
-    opacity: 0.7;
+    opacity: 0.82;
   }
   .evidence-findings {
     grid-template-columns: repeat(2, 1fr);
@@ -2688,6 +2689,7 @@ a {
   }
   .auth-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
   .auth-brandbar {
     position: relative;

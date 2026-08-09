@@ -114,7 +114,11 @@ export function SignalTheatre() {
             d="M0 258 C74 258, 78 255, 260 255"
           />
         </svg>
-        <div className="evidence-findings" aria-label="Illustrative structured findings">
+        <div
+          className="evidence-findings"
+          aria-label="Illustrative structured findings"
+          role="group"
+        >
           {findings.map((finding, index) => (
             <button
               aria-pressed={active === index}

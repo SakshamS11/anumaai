@@ -36,6 +36,34 @@ test("the public mobile menu is keyboard accessible and closes after navigation"
   await expect(menu).toHaveAttribute("aria-expanded", "false");
 });
 
+test("the public mobile menu closes with Escape and restores focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const menu = page.locator(".public-menu-trigger");
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  await expect(menu).toBeFocused();
+});
+
+test("illustrative findings expose their exact source by keyboard and touch", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const competitor = page.getByRole("button", { name: "COMPETITOR Amazon · ₹78,000" });
+  await competitor.focus();
+  await expect(competitor).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("mark")).toHaveText("Amazon pe LOQ ₹78,000");
+
+  const budget = page.getByRole("button", { name: "BUDGET ₹80,000" });
+  await budget.click();
+  await expect(budget).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("mark")).toHaveText("Budget around ₹80,000 hai");
+});
+
 test("sign-in and workspace sign-up expose dedicated credential forms", async ({ page }) => {
   await page.goto("/sign-in");
 
@@ -46,12 +74,38 @@ test("sign-in and workspace sign-up expose dedicated credential forms", async ({
     "current-password",
   );
   await expect(page.getByRole("link", { name: "Forgot password?" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Create an ANUMA workspace" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign up", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Show password" }).click();
+  await expect(page.locator('input[name="password"]')).toHaveAttribute("type", "text");
 
-  await page.getByRole("link", { name: "Create an ANUMA workspace" }).click();
+  await page.getByRole("link", { name: "Sign up", exact: true }).click();
   await expect(page).toHaveURL(/\/sign-up$/);
+  await expect(page.getByRole("heading", { name: "Sign up to ANUMA" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign up" })).toBeVisible();
   await expect(page.getByText(/For organizations starting a new ANUMA environment/)).toBeVisible();
+  await expect(page.getByText("Invited by your organization?")).toBeVisible();
+});
+
+test("recovery pages remain branded, labelled, and recoverable", async ({ page }) => {
+  await page.goto("/forgot-password");
+  await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
+  await expect(page.getByLabel("Email address")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Return to sign in" })).toBeVisible();
+
+  await page.goto("/reset-password");
+  await expect(page.getByLabel("New password", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Confirm new password", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Show password" }).first().click();
+  await expect(page.getByLabel("New password", { exact: true })).toHaveAttribute("type", "text");
+});
+
+test("expired auth fragments become a safe ANUMA invitation error", async ({ page }) => {
+  await page.goto(
+    "/#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired",
+  );
+  await expect(page).toHaveURL(/\/auth\/invite\?auth_error=expired$/);
+  await expect(page.getByRole("heading", { name: "This invitation has expired" })).toBeVisible();
+  await expect(page.getByText(/Supabase|OTP|JWT|RPC/)).toHaveCount(0);
 });
 
 test("an invitation cannot be accepted without a valid application credential", async ({

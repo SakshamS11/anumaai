@@ -233,6 +233,7 @@ export default function HomePage() {
         <div
           className="language-trace"
           aria-label="Illustrative source phrase linked to a normalized finding"
+          role="group"
         >
           <article>
             <span>How it was said</span>

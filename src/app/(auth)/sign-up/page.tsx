@@ -13,11 +13,8 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
     <div className="auth-card">
       <div>
         <p className="eyebrow">Create your ANUMA workspace</p>
-        <h2>Start a new organization</h2>
-        <p className="auth-copy">
-          For organizations starting a new ANUMA environment. If your organization invited you, use
-          the invitation sent by your administrator instead.
-        </p>
+        <h2>Sign up to ANUMA</h2>
+        <p className="auth-copy">For organizations starting a new ANUMA environment.</p>
       </div>
       {error ? (
         <p className="auth-message auth-message-error" role="alert">
@@ -32,6 +29,11 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
       <AuthForm mode="sign-up" />
       <p className="auth-switch">
         Already have an account? <Link href="/sign-in">Sign in</Link>.
+      </p>
+      <p className="auth-switch">
+        <strong>Invited by your organization?</strong>
+        <br />
+        Use the invitation sent by your administrator.
       </p>
     </div>
   );
