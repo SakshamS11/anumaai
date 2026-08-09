@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans, Noto_Sans_Devanagari } from "next/font/google";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+
+const plex = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-plex", display: "swap" });
+const devanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  variable: "--font-devanagari",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -14,7 +22,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${plex.variable} ${devanagari.variable}`}>{children}</body>
     </html>
   );
 }

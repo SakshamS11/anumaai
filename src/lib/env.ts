@@ -12,6 +12,13 @@ const trustedServerEnvironmentSchema = publicEnvironmentSchema.extend({
   SARVAM_API_KEY: z.string().min(1, "SARVAM_API_KEY is required on the server."),
 });
 
+const platformEnvironmentSchema = publicEnvironmentSchema.extend({
+  SUPABASE_SECRET_KEY: z.string().min(1, "SUPABASE_SECRET_KEY is required on the server."),
+  ANUMA_PLATFORM_ADMIN_EMAILS: z
+    .string()
+    .min(1, "ANUMA_PLATFORM_ADMIN_EMAILS is required on the server."),
+});
+
 const openAIEnvironmentSchema = trustedServerEnvironmentSchema.extend({
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required on the server."),
   ANUMA_ANALYSIS_MODEL: z.literal("gpt-5.6-luna").default("gpt-5.6-luna"),
@@ -40,6 +47,15 @@ export function getTrustedServerEnvironment(): TrustedServerEnvironment {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
     SARVAM_API_KEY: process.env.SARVAM_API_KEY,
+  });
+}
+
+export function getPlatformEnvironment() {
+  return platformEnvironmentSchema.parse({
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
+    ANUMA_PLATFORM_ADMIN_EMAILS: process.env.ANUMA_PLATFORM_ADMIN_EMAILS,
   });
 }
 

@@ -25,7 +25,10 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
   const pathname = usePathname();
   const router = useRouter();
   const { currentOrganization } = context;
-  const navigationGroups = ["Interactions", "Intelligence", "Configure"] as const;
+  const navigationGroups =
+    currentOrganization.role === "representative"
+      ? (["Interactions"] as const)
+      : (["Interactions", "Intelligence", "Configure"] as const);
   const assignmentSummary =
     context.assignmentCount > 0
       ? `${context.assignmentCount} active scope assignment${context.assignmentCount === 1 ? "" : "s"}`
@@ -51,7 +54,11 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
             <div className="navigation-group" key={group}>
               <p>{group}</p>
               {applicationRoutes
-                .filter((route) => route.group === group)
+                .filter(
+                  (route) =>
+                    route.group === group &&
+                    (currentOrganization.role === "admin" || route.href !== "/administration"),
+                )
                 .map((route) => {
                   const active = pathname === route.href;
                   return (
@@ -124,19 +131,27 @@ export function AppShell({ children, context, switchOrganization }: AppShellProp
           </details>
         </header>
         <nav aria-label="Primary navigation on small screens" className="mobile-navigation">
-          {applicationRoutes.map((route) => {
-            const active = pathname === route.href;
-            return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className={active ? "mobile-nav-link mobile-nav-link-active" : "mobile-nav-link"}
-                href={route.href}
-                key={route.href}
-              >
-                {route.label}
-              </Link>
-            );
-          })}
+          {applicationRoutes
+            .filter(
+              (route) =>
+                currentOrganization.role !== "representative" || route.group === "Interactions",
+            )
+            .filter(
+              (route) => currentOrganization.role === "admin" || route.href !== "/administration",
+            )
+            .map((route) => {
+              const active = pathname === route.href;
+              return (
+                <Link
+                  aria-current={active ? "page" : undefined}
+                  className={active ? "mobile-nav-link mobile-nav-link-active" : "mobile-nav-link"}
+                  href={route.href}
+                  key={route.href}
+                >
+                  {route.label}
+                </Link>
+              );
+            })}
         </nav>
         <div className="page-content">{children}</div>
       </main>

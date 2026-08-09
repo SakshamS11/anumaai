@@ -12,9 +12,12 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   return (
     <div className="auth-card">
       <div>
-        <p className="eyebrow">Organization access</p>
-        <h2>Create your ANUMA account</h2>
-        <p className="auth-copy">Create an account to set up or join an organization.</p>
+        <p className="eyebrow">Create your ANUMA workspace</p>
+        <h2>Start a new organization</h2>
+        <p className="auth-copy">
+          For organizations starting a new ANUMA environment. Invited people should use the access
+          email sent by their administrator.
+        </p>
       </div>
       {error ? (
         <p className="auth-message auth-message-error" role="alert">
