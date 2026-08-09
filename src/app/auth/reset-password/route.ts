@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 function redirectWithError(request: NextRequest, value: string) {
-  const destination = new URL("/reset-password", request.url);
+  const destination = getSiteUrl(request, "/reset-password");
   destination.searchParams.set("error", value);
   return NextResponse.redirect(destination, { status: 303 });
 }
@@ -31,5 +32,5 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return NextResponse.redirect(new URL("/setup", request.url), { status: 303 });
+  return NextResponse.redirect(getSiteUrl(request, "/setup"), { status: 303 });
 }
