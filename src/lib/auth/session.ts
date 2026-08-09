@@ -7,17 +7,14 @@ export type AuthenticatedUser = {
 
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
   const supabase = await createClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  if (claimsError || !claimsData?.claims) {
+  if (error || !user) {
     return null;
   }
 
-  const userId = claimsData.claims.sub;
-  if (typeof userId !== "string") {
-    return null;
-  }
-
-  const email = claimsData.claims.email;
-  return { id: userId, email: typeof email === "string" ? email : null };
+  return { id: user.id, email: user.email ?? null };
 }
