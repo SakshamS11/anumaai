@@ -1604,6 +1604,30 @@ a {
   gap: 1rem;
   margin-top: 1rem;
 }
+.platform-detail-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 1.25rem 0 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.platform-detail-nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--graphite);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.platform-detail-nav a:hover,
+.platform-detail-nav a:focus-visible {
+  color: var(--carbon);
+  text-decoration: underline;
+  text-decoration-color: var(--signal-coral);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
 .people-directory .directory-row {
   grid-template-columns: minmax(180px, 1.7fr) 0.9fr 1.2fr 0.75fr 0.9fr;
 }

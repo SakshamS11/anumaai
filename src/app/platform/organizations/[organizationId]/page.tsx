@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { resendPlatformInvitation } from "@/app/platform/organizations/actions";
+import { ResendInvitationButton } from "@/components/platform/resend-invitation-button";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const countryNames: Record<string, string> = { IN: "India", AE: "United Arab Emirates" };
@@ -75,6 +76,11 @@ export default async function PlatformOrganizationPage({
           )}
         </p>
       </section>
+      <nav className="platform-detail-nav" aria-label="Organization detail">
+        <a href="#overview">Overview</a>
+        <a href="#people">People</a>
+        <a href="#structure">Structure</a>
+      </nav>
       {message.created ? (
         <p className="auth-message" role="status">
           {organization.name} created.
@@ -90,7 +96,7 @@ export default async function PlatformOrganizationPage({
           Administrator invitation not sent. Retry the invitation below.
         </p>
       ) : null}
-      <section className="platform-detail-grid">
+      <section className="platform-detail-grid" id="overview">
         <article className="product-panel">
           <p className="eyebrow">Setup readiness</p>
           <h2>Customer onboarding</h2>
@@ -120,9 +126,7 @@ export default async function PlatformOrganizationPage({
               </p>
               <form action={resendPlatformInvitation}>
                 <input name="invitation_id" type="hidden" value={pendingAdmin.id} />
-                <button className="button button-secondary" type="submit">
-                  Resend invitation
-                </button>
+                <ResendInvitationButton />
               </form>
             </>
           ) : (
@@ -138,7 +142,7 @@ export default async function PlatformOrganizationPage({
         </article>
       </section>
       <section className="platform-detail-grid">
-        <article className="product-panel">
+        <article className="product-panel" id="people">
           <p className="eyebrow">People</p>
           <h2>{activeMembers.length} active</h2>
           <p>
@@ -146,7 +150,7 @@ export default async function PlatformOrganizationPage({
             invitation(s)
           </p>
         </article>
-        <article className="product-panel">
+        <article className="product-panel" id="structure">
           <p className="eyebrow">Structure</p>
           <h2>
             {activeLocations.length} locations · {activeTeams.length} teams

@@ -1,8 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 
 import { createCustomerOrganization } from "@/app/platform/organizations/actions";
+
+function CreateOrganizationButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button className="button button-primary" disabled={pending} type="submit">
+      {pending ? "Creating organization…" : "Create organization"}
+    </button>
+  );
+}
 
 export function NewOrganizationDialog() {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -16,17 +27,30 @@ export function NewOrganizationDialog() {
     environment: "customer",
   });
   const [email, setEmail] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   function close() {
     dialog.current?.close();
     setStep(1);
+    setValidationError("");
   }
   function continueFrom(current: number) {
     const fieldset = form.current?.querySelector<HTMLFieldSetElement>(`[data-step="${current}"]`);
     const invalid = Array.from(fieldset?.elements ?? []).find(
-      (element) => element instanceof HTMLInputElement && !element.checkValidity(),
-    ) as HTMLInputElement | undefined;
-    if (invalid) return invalid.reportValidity();
+      (element): element is HTMLInputElement | HTMLSelectElement =>
+        (element instanceof HTMLInputElement || element instanceof HTMLSelectElement) &&
+        !element.checkValidity(),
+    );
+    if (invalid) {
+      setValidationError(
+        invalid.name === "email"
+          ? "Enter a valid work email."
+          : "Enter an organization name of at least two characters.",
+      );
+      invalid.focus();
+      return;
+    }
+    setValidationError("");
     setStep(current + 1);
   }
 
@@ -67,7 +91,10 @@ export function NewOrganizationDialog() {
                 minLength={2}
                 required
                 value={company.name}
-                onChange={(event) => setCompany({ ...company, name: event.target.value })}
+                onChange={(event) => {
+                  setCompany({ ...company, name: event.target.value });
+                  setValidationError("");
+                }}
               />
             </label>
             <label className="form-field">
@@ -126,7 +153,10 @@ export function NewOrganizationDialog() {
                 required
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setValidationError("");
+                }}
               />
             </label>
             <p className="role-explanation">
@@ -150,6 +180,11 @@ export function NewOrganizationDialog() {
               <dd>{email}</dd>
             </dl>
           </section>
+          {validationError ? (
+            <p className="auth-message auth-message-error" role="alert">
+              {validationError}
+            </p>
+          ) : null}
           <footer>
             <button
               className="button button-quiet"
@@ -167,9 +202,7 @@ export function NewOrganizationDialog() {
                 Continue
               </button>
             ) : (
-              <button className="button button-primary" type="submit">
-                Create organization
-              </button>
+              <CreateOrganizationButton />
             )}
           </footer>
         </form>
