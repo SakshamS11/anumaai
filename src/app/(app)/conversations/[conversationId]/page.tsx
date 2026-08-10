@@ -7,10 +7,12 @@ import { CustomerConsentPanel } from "@/components/conversations/customer-consen
 import { InteractionUnderstanding } from "@/components/conversations/interaction-understanding";
 import { InteractionMetrics } from "@/components/conversations/interaction-metrics";
 import { InteractionReview } from "@/components/conversations/interaction-review";
+import { CommercialContext } from "@/components/conversations/commercial-context";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { deriveConversationState, getConversationDetail } from "@/modules/conversations/data";
 import { getApplicationContext } from "@/modules/identity/application-context";
+import { createClient } from "@/lib/supabase/server";
 
 type ConversationPageProps = { params: Promise<{ conversationId: string }> };
 
@@ -28,6 +30,12 @@ export default async function ConversationPage({ params }: ConversationPageProps
     conversation.consentStatus === "granted" || conversation.consentStatus === "not_required";
   const latestRecording =
     conversation.recordings.find((recording) => recording.status === "uploaded") ?? null;
+  const supabase = await createClient();
+  const { data: catalogue } = await supabase
+    .from("product_catalogue_items")
+    .select("id,name,aliases,brand,model,external_sku")
+    .eq("organization_id", organization.id)
+    .eq("is_active", true);
 
   return (
     <>
@@ -107,6 +115,17 @@ export default async function ConversationPage({ params }: ConversationPageProps
         }
         conversationId={conversation.id}
         observations={conversation.observations}
+      />
+      <CommercialContext
+        observations={conversation.observations}
+        catalogue={(catalogue ?? []).map((item) => ({
+          id: item.id,
+          name: item.name,
+          aliases: item.aliases,
+          brand: item.brand,
+          model: item.model,
+          externalSku: item.external_sku,
+        }))}
       />
       <InteractionReview
         canRequest={Boolean(conversation.activeAnalysisRunId)}

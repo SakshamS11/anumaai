@@ -1172,6 +1172,134 @@ export type Database = {
         };
         Relationships: [];
       };
+      product_catalogue_import_runs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          source_filename: string;
+          source_checksum: string;
+          status: Database["public"]["Enums"]["catalogue_import_status"];
+          total_row_count: number;
+          imported_row_count: number;
+          invalid_row_count: number;
+          error_summary: Json;
+          created_by_membership_id: string | null;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          source_filename: string;
+          source_checksum: string;
+          status?: Database["public"]["Enums"]["catalogue_import_status"];
+          total_row_count?: number;
+          imported_row_count?: number;
+          invalid_row_count?: number;
+          error_summary?: Json;
+          created_by_membership_id?: string | null;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          source_filename?: string;
+          source_checksum?: string;
+          status?: Database["public"]["Enums"]["catalogue_import_status"];
+          total_row_count?: number;
+          imported_row_count?: number;
+          invalid_row_count?: number;
+          error_summary?: Json;
+          created_by_membership_id?: string | null;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_catalogue_import_runs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_catalogue_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          external_sku: string;
+          name: string;
+          category: string;
+          subcategory: string | null;
+          brand: string | null;
+          model: string | null;
+          aliases: string[];
+          specifications: Json;
+          is_active: boolean;
+          valid_from: string | null;
+          valid_to: string | null;
+          source_import_run_id: string | null;
+          source_row_number: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          external_sku: string;
+          name: string;
+          category: string;
+          subcategory?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          aliases?: string[];
+          specifications?: Json;
+          is_active?: boolean;
+          valid_from?: string | null;
+          valid_to?: string | null;
+          source_import_run_id?: string | null;
+          source_row_number?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          external_sku?: string;
+          name?: string;
+          category?: string;
+          subcategory?: string | null;
+          brand?: string | null;
+          model?: string | null;
+          aliases?: string[];
+          specifications?: Json;
+          is_active?: boolean;
+          valid_from?: string | null;
+          valid_to?: string | null;
+          source_import_run_id?: string | null;
+          source_row_number?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_catalogue_items_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "product_catalogue_items_source_import_run_id_fkey";
+            columns: ["source_import_run_id"];
+            isOneToOne: false;
+            referencedRelation: "product_catalogue_import_runs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       outcome_events: {
         Row: {
           conversation_id: string;
@@ -2112,6 +2240,7 @@ export type Database = {
       membership_status: "active" | "inactive";
       organization_invitation_status: "pending" | "accepted" | "expired" | "revoked";
       outcome_source: "manual" | "import";
+      catalogue_import_status: "pending" | "completed" | "completed_with_errors" | "failed";
       participant_role:
         "representative" | "customer" | "additional_customer" | "manager" | "unknown";
       quality_state: "adequate" | "limited" | "insufficient" | "unknown" | "not_assessed";
