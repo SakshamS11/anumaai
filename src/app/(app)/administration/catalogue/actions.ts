@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { csvChecksum, parseProductCatalogueCsv } from "@/modules/catalogue/product-catalogue";
 import { getApplicationContext } from "@/modules/identity/application-context";
 
@@ -19,7 +19,9 @@ export async function importProductCatalogue(formData: FormData) {
     redirect("/administration/catalogue?error=Choose+a+CSV+file+under+900KB.");
   const source = await file.text();
   const parsed = parseProductCatalogueCsv(source);
-  const supabase = await createClient();
+  // User-scoped clients intentionally have no direct catalogue write grants.
+  // Authorization was resolved above; this server-only client performs the bounded import.
+  const supabase = createAdminClient();
   const { data: run, error: runError } = await supabase
     .from("product_catalogue_import_runs")
     .insert({

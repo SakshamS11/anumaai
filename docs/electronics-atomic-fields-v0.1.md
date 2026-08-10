@@ -2,8 +2,9 @@
 
 ## Purpose
 
-This is ANUMA's proposed canonical field dictionary for the first narrow
-pilot: offline electronics retail, beginning with laptops. It turns the
+This is ANUMA's proposed canonical field dictionary for offline electronics retail.
+It supports laptops, smartphones, televisions, tablets, gaming, audio, wearables,
+cameras, appliances, and other configurable electronics categories. It turns the
 founder guide's forty conversation facts into a stable contract for
 extraction, human annotation, corrections, integrations, and later
 bottom-up analytics.
@@ -71,7 +72,7 @@ ready. It must not be surfaced merely because the field exists here.
 |   5 | `ended_at`             | interaction / one                | verified           | Recording end timestamp in UTC.                                                                      |
 |   6 | `language_mix`         | interaction / one-or-many labels | evidence_extracted | Evidence-backed language/code-mix classification; never changes the UI language.                     |
 |   7 | `customer_party_size`  | interaction / one                | evidence_extracted | Capture only when confidently audible or visually/manual confirmed; otherwise abstain.               |
-|   8 | `purchase_category`    | interaction / one                | evidence_extracted | Canonical category, initially `laptop`; evidence required.                                           |
+|   8 | `purchase_category`    | interaction / one                | evidence_extracted | Canonical electronics category; evidence required.                                                   |
 |   9 | `arrival_intent_state` | interaction / one                | evaluated          | `unknown`, `exploratory`, `partial`, or `defined`; based on opening evidence and a versioned rubric. |
 |  10 | `initial_request`      | interaction / many               | evidence_extracted | Verbatim-normalised request with exact opening evidence span.                                        |
 
@@ -154,7 +155,8 @@ projection, not a second extraction pass.
 ### P0: validate before exposing
 
 Fields 1–16, 24–30, 33–35, and 38 are the first evaluation set for a
-laptops-only gold set. They directly support the pilot questions about customer demand,
+electronics-wide gold set. Laptop, phone, TV, and appliance fixtures should exercise the
+same shared concepts; category-specific specifications remain controlled data. They directly support the pilot questions about customer demand,
 recommendation, online-price friction, finance, and next action.
 
 ### P1: add with authoritative retail context

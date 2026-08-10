@@ -8,7 +8,10 @@ function readDatabaseUrl() {
 
   if (!line) throw new Error("SUPABASE_DB_URL is missing from .env.local.");
 
-  return line.slice(line.indexOf("=") + 1).trim().replace(/^['\"]|['\"]$/g, "");
+  return line
+    .slice(line.indexOf("=") + 1)
+    .trim()
+    .replace(/^['\"]|['\"]$/g, "");
 }
 
 const ids = {
@@ -61,6 +64,10 @@ const ids = {
   reviewA: "d0000000-0000-4000-8000-000000000001",
   reviewOtherA: "d0000000-0000-4000-8000-000000000002",
   reviewB: "d0000000-0000-4000-8000-000000000003",
+  catalogueImportA: "e0000000-0000-4000-8000-000000000001",
+  catalogueImportB: "e0000000-0000-4000-8000-000000000002",
+  catalogueItemA: "e1000000-0000-4000-8000-000000000001",
+  catalogueItemB: "e1000000-0000-4000-8000-000000000002",
 };
 
 const sql = postgres(readDatabaseUrl(), {
@@ -143,6 +150,8 @@ try {
       "scorecard_definition_checks",
       "scorecard_evaluations",
       "review_runs",
+      "product_catalogue_import_runs",
+      "product_catalogue_items",
     ];
 
     const rlsRows = await tx`
@@ -152,7 +161,11 @@ try {
       where pg_namespace.nspname = 'public' and relname = any(${tenantTables})
     `;
     assertEqual(rlsRows.length, tenantTables.length, "all tenant tables exist");
-    assertEqual(rlsRows.every((row) => row.relrowsecurity), true, "RLS enabled on every tenant table");
+    assertEqual(
+      rlsRows.every((row) => row.relrowsecurity),
+      true,
+      "RLS enabled on every tenant table",
+    );
 
     const bucketRows = await tx`
       select public from storage.buckets where id = 'conversation-audio'
@@ -206,6 +219,20 @@ try {
         (${ids.teamA1}, ${ids.orgA}, 'A Showroom Team'),
         (${ids.teamA2}, ${ids.orgA}, 'A Store Team'),
         (${ids.teamB}, ${ids.orgB}, 'B Team')
+    `;
+    await tx`
+      insert into public.product_catalogue_import_runs (
+        id, organization_id, source_filename, source_checksum, status, created_by_membership_id
+      ) values
+        (${ids.catalogueImportA}, ${ids.orgA}, 'catalogue-a.csv', ${"a".repeat(64)}, 'completed', ${ids.adminAMembership}),
+        (${ids.catalogueImportB}, ${ids.orgB}, 'catalogue-b.csv', ${"b".repeat(64)}, 'completed', ${ids.adminBMembership})
+    `;
+    await tx`
+      insert into public.product_catalogue_items (
+        id, organization_id, external_sku, name, category, source_import_run_id
+      ) values
+        (${ids.catalogueItemA}, ${ids.orgA}, 'A-SKU', 'Catalogue product A', 'electronics', ${ids.catalogueImportA}),
+        (${ids.catalogueItemB}, ${ids.orgB}, 'B-SKU', 'Catalogue product B', 'electronics', ${ids.catalogueImportB})
     `;
     await tx`
       insert into public.member_assignments (
@@ -359,7 +386,11 @@ try {
         'Atomic Bootstrap Organization', 'IN', 'INR', 'Asia/Kolkata'
       )
     `;
-    assertEqual(Boolean(bootstrapResult.organization_id), true, "first organization bootstrap succeeds");
+    assertEqual(
+      Boolean(bootstrapResult.organization_id),
+      true,
+      "first organization bootstrap succeeds",
+    );
     assertEqual(
       await count(
         tx,
@@ -369,12 +400,18 @@ try {
       "bootstrap creator becomes administrator",
     );
     assertEqual(
-      await count(tx, tx`select count(*) from public.organizations where id = ${bootstrapResult.organization_id}`),
+      await count(
+        tx,
+        tx`select count(*) from public.organizations where id = ${bootstrapResult.organization_id}`,
+      ),
       1,
       "bootstrap creator reads the new organization",
     );
-    await expectDenied(tx, "bootstrap cannot grant a second arbitrary administrator tenant", () =>
-      tx`select * from public.bootstrap_organization('Second Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
+    await expectDenied(
+      tx,
+      "bootstrap cannot grant a second arbitrary administrator tenant",
+      () =>
+        tx`select * from public.bootstrap_organization('Second Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
     );
 
     await assumeRole(tx, "service_role");
@@ -384,7 +421,11 @@ try {
         'AE', 'AED', 'Asia/Dubai', 'initial-admin@anuma.invalid', ${"b".repeat(64)}, 'test'
       )
     `;
-    assertEqual(Boolean(provisionedCustomer.organization_id), true, "platform provision creates an organization atomically");
+    assertEqual(
+      Boolean(provisionedCustomer.organization_id),
+      true,
+      "platform provision creates an organization atomically",
+    );
     assertEqual(
       await count(
         tx,
@@ -403,14 +444,21 @@ try {
     );
 
     await assumeRole(tx, "anon");
-    await expectDenied(tx, "anonymous cannot bootstrap an organization", () =>
-      tx`select * from public.bootstrap_organization('Anonymous Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
+    await expectDenied(
+      tx,
+      "anonymous cannot bootstrap an organization",
+      () =>
+        tx`select * from public.bootstrap_organization('Anonymous Bootstrap', 'IN', 'INR', 'Asia/Kolkata')`,
     );
-    await expectDenied(tx, "anonymous cannot read organizations", () =>
-      tx`select count(*) from public.organizations`,
+    await expectDenied(
+      tx,
+      "anonymous cannot read organizations",
+      () => tx`select count(*) from public.organizations`,
     );
-    await expectDenied(tx, "anonymous cannot read conversations", () =>
-      tx`select count(*) from public.conversations`,
+    await expectDenied(
+      tx,
+      "anonymous cannot read conversations",
+      () => tx`select count(*) from public.conversations`,
     );
     assertEqual(
       await count(
@@ -420,68 +468,246 @@ try {
       0,
       "anonymous cannot read private audio objects",
     );
-    await expectDenied(tx, "anonymous cannot upload private audio", () => tx`
+    await expectDenied(
+      tx,
+      "anonymous cannot upload private audio",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.recordingA}/audio.webm`})
-    `);
+    `,
+    );
 
     await assumeRole(tx, "authenticated", ids.repAUser);
-    assertEqual(await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgA}`), 1, "representative reads own organization");
-    assertEqual(await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgB}`), 0, "representative cannot read another organization");
-    assertEqual(await count(tx, tx`select count(*) from public.locations where organization_id = ${ids.orgB}`), 0, "representative cannot read another tenant locations");
-    assertEqual(await count(tx, tx`select count(*) from public.teams where organization_id = ${ids.orgB}`), 0, "representative cannot read another tenant teams");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationA}`), 1, "representative reads own conversation");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`), 0, "representative cannot read peer conversation");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationB}`), 0, "representative cannot read cross-tenant conversation");
-    assertEqual(await count(tx, tx`select count(*) from public.recordings where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant recording metadata");
-    assertEqual(await count(tx, tx`select count(*) from public.transcription_runs where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcription run");
-    assertEqual(await count(tx, tx`select count(*) from public.transcript_segments where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant transcript segment");
-    assertEqual(await count(tx, tx`select count(*) from public.outcome_events where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant outcome");
-    assertEqual(await count(tx, tx`select count(*) from public.structured_observations where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant observations");
-    assertEqual(await count(tx, tx`select count(*) from public.observation_corrections where organization_id = ${ids.orgB}`), 0, "representative cannot read cross-tenant corrections");
-    assertEqual(await count(tx, tx`select count(*) from public.check_definitions where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B check definitions");
-    await expectDenied(tx, "non-admin cannot create organization check configuration", () => tx`
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgA}`),
+      1,
+      "representative reads own organization",
+    );
+    assertEqual(
+      await count(tx, tx`select count(*) from public.organizations where id = ${ids.orgB}`),
+      0,
+      "representative cannot read another organization",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.locations where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read another tenant locations",
+    );
+    assertEqual(
+      await count(tx, tx`select count(*) from public.teams where organization_id = ${ids.orgB}`),
+      0,
+      "representative cannot read another tenant teams",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where id = ${ids.conversationA}`,
+      ),
+      1,
+      "representative reads own conversation",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`,
+      ),
+      0,
+      "representative cannot read peer conversation",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where id = ${ids.conversationB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant conversation",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.recordings where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant recording metadata",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.transcription_runs where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant transcription run",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.transcript_segments where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant transcript segment",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.outcome_events where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant outcome",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.structured_observations where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant observations",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.observation_corrections where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read cross-tenant corrections",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.check_definitions where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "organization A cannot read organization B check definitions",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgA}`,
+      ),
+      1,
+      "representative reads own organization catalogue",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "representative cannot read another organization catalogue",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_import_runs where organization_id = ${ids.orgA}`,
+      ),
+      0,
+      "representative cannot read admin catalogue import provenance",
+    );
+    await expectDenied(
+      tx,
+      "representative cannot directly insert catalogue items",
+      () => tx`
+      insert into public.product_catalogue_items (organization_id, external_sku, name, category)
+      values (${ids.orgA}, 'REP-ATTACK', 'Rep attack', 'electronics')
+    `,
+    );
+    await expectDenied(
+      tx,
+      "non-admin cannot create organization check configuration",
+      () => tx`
       insert into public.check_definitions (
         organization_id, key, name, description, purpose, applicability, evaluation_strategy, observation_types, weight
       ) values (${ids.orgA}, 'rep_config_attack', 'Rep config attack', 'Must be denied.', 'scorecard', 'every_interaction', 'observation', '{need}', 1)
-    `);
-    await expectDenied(tx, "organization A cannot create config for organization B", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "organization A cannot create config for organization B",
+      () => tx`
       insert into public.check_definitions (
         organization_id, key, name, description, purpose, applicability, evaluation_strategy, observation_types, weight
       ) values (${ids.orgB}, 'cross_tenant_config_attack', 'Cross tenant config attack', 'Must be denied.', 'scorecard', 'every_interaction', 'observation', '{need}', 1)
-    `);
-    assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B check evaluations");
-    assertEqual(await count(tx, tx`select count(*) from public.scorecard_evaluations where organization_id = ${ids.orgB}`), 0, "organization A cannot read organization B scorecard evaluations");
+    `,
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.check_evaluations where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "organization A cannot read organization B check evaluations",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.scorecard_evaluations where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "organization A cannot read organization B scorecard evaluations",
+    );
     const [{ correction_id: proposedCorrectionId }] = await tx`
       select public.propose_observation_correction(
         ${ids.observationA}, '{"valueText":"Corrected fixture need A"}'::jsonb, 'Security test correction'
       ) as correction_id
     `;
     correctionA = proposedCorrectionId;
-    assertEqual(Boolean(correctionA), true, "representative can propose an append-only correction to own observation");
-    await expectDenied(tx, "representative cannot propose correction for cross-tenant observation", () => tx`
+    assertEqual(
+      Boolean(correctionA),
+      true,
+      "representative can propose an append-only correction to own observation",
+    );
+    await expectDenied(
+      tx,
+      "representative cannot propose correction for cross-tenant observation",
+      () => tx`
       select public.propose_observation_correction(
         ${ids.observationB}, '{"valueText":"Cross-tenant attack"}'::jsonb, null
       )
-    `);
-    await expectDenied(tx, "representative cannot confirm a correction", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot confirm a correction",
+      () => tx`
       select public.review_observation_correction(${correctionA}, 'confirmed')
-    `);
+    `,
+    );
     assertEqual(
-      await count(tx, tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgA}`),
+      await count(
+        tx,
+        tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgA}`,
+      ),
       0,
       "representative cannot read organization invitations",
     );
-    await expectDenied(tx, "representative cannot invite organization people", () => tx`
+    await expectDenied(
+      tx,
+      "representative cannot invite organization people",
+      () => tx`
       select * from public.create_organization_invitation(
         ${ids.orgA}, 'blocked-representative@anuma.invalid', 'representative', null, null, ${invitationTokenHash}
       )
-    `);
-    await expectDenied(tx, "representative cannot change organization roles", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot change organization roles",
+      () => tx`
       select public.update_organization_member(${ids.otherRepAMembership}, 'manager', 'active', ${ids.locationA2}, ${ids.teamA2})
-    `);
-    assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgA}/%`}`), 1, "representative reads own authorized audio path");
-    assertEqual(await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgB}/%`}`), 0, "representative cannot read cross-tenant audio path");
+    `,
+    );
+    assertEqual(
+      await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgA}/%`}`),
+      1,
+      "representative reads own authorized audio path",
+    );
+    assertEqual(
+      await count(tx, tx`select count(*) from storage.objects where name like ${`${ids.orgB}/%`}`),
+      0,
+      "representative cannot read cross-tenant audio path",
+    );
 
     const [{ conversation_id: repConversationId }] = await tx`
       select public.create_conversation_with_consent(
@@ -496,17 +722,42 @@ try {
       where conversation_id = ${repConversationId}
       order by role
     `;
-    assertEqual(createdParticipants.length, 2, "conversation creation creates representative and customer participants");
-    const customerParticipant = createdParticipants.find((participant) => participant.role === "customer");
+    assertEqual(
+      createdParticipants.length,
+      2,
+      "conversation creation creates representative and customer participants",
+    );
+    const customerParticipant = createdParticipants.find(
+      (participant) => participant.role === "customer",
+    );
     const representativeParticipant = createdParticipants.find(
       (participant) => participant.role === "representative",
     );
-    assertEqual(customerParticipant?.membership_id, null, "anonymous customer participant has no membership");
-    assertEqual(customerParticipant?.display_label, "Customer", "customer participant has no PII label");
-    assertEqual(representativeParticipant?.membership_id, ids.repAMembership, "representative participant keeps authenticated membership");
-    assertEqual(representativeParticipant?.display_label, "Representative", "representative participant label is correct");
     assertEqual(
-      await count(tx, tx`select count(*) from public.consent_records where conversation_id = ${repConversationId} and status = 'granted'`),
+      customerParticipant?.membership_id,
+      null,
+      "anonymous customer participant has no membership",
+    );
+    assertEqual(
+      customerParticipant?.display_label,
+      "Customer",
+      "customer participant has no PII label",
+    );
+    assertEqual(
+      representativeParticipant?.membership_id,
+      ids.repAMembership,
+      "representative participant keeps authenticated membership",
+    );
+    assertEqual(
+      representativeParticipant?.display_label,
+      "Representative",
+      "representative participant label is correct",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.consent_records where conversation_id = ${repConversationId} and status = 'granted'`,
+      ),
       1,
       "conversation creation records consent provenance",
     );
@@ -530,15 +781,23 @@ try {
         ${repConversationId}, 'audio/webm', 128, 1000, 'browser_recording', 'role-play.webm'
       )
     `;
-    assertEqual(Boolean(preparedRecording.recording_id), true, "representative prepares exact recording metadata before upload");
+    assertEqual(
+      Boolean(preparedRecording.recording_id),
+      true,
+      "representative prepares exact recording metadata before upload",
+    );
     assertEqual(
       preparedRecording.storage_object_path,
       `${ids.orgA}/${repConversationId}/${preparedRecording.recording_id}/source.webm`,
       "prepared recording path is organization, conversation, and real recording scoped",
     );
-    await expectDenied(tx, "recording cannot finalize before its exact private object exists", () => tx`
+    await expectDenied(
+      tx,
+      "recording cannot finalize before its exact private object exists",
+      () => tx`
       select public.finalize_recording_upload(${preparedRecording.recording_id})
-    `);
+    `,
+    );
     await tx`
       select public.append_customer_recording_consent(${repConversationId}, 'withdrawn', 'verbal')
     `;
@@ -562,7 +821,10 @@ try {
       2,
       "every consent history entry remains attached to the anonymous customer",
     );
-    await expectDenied(tx, "representative cannot create conversation for another representative", () => tx`
+    await expectDenied(
+      tx,
+      "representative cannot create conversation for another representative",
+      () => tx`
       insert into public.conversations (
         organization_id, created_by_membership_id, representative_membership_id,
         location_id, team_id, vertical, started_at
@@ -570,66 +832,153 @@ try {
         ${ids.orgA}, ${ids.repAMembership}, ${ids.otherRepAMembership},
         ${ids.locationA2}, ${ids.teamA2}, 'electronics', now()
       )
-    `);
-    await expectDenied(tx, "representative cannot create cross-tenant outcome", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot create cross-tenant outcome",
+      () => tx`
       insert into public.outcome_events (
         organization_id, conversation_id, event_type, occurred_at, source, created_by_membership_id
       ) values (${ids.orgB}, ${ids.conversationB}, 'lost', now(), 'manual', ${ids.repBMembership})
-    `);
+    `,
+    );
     await tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.representativeUploadRecordingA}/audio.webm`})
     `;
     pass("representative uploads valid own-conversation recording path");
-    await expectDenied(tx, "representative cannot upload orphan recording path", () => tx`
+    await expectDenied(
+      tx,
+      "representative cannot upload orphan recording path",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/70000000-0000-4000-8000-000000000010/audio.webm`})
-    `);
-    await expectDenied(tx, "representative cannot upload recording from another conversation", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot upload recording from another conversation",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.otherRecordingA}/audio.webm`})
-    `);
-    await expectDenied(tx, "representative cannot upload cross-tenant recording", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot upload cross-tenant recording",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgB}/${ids.conversationB}/${ids.recordingB}/audio.webm`})
-    `);
-    await expectDenied(tx, "representative cannot upload with an incorrect organization path", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot upload with an incorrect organization path",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgB}/${ids.conversationA}/${ids.representativeUploadRecordingA}/audio.webm`})
-    `);
-    await expectDenied(tx, "representative cannot upload with an incorrect conversation path", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "representative cannot upload with an incorrect conversation path",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.otherConversationA}/${ids.representativeUploadRecordingA}/audio.webm`})
-    `);
+    `,
+    );
 
     await assumeRole(tx, "authenticated", ids.managerAUser);
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationA}`), 1, "manager reads assigned location/team conversation");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`), 0, "manager cannot read unassigned location/team conversation");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where id = ${ids.conversationB}`), 0, "manager cannot read cross-tenant conversation");
-    assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where conversation_id = ${ids.conversationA}`), 1, "manager reads assigned conversation review");
-    assertEqual(await count(tx, tx`select count(*) from public.check_evaluations where conversation_id = ${ids.otherConversationA}`), 0, "manager cannot read unassigned conversation review");
-    await expectDenied(tx, "manager review access does not grant audio upload authority", () => tx`
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where id = ${ids.conversationA}`,
+      ),
+      1,
+      "manager reads assigned location/team conversation",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where id = ${ids.otherConversationA}`,
+      ),
+      0,
+      "manager cannot read unassigned location/team conversation",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where id = ${ids.conversationB}`,
+      ),
+      0,
+      "manager cannot read cross-tenant conversation",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.check_evaluations where conversation_id = ${ids.conversationA}`,
+      ),
+      1,
+      "manager reads assigned conversation review",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.check_evaluations where conversation_id = ${ids.otherConversationA}`,
+      ),
+      0,
+      "manager cannot read unassigned conversation review",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_import_runs where organization_id = ${ids.orgA}`,
+      ),
+      0,
+      "manager cannot read admin catalogue import provenance",
+    );
+    await expectDenied(
+      tx,
+      "manager review access does not grant audio upload authority",
+      () => tx`
       insert into storage.objects (bucket_id, name)
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.managerAttemptRecordingA}/audio.webm`})
-    `);
-    await expectDenied(tx, "manager review access does not grant recording preparation authority", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "manager review access does not grant recording preparation authority",
+      () => tx`
       select * from public.prepare_recording_upload(
         ${ids.conversationA}, 'audio/webm', 128, 1000, 'browser_recording', 'manager.webm'
       )
-    `);
+    `,
+    );
     assertEqual(
-      await count(tx, tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgA}`),
+      await count(
+        tx,
+        tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgA}`,
+      ),
       0,
       "manager cannot read organization invitations",
     );
-    await expectDenied(tx, "manager cannot invite organization people", () => tx`
+    await expectDenied(
+      tx,
+      "manager cannot invite organization people",
+      () => tx`
       select * from public.create_organization_invitation(
         ${ids.orgA}, 'blocked-manager@anuma.invalid', 'representative', null, null, ${invitationTokenHash}
       )
-    `);
-    await expectDenied(tx, "manager cannot change organization roles", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "manager cannot change organization roles",
+      () => tx`
       select public.update_organization_member(${ids.repAMembership}, 'manager', 'active', ${ids.locationA1}, ${ids.teamA1})
-    `);
+    `,
+    );
     await tx`select public.review_observation_correction(${correctionA}, 'confirmed')`;
     assertEqual(
       await count(
@@ -641,40 +990,100 @@ try {
     );
 
     await assumeRole(tx, "authenticated", ids.adminAUser);
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 3, "admin reads permitted organization conversations");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgB}`), 0, "admin cannot read cross-tenant conversations");
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`,
+      ),
+      3,
+      "admin reads permitted organization conversations",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "admin cannot read cross-tenant conversations",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgA}`,
+      ),
+      1,
+      "admin reads own organization catalogue",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgB}`,
+      ),
+      0,
+      "admin cannot read another organization catalogue",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.product_catalogue_import_runs where organization_id = ${ids.orgA}`,
+      ),
+      1,
+      "admin reads own catalogue import provenance",
+    );
     await tx`
       insert into public.locations (organization_id, name, location_type)
       values (${ids.orgA}, 'Admin-created location', 'other')
     `;
     pass("admin manages own organization configuration");
     assertEqual(
-      await count(tx, tx`select count(*) from public.user_profiles where user_id = ${ids.adminBUser}`),
+      await count(
+        tx,
+        tx`select count(*) from public.user_profiles where user_id = ${ids.adminBUser}`,
+      ),
       0,
       "organization admin cannot read another tenant person profile",
     );
     assertEqual(
-      await count(tx, tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgB}`),
+      await count(
+        tx,
+        tx`select count(*) from public.organization_invitations where organization_id = ${ids.orgB}`,
+      ),
       0,
       "organization admin cannot read another tenant invitations",
     );
-    await expectDenied(tx, "organization admin cannot write another tenant invitation", () => tx`
+    await expectDenied(
+      tx,
+      "organization admin cannot write another tenant invitation",
+      () => tx`
       select * from public.create_organization_invitation(
         ${ids.orgB}, 'cross-tenant-invite@anuma.invalid', 'representative', null, null, ${invitationTokenHash}
       )
-    `);
-    await expectDenied(tx, "last active administrator cannot be demoted", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "last active administrator cannot be demoted",
+      () => tx`
       select public.update_organization_member(${ids.adminAMembership}, 'manager', 'active', null, null)
-    `);
-    await expectDenied(tx, "organization assignment cannot reference another tenant location", () => tx`
+    `,
+    );
+    await expectDenied(
+      tx,
+      "organization assignment cannot reference another tenant location",
+      () => tx`
       select public.update_organization_member(${ids.repAMembership}, 'representative', 'active', ${ids.locationB}, null)
-    `);
+    `,
+    );
     const [createdInvitation] = await tx`
       select * from public.create_organization_invitation(
         ${ids.orgA}, 'phase2-6@anuma.invalid', 'representative', ${ids.locationA1}, ${ids.teamA1}, ${invitationTokenHash}
       )
     `;
-    assertEqual(Boolean(createdInvitation.invitation_id), true, "administrator creates a scoped organization invitation");
+    assertEqual(
+      Boolean(createdInvitation.invitation_id),
+      true,
+      "administrator creates a scoped organization invitation",
+    );
     assertEqual(
       await count(
         tx,
@@ -688,21 +1097,33 @@ try {
       values ('conversation-audio', ${`${ids.orgA}/${ids.conversationA}/${ids.adminRecordingA}/audio.webm`})
     `;
     pass("admin uploads authorized organization recording path");
-    await expectDenied(tx, "admin cannot manage another organization configuration", () => tx`
+    await expectDenied(
+      tx,
+      "admin cannot manage another organization configuration",
+      () => tx`
       insert into public.locations (organization_id, name, location_type)
       values (${ids.orgB}, 'Cross-tenant attack', 'other')
-    `);
+    `,
+    );
 
     await assumeRole(tx, "authenticated", ids.adminBUser);
-    await expectDenied(tx, "invitation acceptance rejects a different authenticated email", () => tx`
+    await expectDenied(
+      tx,
+      "invitation acceptance rejects a different authenticated email",
+      () => tx`
       select * from public.accept_organization_invitation(${createdInvitation.invitation_id}, ${invitationTokenHash})
-    `);
+    `,
+    );
 
     await assumeRole(tx, "authenticated", ids.bootstrapUser);
     const [acceptedInvitation] = await tx`
       select * from public.accept_organization_invitation(${createdInvitation.invitation_id}, ${invitationTokenHash})
     `;
-    assertEqual(acceptedInvitation.organization_id, ids.orgA, "invited existing user accepts the intended organization");
+    assertEqual(
+      acceptedInvitation.organization_id,
+      ids.orgA,
+      "invited existing user accepts the intended organization",
+    );
     assertEqual(
       await count(
         tx,
@@ -732,8 +1153,22 @@ try {
     );
 
     await assumeRole(tx, "authenticated", ids.adminBUser);
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`), 0, "organization B admin cannot read organization A conversations");
-    assertEqual(await count(tx, tx`select count(*) from public.conversations where organization_id = ${ids.orgB}`), 1, "organization B admin reads own conversation");
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where organization_id = ${ids.orgA}`,
+      ),
+      0,
+      "organization B admin cannot read organization A conversations",
+    );
+    assertEqual(
+      await count(
+        tx,
+        tx`select count(*) from public.conversations where organization_id = ${ids.orgB}`,
+      ),
+      1,
+      "organization B admin reads own conversation",
+    );
 
     throw rollbackSignal;
   });
@@ -743,4 +1178,6 @@ try {
   await sql.end();
 }
 
-console.log(`Security integration complete: ${passed.length} scenarios passed; fixtures rolled back.`);
+console.log(
+  `Security integration complete: ${passed.length} scenarios passed; fixtures rolled back.`,
+);

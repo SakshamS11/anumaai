@@ -105,13 +105,16 @@ export function resolveProductMention(
     brand: string | null;
     model: string | null;
     externalSku?: string;
+    isActive?: boolean;
   }>,
 ) {
   const normalized = mention.trim().toLocaleLowerCase();
-  const matches = items.filter((item) =>
-    [item.name, item.brand, item.model, ...item.aliases]
-      .filter(Boolean)
-      .some((candidate) => candidate!.toLocaleLowerCase() === normalized),
+  const matches = items.filter(
+    (item) =>
+      item.isActive !== false &&
+      [item.name, item.brand, item.model, ...item.aliases]
+        .filter(Boolean)
+        .some((candidate) => candidate!.toLocaleLowerCase() === normalized),
   );
   return matches.length === 1
     ? { state: "confirmed" as const, item: matches[0] }
