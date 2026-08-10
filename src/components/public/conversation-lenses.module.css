@@ -1,0 +1,93 @@
+.story {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  border-top: 1px solid var(--border);
+  padding: clamp(3.5rem, 10vw, 8rem) 0;
+}
+.copy h2 {
+  font-size: clamp(2rem, 4vw, 4rem);
+  letter-spacing: -0.055em;
+  line-height: 1;
+  margin: 0.55rem 0 1rem;
+}
+.copy p:last-child {
+  color: var(--graphite);
+  line-height: 1.65;
+  max-width: 38ch;
+}
+.explorer {
+  border-top: 2px solid var(--carbon);
+}
+.steps {
+  display: grid;
+}
+.steps button {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--graphite);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 2.5rem 6.6rem 1fr;
+  gap: 0.55rem;
+  padding: 0.85rem 0;
+  text-align: left;
+}
+.steps button span,
+.scene > p,
+.scene > span {
+  font:
+    700 0.68rem/1.2 var(--font-plex-mono),
+    monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.steps button strong {
+  color: var(--carbon);
+}
+.steps button small {
+  font-size: 0.85rem;
+}
+.steps button.active {
+  color: var(--carbon);
+}
+.steps button.active strong {
+  color: var(--signal-coral);
+}
+.scene {
+  border-left: 2px solid var(--electric-aqua);
+  margin-top: 1.5rem;
+  padding: 1.1rem 0 1.1rem 1.2rem;
+}
+.scene > p {
+  color: var(--graphite);
+  margin: 0 0 0.7rem;
+}
+.scene > strong {
+  font-size: 1.15rem;
+}
+.scene blockquote {
+  font-size: clamp(1.1rem, 2vw, 1.65rem);
+  letter-spacing: -0.03em;
+  line-height: 1.35;
+  margin: 1rem 0;
+}
+.scene > span {
+  color: var(--graphite);
+}
+@media (max-width: 760px) {
+  .story {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .steps button {
+    grid-template-columns: 2rem 1fr;
+  }
+  .steps button small {
+    grid-column: 2;
+  }
+  .scene {
+    margin-top: 1rem;
+  }
+}

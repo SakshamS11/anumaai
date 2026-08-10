@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import { ConversationLenses } from "@/components/public/conversation-lenses";
 import { PublicNavigation } from "@/components/public/public-navigation";
 import { SignalTheatre } from "@/components/public/signal-theatre";
 
@@ -13,22 +13,12 @@ const questions = [
     "Competitor · price comparison · objection",
   ],
   ["Where are price objections going unresolved?", "Concern · response · supporting evidence"],
-  [
-    "What questions appear before customers walk away?",
-    "Question · decision barrier · next action",
-  ],
-  [
-    "What are stronger representatives doing differently?",
-    "Talk dynamics · expected behaviours · evidence",
-  ],
   ["What happened before the outcome?", "Interaction context · traceable source"],
 ];
-
 export default function HomePage() {
   return (
     <main className="marketing-page">
       <PublicNavigation />
-
       <section className="marketing-hero" id="product">
         <div className="hero-copy">
           <p className="eyebrow">Frontline interaction intelligence</p>
@@ -48,69 +38,7 @@ export default function HomePage() {
         </div>
         <SignalTheatre />
       </section>
-
-      <section className="record-comparison">
-        <div className="record-side">
-          <p className="eyebrow">The transaction tells you what happened.</p>
-          <h2>System of record</h2>
-          <dl>
-            <dt>Product</dt>
-            <dd>Lenovo LOQ</dd>
-            <dt>Transaction</dt>
-            <dd>₹81,000</dd>
-            <dt>Store</dt>
-            <dd>Delhi</dd>
-            <dt>Time</dt>
-            <dd>4:18 PM</dd>
-          </dl>
-        </div>
-        <span className="comparison-plus" aria-hidden="true">
-          +
-        </span>
-        <div className="anuma-side">
-          <p className="eyebrow">The conversation tells you why.</p>
-          <h2>ANUMA</h2>
-          <dl>
-            <dt>Need</dt>
-            <dd>College + gaming</dd>
-            <dt>Budget</dt>
-            <dd>₹80,000</dd>
-            <dt>Compared</dt>
-            <dd>Amazon · ₹78,000</dd>
-            <dt>Concern</dt>
-            <dd>Online price</dd>
-            <dt>Finance</dt>
-            <dd>HDFC EMI</dd>
-            <dt>Next action</dt>
-            <dd>Confirm offer + EMI</dd>
-          </dl>
-          <p>ANUMA adds the interaction context around the outcome.</p>
-        </div>
-      </section>
-
-      <section className="how-it-works" id="how-it-works">
-        <div>
-          <p className="eyebrow">How it works</p>
-          <h2>From a human interaction to evidence-backed understanding.</h2>
-          <p>Each step preserves the source while making the interaction more useful.</p>
-        </div>
-        <ol>
-          {[
-            ["01", "Capture", "What was said"],
-            ["02", "Structure", "What it meant"],
-            ["03", "Measure", "How the interaction happened"],
-            ["04", "Evaluate", "What expectations were met"],
-            ["05", "Learn", "What the organization can learn"],
-          ].map(([number, label, meaning]) => (
-            <li key={number}>
-              <span>{number}</span>
-              <strong>{label}</strong>
-              <small>{meaning}</small>
-            </li>
-          ))}
-        </ol>
-      </section>
-
+      <ConversationLenses />
       <section className="business-questions">
         <p className="eyebrow">What could your business know?</p>
         <div>
@@ -128,36 +56,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      <section className="intelligence-pillars">
-        <p className="eyebrow">From conversations to decisions</p>
-        <div>
-          {[
-            [
-              "01",
-              "Customer truth",
-              "Needs, budgets, preferences, competitor references, questions and decision barriers.",
-            ],
-            [
-              "02",
-              "Frontline execution",
-              "Talk dynamics, configured expectations, questions addressed, scorecards and coaching.",
-            ],
-            [
-              "03",
-              "Outcome intelligence",
-              "Planned aggregate intelligence will connect trustworthy interaction patterns to what happened next.",
-            ],
-          ].map(([number, title, copy]) => (
-            <article key={number}>
-              <span>{number}</span>
-              <h2>{title}</h2>
-              <p>{copy}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="dynamics">
         <div>
           <p className="eyebrow">Conversation dynamics</p>
@@ -189,7 +87,6 @@ export default function HomePage() {
           </dl>
         </div>
       </section>
-
       <section className="trace-proof">
         <div>
           <p className="eyebrow">Intelligence you can trace</p>
@@ -202,7 +99,7 @@ export default function HomePage() {
                 ₹80,000
               </strong>
               <small>
-                <i /> Verified
+                <i /> Evidence linked
               </small>
             </article>
             <svg viewBox="0 0 100 170" aria-hidden="true">
@@ -214,20 +111,19 @@ export default function HomePage() {
                 Customer · <time>00:42</time>
               </strong>
               <blockquote>“Budget around ₹80,000 hai.”</blockquote>
-              <a href="#evidence-canvas">View surrounding context →</a>
+              <a href="#evidence-canvas">Return to source context →</a>
             </article>
           </div>
         </div>
       </section>
-
       <section className="language-story">
         <div>
           <p className="eyebrow">Built for how people actually speak</p>
           <h2>Natural conversations do not follow perfect scripts.</h2>
           <p>
-            ANUMA is designed to structure business meaning from natural, code-mixed interactions
-            while preserving the original source evidence. Language quality is validated through
-            controlled pilot evaluation, not a universal language claim.
+            ANUMA structures business meaning from natural, code-mixed interaction while preserving
+            its original evidence. Quality is validated through controlled evaluation, not a
+            universal language claim.
           </p>
         </div>
         <div
@@ -251,7 +147,6 @@ export default function HomePage() {
           <small>Different words. Consistent business meaning.</small>
         </div>
       </section>
-
       <section className="expectations">
         <p className="eyebrow">Your business. Your expectations.</p>
         <h2>Evaluate the behaviours your organization chooses.</h2>
@@ -259,21 +154,17 @@ export default function HomePage() {
           {[
             "Requirement discovery",
             "Budget discovery",
-            "Relevant product discussed",
-            "Finance explained",
-            "Warranty discussed",
             "Customer question addressed",
+            "Objection handled",
             "Next action captured",
           ].map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
         <p>
-          ANUMA evaluates the expectations an organization chooses against what actually happened in
-          the interaction.
+          ANUMA evaluates selected expectations against what actually happened in the interaction.
         </p>
       </section>
-
       <section className="marketing-final">
         <p className="eyebrow">Every conversation leaves a signal.</p>
         <h2>Make the next one usable.</h2>
@@ -284,7 +175,6 @@ export default function HomePage() {
           Sign in →
         </Link>
       </section>
-
       <footer className="marketing-footer">
         <Link className="wordmark" href="/">
           ANUMA

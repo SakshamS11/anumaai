@@ -1,39 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import styles from "./signal-theatre.module.css";
 
-type Finding = { label: string; value: string; source: number; phrase: string };
-
+type Finding = {
+  label: string;
+  value: string;
+  source: number;
+  phrase: string;
+  kind: "signal" | "dialogue";
+};
 const dialogue = [
   {
     speaker: "Customer",
     time: "00:12",
-    text: "College aur gaming ke liye laptop chahiye. Budget around ₹80,000 hai.",
+    text: "Camera important hai, but ₹1.2 lakh se zyada nahi.",
   },
-  { speaker: "Customer", time: "00:41", text: "Amazon pe LOQ ₹78,000 dikha raha tha." },
+  { speaker: "Customer", time: "00:41", text: "Does the Ultra have 5x optical zoom?" },
   {
     speaker: "Representative",
     time: "01:06",
-    text: "I’ll confirm the HDFC EMI and today’s final offer.",
+    text: "It does. I’ll also confirm the final EMI options.",
   },
 ];
-
 const findings: Finding[] = [
-  { label: "Need", value: "College + gaming", source: 0, phrase: "College aur gaming" },
-  { label: "Budget", value: "₹80,000", source: 0, phrase: "Budget around ₹80,000 hai" },
-  { label: "Competitor", value: "Amazon · ₹78,000", source: 1, phrase: "Amazon pe LOQ ₹78,000" },
   {
-    label: "Next action",
-    value: "Confirm EMI + final offer",
+    label: "Decision driver",
+    value: "Camera quality",
+    source: 0,
+    phrase: "Camera important",
+    kind: "signal",
+  },
+  {
+    label: "Maximum budget",
+    value: "₹120,000",
+    source: 0,
+    phrase: "₹1.2 lakh se zyada nahi",
+    kind: "signal",
+  },
+  {
+    label: "Customer question",
+    value: "5x optical zoom",
+    source: 1,
+    phrase: "5x optical zoom",
+    kind: "dialogue",
+  },
+  {
+    label: "Response",
+    value: "Answered · confirm EMI",
     source: 2,
-    phrase: "confirm the HDFC EMI and today’s final offer",
+    phrase: "confirm the final EMI options",
+    kind: "dialogue",
   },
 ];
-
 function highlight(text: string, phrase: string, active: boolean) {
   const position = text.toLowerCase().indexOf(phrase.toLowerCase());
-  if (!active || position < 0) return text;
-  return (
+  return !active || position < 0 ? (
+    text
+  ) : (
     <>
       {text.slice(0, position)}
       <mark>{text.slice(position, position + phrase.length)}</mark>
@@ -41,26 +65,17 @@ function highlight(text: string, phrase: string, active: boolean) {
     </>
   );
 }
-
 export function SignalTheatre() {
-  const [active, setActive] = useState(1);
-  const [guided, setGuided] = useState(true);
+  const [active, setActive] = useState(0);
+  const [lens, setLens] = useState<"signals" | "dialogue">("signals");
+  const available = findings
+    .map((finding, index) => ({ finding, index }))
+    .filter(({ finding }) => finding.kind === lens);
   const activeFinding = findings[active];
-
-  useEffect(() => {
-    if (!guided || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const sequence = [2, 3];
-    const timers = sequence.map((finding, index) =>
-      window.setTimeout(() => setActive(finding), 2300 * (index + 1)),
-    );
-    return () => timers.forEach(window.clearTimeout);
-  }, [guided]);
-
   function select(index: number) {
-    setGuided(false);
     setActive(index);
+    setLens(findings[index].kind === "signal" ? "signals" : "dialogue");
   }
-
   return (
     <section
       className="evidence-canvas"
@@ -75,6 +90,30 @@ export function SignalTheatre() {
         <span className="canvas-status">
           <i aria-hidden="true" /> Source linked
         </span>
+      </div>
+      <div className={styles.lenses} role="tablist" aria-label="Illustrative conversation lens">
+        <button
+          aria-selected={lens === "signals"}
+          onClick={() => {
+            setLens("signals");
+            setActive(0);
+          }}
+          role="tab"
+          type="button"
+        >
+          Structured signals
+        </button>
+        <button
+          aria-selected={lens === "dialogue"}
+          onClick={() => {
+            setLens("dialogue");
+            setActive(2);
+          }}
+          role="tab"
+          type="button"
+        >
+          Question → response
+        </button>
       </div>
       <div className="evidence-canvas-body">
         <div className="evidence-transcript" aria-live="polite">
@@ -119,7 +158,7 @@ export function SignalTheatre() {
           aria-label="Illustrative structured findings"
           role="group"
         >
-          {findings.map((finding, index) => (
+          {available.map(({ finding, index }) => (
             <button
               aria-pressed={active === index}
               className={
@@ -128,7 +167,6 @@ export function SignalTheatre() {
               key={finding.label}
               onClick={() => select(index)}
               onFocus={() => select(index)}
-              onMouseEnter={() => select(index)}
               type="button"
             >
               <span>{finding.label}</span>
@@ -138,8 +176,8 @@ export function SignalTheatre() {
         </div>
       </div>
       <footer>
-        <span className="verified-dot" aria-hidden="true" /> Natural, code-mixed source. Normalized
-        business meaning.
+        <span className="verified-dot" aria-hidden="true" /> Select a finding to focus its original
+        source phrase.
       </footer>
     </section>
   );
