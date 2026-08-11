@@ -1864,15 +1864,15 @@ a {
 }
 .marketing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.83fr) minmax(560px, 1.17fr);
-  gap: clamp(2.5rem, 5vw, 5rem);
+  grid-template-columns: minmax(0, 0.9fr) minmax(540px, 1.1fr);
+  gap: clamp(2.25rem, 4vw, 4.5rem);
   align-items: start;
   padding: clamp(3.5rem, 6vw, 5.75rem) 0 clamp(3.75rem, 7vw, 6.5rem);
 }
 .hero-copy h1 {
-  max-width: 15.5ch;
+  max-width: 17.5ch;
   margin: 0.6rem 0 1.2rem;
-  font-size: clamp(3.1rem, 4.6vw, 4.45rem);
+  font-size: clamp(3rem, 4.25vw, 4.25rem);
   letter-spacing: -0.065em;
   line-height: 0.98;
 }
@@ -1918,11 +1918,11 @@ a {
   text-underline-offset: 0.25em;
 }
 .evidence-canvas {
-  min-height: 520px;
+  min-height: 0;
   border-top: 3px solid var(--carbon);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  box-shadow: 16px 16px 0 var(--surface-muted);
+  box-shadow: none;
   padding: 1.2rem;
 }
 .evidence-canvas-head {
@@ -2488,6 +2488,9 @@ a {
   font-weight: 800;
 }
 .expectations {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(2rem, 8vw, 7rem);
   border-top: 1px solid var(--border);
   padding: clamp(3rem, 7vw, 6rem) 0;
 }
@@ -2541,31 +2544,47 @@ a {
   grid-column: 1 / -1;
   margin-top: 0.85rem;
 }
-.expectations > p:last-child {
+.expectations-copy > p:last-child {
   margin-top: 1.25rem;
 }
-.expectations ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin: 2rem 0;
+
+.expectation-ledger {
+  display: grid;
+  align-content: center;
+  margin: 0;
   padding: 0;
+  border-top: 2px solid var(--carbon);
   list-style: none;
 }
-.expectations li {
-  border: 1px solid var(--border);
-  padding: 0.7rem 0.9rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+
+.expectation-ledger li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) minmax(10rem, 0.8fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  border-bottom: 1px solid var(--border);
+  padding: 1.05rem 0;
 }
-.expectations li::before {
-  content: "";
-  display: inline-block;
-  width: 0.45rem;
-  height: 0.45rem;
-  margin-right: 0.5rem;
-  border-radius: 50%;
-  background: var(--signal-coral);
+
+.expectation-ledger span,
+.expectation-ledger small {
+  color: var(--graphite);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.expectation-ledger span {
+  color: var(--carbon);
+}
+
+.expectation-ledger strong {
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
 }
 .marketing-final {
   display: grid;
@@ -2739,7 +2758,7 @@ a {
     gap: 2.5rem;
   }
   .evidence-canvas {
-    min-height: 510px;
+    min-height: 0;
   }
   .auth-layout {
     grid-template-columns: minmax(0, 0.8fr) minmax(420px, 1fr);
@@ -2805,7 +2824,8 @@ a {
   .business-questions,
   .dynamics,
   .how-it-works,
-  .language-story {
+  .language-story,
+  .expectations {
     grid-template-columns: 1fr;
     padding: 3.25rem 0;
   }
@@ -2817,7 +2837,7 @@ a {
   }
   .evidence-canvas {
     min-height: 0;
-    box-shadow: 8px 8px 0 var(--surface-muted);
+    box-shadow: none;
   }
   .evidence-canvas-body {
     grid-template-columns: 1fr;
@@ -2895,6 +2915,12 @@ a {
     width: 2px;
     height: 28px;
     margin-left: 1rem;
+  }
+  .expectation-ledger li {
+    grid-template-columns: 2rem minmax(0, 1fr);
+  }
+  .expectation-ledger small {
+    grid-column: 2;
   }
   .how-it-works li {
     grid-template-columns: 2.5rem 1fr;

@@ -1,38 +1,300 @@
-.lenses {
+.introduction {
   display: flex;
-  gap: 0.4rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0 0.85rem;
   border-bottom: 1px solid var(--border);
-  padding: 0.75rem 0;
 }
-.lenses button {
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
+
+.introduction p {
+  margin: 0;
   color: var(--graphite);
-  cursor: pointer;
-  font:
-    700 0.7rem/1.2 var(--font-plex-mono),
-    monospace;
-  letter-spacing: 0.08em;
-  padding: 0.45rem 0.2rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.introduction span,
+.turnMeta,
+.finding span,
+.footer {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.66rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
-.lenses button[aria-selected="true"] {
-  border-bottom-color: var(--signal-coral);
+
+.introduction span {
+  flex: 0 0 auto;
+  color: var(--graphite);
+}
+
+.traceList {
+  display: grid;
+}
+
+.traceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(3.5rem, 0.24fr) minmax(11rem, 0.82fr);
+  align-items: stretch;
+  min-height: 7.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sourceTurn,
+.finding {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  color: var(--carbon);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.sourceTurn {
+  display: grid;
+  align-content: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 1rem;
+  background: transparent;
+  border-left: 2px solid transparent;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.traceRow:not([data-active]) .sourceTurn {
+  background: #fbfbfa;
+}
+
+.traceRow[data-active] .sourceTurn {
+  border-left-color: var(--signal-coral);
+  background: #fff1ee;
+}
+
+.turnMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--graphite);
+}
+
+.turnMeta strong {
   color: var(--carbon);
 }
-.lenses button:focus-visible {
+
+.turnText {
+  max-width: 36ch;
+  color: var(--graphite);
+  font-size: clamp(0.9rem, 1.12vw, 1.02rem);
+  line-height: 1.5;
+}
+
+.turnText mark {
+  color: var(--carbon);
+  background: var(--signal-coral);
+  padding: 0 0.07em;
+}
+
+.traceBridge {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.traceBridge::before {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: #c7c9ca;
+  content: "";
+  transform: scaleX(0.76);
+  transform-origin: left center;
+  transition:
+    background-color 220ms ease,
+    height 220ms ease,
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.traceBridge i {
+  position: absolute;
+  top: calc(50% - 0.23rem);
+  right: -0.02rem;
+  z-index: 1;
+  width: 0.46rem;
+  height: 0.46rem;
+  border-radius: 50%;
+  background: #c7c9ca;
+  transition:
+    background-color 220ms ease,
+    transform 220ms ease;
+}
+
+.traceRow[data-active] .traceBridge::before {
+  height: 2px;
+  background: var(--signal-coral);
+  transform: scaleX(1);
+  animation: trace-draw 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.traceRow[data-active] .traceBridge i {
+  background: var(--signal-coral);
+  transform: scale(1.15);
+  animation: trace-point 300ms 150ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.findingList {
+  display: grid;
+  align-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.65rem 0 0.65rem 0.85rem;
+}
+
+.finding {
+  min-height: 3rem;
+  padding: 0.48rem 0.65rem;
+  border-left: 1px solid var(--border-strong);
+  background: var(--surface);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.finding:hover,
+.finding:focus-visible,
+.finding[aria-pressed="true"] {
+  border-left: 3px solid var(--signal-coral);
+  background: #fff1ee;
+  transform: translateX(-0.2rem);
+}
+
+.finding span {
+  display: block;
+  color: var(--graphite);
+}
+
+.finding strong {
+  display: block;
+  margin-top: 0.22rem;
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.sourceTurn:focus-visible,
+.finding:focus-visible {
   outline: 2px solid var(--carbon);
   outline-offset: 3px;
 }
-@media (max-width: 640px) {
-  .lenses {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.9rem 0 0;
+  color: var(--graphite);
+  line-height: 1.45;
+}
+
+.footer span {
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--electric-aqua);
+}
+
+@keyframes trace-draw {
+  from {
+    transform: scaleX(0);
   }
-  .lenses button {
-    min-height: 44px;
-    padding-inline: 0.35rem;
-    text-align: left;
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes trace-point {
+  from {
+    transform: scale(0);
+  }
+
+  to {
+    transform: scale(1.15);
+  }
+}
+
+@media (max-width: 640px) {
+  .introduction {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .introduction span {
+    font-size: 0.61rem;
+  }
+
+  .traceRow {
+    grid-template-columns: minmax(0, 1fr) minmax(7.6rem, 0.64fr);
+    min-height: 0;
+  }
+
+  .sourceTurn {
+    min-height: 7.25rem;
+    padding: 0.85rem 0.7rem;
+  }
+
+  .turnMeta {
+    gap: 0.35rem;
+    font-size: 0.59rem;
+  }
+
+  .turnText {
+    font-size: 0.86rem;
+  }
+
+  .traceBridge {
+    display: none;
+  }
+
+  .findingList {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 0.5rem 0 0.5rem 0.55rem;
+  }
+
+  .finding {
+    min-height: 3.35rem;
+    padding: 0.45rem 0.5rem;
+  }
+
+  .finding span {
+    font-size: 0.57rem;
+  }
+
+  .finding strong {
+    font-size: 0.76rem;
+  }
+
+  .footer {
+    align-items: flex-start;
+    font-size: 0.58rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sourceTurn,
+  .traceBridge::before,
+  .traceBridge i,
+  .finding {
+    animation: none;
+    transition: none;
   }
 }

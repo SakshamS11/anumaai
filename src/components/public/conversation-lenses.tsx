@@ -157,7 +157,9 @@ export function ConversationLenses() {
               {lens[0]} · {lens[1]}
             </p>
           </header>
-          <LensRecord active={active} />
+          <div className={styles.recordBody} key={active}>
+            <LensRecord active={active} />
+          </div>
           <footer>Source relationships remain visible at every layer.</footer>
         </article>
       </div>

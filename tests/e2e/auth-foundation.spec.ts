@@ -14,10 +14,10 @@ test("the public entry point explains ANUMA and links to access routes", async (
   await expect(page).toHaveURL(/\/$/);
   await expect(
     page.getByRole("heading", {
-      name: "The customer told your team what matters. Did the business keep it?",
+      name: "Your customers say more than your systems ever keep.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Explore a conversation" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Follow a conversation" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in", exact: true }).first()).toBeVisible();
 });
 
@@ -49,11 +49,9 @@ test("the public mobile menu closes with Escape and restores focus", async ({ pa
   await expect(menu).toBeFocused();
 });
 
-test("illustrative findings expose their exact source by keyboard and touch", async ({ page }) => {
+test("illustrative records expose their exact source by keyboard and touch", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-
-  await page.getByRole("tab", { name: "Question → response" }).click();
 
   const question = page.getByRole("button", {
     name: /Customer question.*5x optical zoom/i,
@@ -63,7 +61,7 @@ test("illustrative findings expose their exact source by keyboard and touch", as
   await expect(page.locator("mark")).toHaveText("5x optical zoom");
 
   const response = page.getByRole("button", {
-    name: /Representative response.*Answered.*EMI options/i,
+    name: /Response to 00:41.*Answered.*EMI options/i,
   });
   await response.click();
   await expect(response).toHaveAttribute("aria-pressed", "true");
