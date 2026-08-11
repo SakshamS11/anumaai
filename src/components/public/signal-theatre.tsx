@@ -1,64 +1,77 @@
 "use client";
 
 import { useState } from "react";
+import styles from "./signal-theatre.module.css";
 
-type Language = "Hinglish" | "English" | "Tamil + English";
-type Finding = { label: string; value: string; source: number; phrase: string };
-
-const examples: Record<Language, Array<{ speaker: string; time: string; text: string }>> = {
-  Hinglish: [
-    {
-      speaker: "Customer",
-      time: "00:12",
-      text: "College aur gaming ke liye laptop chahiye. Budget around ₹80,000 hai.",
-    },
-    { speaker: "Customer", time: "00:41", text: "Amazon pe LOQ ₹78,000 dikha raha tha." },
-    {
-      speaker: "Representative",
-      time: "01:06",
-      text: "I’ll confirm today’s HDFC EMI and final offer.",
-    },
-  ],
-  English: [
-    {
-      speaker: "Customer",
-      time: "00:12",
-      text: "I need a laptop for college and gaming. My budget is around ₹80,000.",
-    },
-    { speaker: "Customer", time: "00:41", text: "Amazon shows the LOQ at ₹78,000." },
-    {
-      speaker: "Representative",
-      time: "01:06",
-      text: "I’ll confirm today’s HDFC EMI and final offer.",
-    },
-  ],
-  "Tamil + English": [
-    {
-      speaker: "Customer",
-      time: "00:12",
-      text: "College-um gaming-um use panna laptop venum. Budget around ₹80,000.",
-    },
-    { speaker: "Customer", time: "00:41", text: "Amazon-la LOQ ₹78,000 kaamikudhu." },
-    {
-      speaker: "Representative",
-      time: "01:06",
-      text: "Today’s HDFC EMI-um final offer-um confirm panren.",
-    },
-  ],
+type Finding = {
+  id: string;
+  label: string;
+  value: string;
+  phrase: string;
 };
 
-const findings: Finding[] = [
-  { label: "Need", value: "College + gaming", source: 0, phrase: "College aur gaming" },
-  { label: "Budget", value: "₹80,000", source: 0, phrase: "₹80,000" },
-  { label: "Product", value: "Lenovo LOQ", source: 1, phrase: "LOQ" },
-  { label: "Competitor", value: "Amazon", source: 1, phrase: "Amazon" },
-  { label: "Competitor price", value: "₹78,000", source: 1, phrase: "₹78,000" },
-  { label: "Next action", value: "Confirm EMI + final offer", source: 2, phrase: "confirm" },
+type Turn = {
+  speaker: "Customer" | "Representative";
+  time: string;
+  text: string;
+  findings: Finding[];
+};
+
+const turns: Turn[] = [
+  {
+    speaker: "Customer",
+    time: "00:12",
+    text: "Camera important hai. But ₹1.2 lakh se zyada nahi.",
+    findings: [
+      {
+        id: "need",
+        label: "Decision driver",
+        value: "Camera quality",
+        phrase: "Camera important",
+      },
+      {
+        id: "budget",
+        label: "Maximum budget",
+        value: "₹120,000",
+        phrase: "₹1.2 lakh se zyada nahi",
+      },
+    ],
+  },
+  {
+    speaker: "Customer",
+    time: "00:41",
+    text: "Does the Ultra have 5x optical zoom?",
+    findings: [
+      {
+        id: "question",
+        label: "Customer question",
+        value: "5x optical zoom",
+        phrase: "5x optical zoom",
+      },
+    ],
+  },
+  {
+    speaker: "Representative",
+    time: "01:06",
+    text: "It does. I’ll show you the EMI options as well.",
+    findings: [
+      {
+        id: "response",
+        label: "Response to 00:41",
+        value: "Answered · EMI options",
+        phrase: "show you the EMI options",
+      },
+    ],
+  },
 ];
 
 function highlight(text: string, phrase: string, active: boolean) {
   const position = text.toLowerCase().indexOf(phrase.toLowerCase());
-  if (!active || position < 0) return text;
+
+  if (!active || position < 0) {
+    return text;
+  }
+
   return (
     <>
       {text.slice(0, position)}
@@ -69,99 +82,94 @@ function highlight(text: string, phrase: string, active: boolean) {
 }
 
 export function SignalTheatre() {
-  const [language, setLanguage] = useState<Language>("Hinglish");
-  const [active, setActive] = useState(1);
-  const dialogue = examples[language];
-  const activeFinding = findings[active];
-  const source = activeFinding.source;
+  const [activeFindingId, setActiveFindingId] = useState("need");
+  const activeTurnIndex = turns.findIndex((turn) =>
+    turn.findings.some((finding) => finding.id === activeFindingId),
+  );
 
   return (
     <section
       className="evidence-canvas"
       id="evidence-canvas"
-      aria-label="Illustrative conversation transformed into evidence-backed signals"
+      aria-label="Illustrative interaction transformed into evidence-backed customer context"
     >
       <div className="evidence-canvas-head">
         <div>
           <p>Illustrative interaction</p>
-          <strong>Conversation → structured truth</strong>
+          <strong>One conversation. A record you can inspect.</strong>
         </div>
-        <label className="source-language">
-          <span>Source language</span>
-          <select
-            aria-label="Source language for illustrative interaction"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value as Language)}
-          >
-            {(Object.keys(examples) as Language[]).map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
+        <span className="canvas-status">
+          <i aria-hidden="true" /> Source linked
+        </span>
       </div>
-      <div className="evidence-canvas-body">
-        <div className="evidence-transcript" aria-live="polite">
-          {dialogue.map((line, index) => (
+
+      <div className={styles.introduction}>
+        <p>Follow a spoken moment to the business context it created.</p>
+        <span>Source phrase → usable record</span>
+      </div>
+
+      <div className={styles.traceList}>
+        {turns.map((turn, turnIndex) => {
+          const isActiveTurn = turnIndex === activeTurnIndex;
+          const activeFinding = turn.findings.find((finding) => finding.id === activeFindingId);
+          const firstFinding = turn.findings[0];
+
+          return (
             <article
-              className={
-                index === source
-                  ? "canvas-turn canvas-turn-active"
-                  : "canvas-turn canvas-turn-muted"
-              }
-              key={`${language}-${line.time}`}
+              className={styles.traceRow}
+              data-active={isActiveTurn || undefined}
+              key={turn.time}
             >
-              <div className="turn-meta">
-                <strong>{line.speaker}</strong>
-                <time>{line.time}</time>
+              <button
+                aria-pressed={isActiveTurn}
+                className={styles.sourceTurn}
+                onClick={() => setActiveFindingId(firstFinding.id)}
+                onFocus={() => setActiveFindingId(firstFinding.id)}
+                type="button"
+              >
+                <span className={styles.turnMeta}>
+                  <strong>{turn.speaker}</strong>
+                  <time>{turn.time}</time>
+                </span>
+                <span className={styles.turnText}>
+                  {highlight(turn.text, activeFinding?.phrase ?? "", isActiveTurn)}
+                </span>
+              </button>
+
+              <span className={styles.traceBridge} aria-hidden="true">
+                <i />
+              </span>
+
+              <div
+                aria-label={`${turn.speaker} findings`}
+                className={styles.findingList}
+                role="group"
+              >
+                {turn.findings.map((finding) => {
+                  const isActive = finding.id === activeFindingId;
+
+                  return (
+                    <button
+                      aria-pressed={isActive}
+                      className={styles.finding}
+                      key={finding.id}
+                      onClick={() => setActiveFindingId(finding.id)}
+                      onFocus={() => setActiveFindingId(finding.id)}
+                      type="button"
+                    >
+                      <span>{finding.label}</span>
+                      <strong>{finding.value}</strong>
+                    </button>
+                  );
+                })}
               </div>
-              <p>{highlight(line.text, activeFinding.phrase, index === source)}</p>
             </article>
-          ))}
-        </div>
-        <svg
-          className="canvas-traces"
-          viewBox="0 0 260 320"
-          aria-hidden="true"
-          preserveAspectRatio="none"
-        >
-          <path
-            className={source === 0 ? "trace-path trace-path-active" : "trace-path"}
-            d="M0 59 C82 59, 78 51, 260 51"
-          />
-          <path
-            className={source === 1 ? "trace-path trace-path-active" : "trace-path"}
-            d="M0 157 C72 157, 76 150, 260 150"
-          />
-          <path
-            className={source === 2 ? "trace-path trace-path-active" : "trace-path"}
-            d="M0 258 C74 258, 78 255, 260 255"
-          />
-        </svg>
-        <div className="evidence-findings" aria-label="Illustrative structured findings">
-          {findings.map((finding, index) => (
-            <button
-              className={
-                active === index ? "canvas-finding canvas-finding-active" : "canvas-finding"
-              }
-              key={finding.label}
-              onBlur={() => setActive(1)}
-              onClick={() => setActive(index)}
-              onFocus={() => setActive(index)}
-              onMouseEnter={() => setActive(index)}
-              onMouseLeave={() => setActive(1)}
-              type="button"
-            >
-              <span>{finding.label}</span>
-              <strong>{finding.value}</strong>
-            </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
-      <footer>
-        <span className="verified-dot" aria-hidden="true" /> Different language. Same business
-        truth.
+
+      <footer className={styles.footer}>
+        <span aria-hidden="true" /> Select any source moment or record to follow its evidence path.
       </footer>
     </section>
   );
