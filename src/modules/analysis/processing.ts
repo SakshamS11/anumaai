@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getOpenAIEnvironment } from "@/lib/env";
 import type { Json } from "@/lib/supabase/database.generated";
 import { hasPersistedAnalysisResult } from "@/modules/analysis/idempotency";
-import { metricRows, type MetricSegment } from "@/modules/analysis/metrics";
+import { dialogueMetricRows, metricRows, type MetricSegment } from "@/modules/analysis/metrics";
 import { OpenAIAnalysisProvider } from "@/modules/analysis/openai-provider";
 import { amountMajorToMinor } from "@/modules/analysis/types";
 
@@ -106,21 +106,33 @@ export async function processAnalysisRun(runId: string) {
     })),
   });
   const ids = new Set(segments.map((segment) => segment.id));
+  const hasInvalidEvidence = (evidenceSegmentIds: string[]) =>
+    evidenceSegmentIds.some((id) => !ids.has(id));
   if (
-    result.observations.some((observation) =>
-      observation.evidenceSegmentIds.some((id) => !ids.has(id)),
+    result.observations.some((observation) => hasInvalidEvidence(observation.evidenceSegmentIds)) ||
+    result.questions.some(
+      (question) =>
+        hasInvalidEvidence(question.evidenceSegmentIds) ||
+        hasInvalidEvidence(question.response.evidenceSegmentIds),
+    ) ||
+    result.objections.some(
+      (objection) =>
+        hasInvalidEvidence(objection.evidenceSegmentIds) ||
+        hasInvalidEvidence(objection.handling.evidenceSegmentIds),
     )
   ) {
     throw new Error("Model returned invalid evidence references.");
   }
 
-  const { error: persistenceError } = await db.rpc("persist_analysis_result", {
+  const { error: persistenceError } = await db.rpc("persist_interaction_intelligence_result", {
     p_analysis_run_id: runId,
-    p_metric_values: metricRows(mappedSegments) as Json,
+    p_metric_values: [...metricRows(mappedSegments), ...dialogueMetricRows(result)] as Json,
     p_observations: result.observations.map((observation) => ({
       ...observation,
       amountMinor: amountMajorToMinor(observation.amountMajor, observation.currency),
     })) as unknown as Json,
+    p_questions: result.questions as unknown as Json,
+    p_objections: result.objections as unknown as Json,
   });
   if (persistenceError) throw new Error("Analysis results could not be saved atomically.");
 

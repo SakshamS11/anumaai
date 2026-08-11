@@ -55,7 +55,7 @@ ready. It must not be surfaced merely because the field exists here.
 - **Range** stores lower and/or upper amount with a qualifier; do not collapse
   “₹70–80k” into an exact ₹75k.
 - **Entity** stores canonical entity ID when matched plus the original surface
-  text. A failed catalogue match is not permission to invent an SKU.
+  text. Optional future enrichment must not invent or replace a spoken product claim.
 - **Relation** identifies the object to which a fact applies, for example a
   price to a considered product, or a response to an objection.
 
@@ -98,7 +98,7 @@ ready. It must not be surfaced merely because the field exists here.
 
 |   # | Canonical field          | Grain / cardinality                            | Source class                    | Rule                                                                                                         |
 | --: | ------------------------ | ---------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-|  24 | `product_considered`     | product relation / many                        | evidence_extracted              | Model/SKU candidate considered by either party; cautiously resolve against the product master.               |
+|  24 | `product_considered`     | product relation / many                        | evidence_extracted              | Product/model candidate considered by either party; preserve the source claim.                               |
 |  25 | `product_recommended`    | product relation / many                        | evidence_extracted              | Representative-proposed model/SKU candidate with evidence.                                                   |
 |  26 | `recommendation_reason`  | recommendation relation / many                 | evidence_extracted              | Reason linked to a recommended product and customer requirement, such as performance/value.                  |
 |  27 | `store_price_quoted`     | price assertion / many                         | evidence_extracted or verified  | Spoken price is evidence-extracted; system price is verified. Retain product relation and price role.        |
@@ -159,11 +159,9 @@ electronics-wide gold set. Laptop, phone, TV, and appliance fixtures should exer
 same shared concepts; category-specific specifications remain controlled data. They directly support the pilot questions about customer demand,
 recommendation, online-price friction, finance, and next action.
 
-### P1: add with authoritative retail context
+### P1: optional enrichment or manual outcome context
 
-Fields 31, 32, 37, 39, and 40 require product master, inventory, price/promotion, or
-POS/manual-outcome inputs. Build them only when the source ownership and correction
-rules are agreed with the retailer.
+External product, inventory, price, promotion, POS, and similar operational sources are optional enrichment, never a prerequisite for core interaction intelligence. Manual outcomes remain a later dedicated workflow.
 
 ### P2: introduce only after rubric calibration
 

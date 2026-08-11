@@ -7,7 +7,6 @@ export function AdminNavigation() {
       <Link href="/administration/people">People</Link>
       <Link href="/administration/structure">Structure</Link>
       <Link href="/administration/checks">Checks</Link>
-      <Link href="/administration/catalogue">Business data</Link>
       <Link href="/administration/settings">Settings</Link>
     </nav>
   );

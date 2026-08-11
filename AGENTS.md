@@ -30,6 +30,7 @@ If documentation conflicts, the master product specification and an explicit fou
 - Customer organization roles are only `representative`, `manager`, and `admin`; internal ANUMA access is not ordinary tenant membership.
 - Before invoking an AI model, determine whether the required result can be reliably derived from existing structured observations or deterministic computation. Prefer reuse and deterministic computation over repeated model inference.
 - Interaction understanding is a single, versioned semantic extraction from the active confirmed transcript. Validate every model-returned evidence segment against that exact source run before persistence.
+- External business-system data is optional enrichment. No core ANUMA interaction-intelligence capability may require a product master, POS, CRM, inventory, pricing, promotion, ERP, DMS, or other external business-system integration to function.
 
 ## Architecture boundaries
 
@@ -90,6 +91,12 @@ ANUMA uses an **Evidence Editorial** product language: prioritize a finding, the
 - Keep public explanation, authentication, customer product, and internal ANUMA platform operations as distinct environments with a shared brand language. Internal platform access is server-authorized by configured operator identity and is never a customer membership role.
 - Organization invitations must be email-bound, time-limited, resendable, and explicitly accepted. A page GET or link prefetch must never activate membership or consume the application invitation credential; acceptance creates membership and assignment atomically while preserving history.
 - Representatives receive a frontline-first interaction experience; managers receive scoped review access; only customer admins see organization configuration. Do not expose future intelligence pages or administrative controls merely to make navigation look fuller.
+
+## Visual quality gate
+
+User-facing work is incomplete until the rendered interface has been reviewed at mobile, tablet, and desktop widths. Before a significant UI change, inspect the current surface, name its primary user task, set its information hierarchy, and record two to four surface-specific design principles. After implementation, review the real page (not JSX alone) for hierarchy, spacing, typography, density, loading/empty/error/long-content states, keyboard and touch behavior, focus visibility, reduced motion, and responsive composition. Use screenshots where possible and compare before/after. Ask: "Could this page belong to any generic SaaS product?" If yes, perform a product-specific design pass, remove unnecessary decoration, and review again.
+
+Do not default to gradients, glass, glow, generic KPI-card walls, pill badges, icon grids, fake charts, waveforms, sparkles, robots, floating blobs, generic dashboard composition, or vague AI copy. ANUMA's product-native visual language comes from speaker turns, timestamps, evidence markers, transcript fragments, question-to-answer links, objection-to-response links, corrections, uncertainty, review state, and processing state. Motion must explain selection, state, evidence linkage, progress, or orientation; it must be subtle, optional under reduced-motion preferences, and never delay information. Public marketing may be expressive; the operational product prioritizes clarity, speed, evidence, density, and predictable interaction.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

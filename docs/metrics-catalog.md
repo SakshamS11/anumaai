@@ -28,11 +28,11 @@ Quality status is mandatory:
 
 ## Conversation metrics
 
-| Key | Unit | Formula / definition | Default quality |
-|---|---:|---|---|
-| `conversation.duration_seconds` | seconds | recording timeline end minus start; prefer trusted media metadata, else max segment end | measured/estimated |
-| `conversation.participant_speaking_seconds` | seconds | sum of eligible participant segment durations; no claim of unique acoustic speech time | estimated |
-| `conversation.word_count` | count | sum token counts across eligible participant segments | measured/estimated |
+| Key                                         |    Unit | Formula / definition                                                                    | Default quality    |
+| ------------------------------------------- | ------: | --------------------------------------------------------------------------------------- | ------------------ |
+| `conversation.duration_seconds`             | seconds | recording timeline end minus start; prefer trusted media metadata, else max segment end | measured/estimated |
+| `conversation.participant_speaking_seconds` | seconds | sum of eligible participant segment durations; no claim of unique acoustic speech time  | estimated          |
+| `conversation.word_count`                   |   count | sum token counts across eligible participant segments                                   | measured/estimated |
 
 ## Conversation-level quality and eligibility
 
@@ -44,35 +44,35 @@ Analytical aggregates exclude conversations not marked `analytics_eligible`; ben
 
 ## Representative metrics
 
-| Key | Unit | Formula / definition | Default quality |
-|---|---:|---|---|
-| `representative.speaking_seconds` | seconds | sum representative attributed segment durations | estimated |
-| `representative.talk_share` | ratio | representative speaking seconds / total eligible representative + customer speaking seconds | estimated |
-| `representative.word_count` | count | tokenizer count for representative segments | measured/estimated |
-| `representative.estimated_wpm` | words/min | word count / representative speaking seconds × 60 | estimated |
-| `representative.turn_count` | count | merged representative turns | estimated |
-| `representative.average_turn_seconds` | seconds | sum representative turn durations / turn count | estimated |
-| `representative.median_turn_seconds` | seconds | median representative turn duration | estimated |
-| `representative.longest_monologue_seconds` | seconds | maximum merged representative turn duration | estimated |
+| Key                                        |      Unit | Formula / definition                                                                        | Default quality    |
+| ------------------------------------------ | --------: | ------------------------------------------------------------------------------------------- | ------------------ |
+| `representative.speaking_seconds`          |   seconds | sum representative attributed segment durations                                             | estimated          |
+| `representative.talk_share`                |     ratio | representative speaking seconds / total eligible representative + customer speaking seconds | estimated          |
+| `representative.word_count`                |     count | tokenizer count for representative segments                                                 | measured/estimated |
+| `representative.estimated_wpm`             | words/min | word count / representative speaking seconds × 60                                           | estimated          |
+| `representative.turn_count`                |     count | merged representative turns                                                                 | estimated          |
+| `representative.average_turn_seconds`      |   seconds | sum representative turn durations / turn count                                              | estimated          |
+| `representative.median_turn_seconds`       |   seconds | median representative turn duration                                                         | estimated          |
+| `representative.longest_monologue_seconds` |   seconds | maximum merged representative turn duration                                                 | estimated          |
 
 ## Customer metrics
 
-| Key | Unit | Formula / definition | Default quality |
-|---|---:|---|---|
-| `customer.speaking_seconds` | seconds | sum customer-group attributed segment durations | estimated |
-| `customer.talk_share` | ratio | customer speaking seconds / total eligible representative + customer speaking seconds | estimated |
-| `customer.word_count` | count | tokenizer count for customer-group segments | measured/estimated |
-| `customer.estimated_wpm` | words/min | customer word count / customer speaking seconds × 60 | estimated |
-| `customer.turn_count` | count | merged customer-group turns | estimated |
-| `customer.average_turn_seconds` | seconds | sum customer turn durations / turn count | estimated |
+| Key                             |      Unit | Formula / definition                                                                  | Default quality    |
+| ------------------------------- | --------: | ------------------------------------------------------------------------------------- | ------------------ |
+| `customer.speaking_seconds`     |   seconds | sum customer-group attributed segment durations                                       | estimated          |
+| `customer.talk_share`           |     ratio | customer speaking seconds / total eligible representative + customer speaking seconds | estimated          |
+| `customer.word_count`           |     count | tokenizer count for customer-group segments                                           | measured/estimated |
+| `customer.estimated_wpm`        | words/min | customer word count / customer speaking seconds × 60                                  | estimated          |
+| `customer.turn_count`           |     count | merged customer-group turns                                                           | estimated          |
+| `customer.average_turn_seconds` |   seconds | sum customer turn durations / turn count                                              | estimated          |
 
 ## Interaction metrics
 
-| Key | Unit | Formula / definition | Default quality |
-|---|---:|---|---|
-| `interaction.turn_switches` | count | count adjacent eligible turns whose role group changes representative ↔ customer | estimated |
-| `interaction.turn_switches_per_eligible_minute` | provisional count/min | normalized switch rate using an explicitly identified candidate denominator; not a stable benchmark metric until Phase 4 evaluation | estimated/provisional |
-| `interaction.approx_response_gap_seconds` | seconds | median non-negative gap from customer turn end to next representative turn start, only when sequential timestamps are adequate | estimated/insufficient_quality |
+| Key                                             |                  Unit | Formula / definition                                                                                                                | Default quality                |
+| ----------------------------------------------- | --------------------: | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `interaction.turn_switches`                     |                 count | count adjacent eligible turns whose role group changes representative ↔ customer                                                    | estimated                      |
+| `interaction.turn_switches_per_eligible_minute` | provisional count/min | normalized switch rate using an explicitly identified candidate denominator; not a stable benchmark metric until Phase 4 evaluation | estimated/provisional          |
+| `interaction.approx_response_gap_seconds`       |               seconds | median non-negative gap from customer turn end to next representative turn start, only when sequential timestamps are adequate      | estimated/insufficient_quality |
 
 `approx_response_gap_seconds` must disclose sample count and must not be rendered with sub-second precision. It is not a response-latency score.
 
@@ -87,58 +87,60 @@ Phase 4 must compare sensitivity to diarization fragmentation, single-speaker st
 
 ## Question metrics
 
-| Key | Unit | Formula / definition | Default quality |
-|---|---:|---|---|
-| `questions.representative_substantive_count` | count | substantive questions asked by representative | inferred |
-| `questions.customer_substantive_count` | count | substantive questions asked by customer group | inferred |
-| `questions.representative_open_count` | count | representative substantive questions classified open | inferred |
-| `questions.representative_closed_count` | count | representative substantive questions classified closed | inferred |
-| `questions.clarification_count` | count | substantive clarification questions by any role; retain role dimension | inferred |
-| `questions.customer_fully_answered_count` | count | customer substantive questions with effective state `answered` | inferred |
-| `questions.customer_partially_answered_count` | count | customer substantive questions with effective state `partially_answered` | inferred |
-| `questions.customer_unanswered_count` | count | customer substantive questions with effective state `unanswered` | inferred |
-| `questions.customer_uncertain_count` | count | customer substantive questions whose linkage/state is uncertain | inferred |
-| `questions.customer_full_answer_rate` | ratio | fully answered / (fully answered + partially answered + unanswered) | inferred |
+The current interaction-level projection stores `customer_question_count`, `customer_questions_answered`, `customer_questions_partially_answered`, `customer_questions_unanswered`, `customer_questions_uncertain`, `customer_questions_with_response`, `customer_question_response_coverage`, `representative_question_count`, `objection_count`, `objections_with_response`, `objections_resolved`, `objections_partially_resolved`, `objections_unresolved`, and `objection_response_coverage`. These are deterministic counts over one immutable dialogue projection. A response-coverage numerator requires linked response evidence; it is deliberately separate from answer completeness or objection-handling quality. The ratios are descriptive, not a quality judgement or client target.
+
+| Key                                           |         Unit | Formula / definition                                                                                                                                     | Default quality         |
+| --------------------------------------------- | -----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `questions.representative_substantive_count`  |        count | substantive questions asked by representative                                                                                                            | inferred                |
+| `questions.customer_substantive_count`        |        count | substantive questions asked by customer group                                                                                                            | inferred                |
+| `questions.representative_open_count`         |        count | representative substantive questions classified open                                                                                                     | inferred                |
+| `questions.representative_closed_count`       |        count | representative substantive questions classified closed                                                                                                   | inferred                |
+| `questions.clarification_count`               |        count | substantive clarification questions by any role; retain role dimension                                                                                   | inferred                |
+| `questions.customer_fully_answered_count`     |        count | customer substantive questions with effective state `answered`                                                                                           | inferred                |
+| `questions.customer_partially_answered_count` |        count | customer substantive questions with effective state `partially_answered`                                                                                 | inferred                |
+| `questions.customer_unanswered_count`         |        count | customer substantive questions with effective state `unanswered`                                                                                         | inferred                |
+| `questions.customer_uncertain_count`          |        count | customer substantive questions whose linkage/state is uncertain                                                                                          | inferred                |
+| `questions.customer_full_answer_rate`         |        ratio | fully answered / (fully answered + partially answered + unanswered)                                                                                      | inferred                |
 | `questions.customer_weighted_answer_coverage` | policy ratio | (fully answered + policy weight × partially answered) / eligible customer questions; only when a published organization/metric policy defines the weight | inferred/policy-derived |
 
 The raw answer states and counts are canonical. `customer_full_answer_rate` gives partial answers no credit and must appear with fully answered, partially answered, unanswered, uncertain, and not-applicable counts. A weighted coverage metric is optional and must identify the published organization/metric policy version and weight; there is no universal default such as `0.5`, and the UI must label it as policy-derived rather than objective truth. Exclude `uncertain` and `not_applicable` from rate denominators but disclose them. If there are zero eligible customer questions, rates are `not_applicable`, never 100%.
 
 ## Timing metrics
 
-| Key | Unit | Formula / definition | Default quality |
-|---|---:|---|---|
-| `timing.first_substantive_discovery_seconds` | offset seconds | earliest representative substantive question mapped to a discovery topic | inferred |
-| `timing.first_price_discussion_seconds` | offset seconds | earliest evidence-backed price/discount/financing-price event | inferred |
-| `timing.first_objection_seconds` | offset seconds | earliest objection event; not applicable if none | inferred/not_applicable |
-| `timing.first_next_step_discussion_seconds` | offset seconds | earliest evidence-backed next-step or commitment discussion | inferred/not_applicable |
+| Key                                          |           Unit | Formula / definition                                                     | Default quality         |
+| -------------------------------------------- | -------------: | ------------------------------------------------------------------------ | ----------------------- |
+| `timing.first_substantive_discovery_seconds` | offset seconds | earliest representative substantive question mapped to a discovery topic | inferred                |
+| `timing.first_price_discussion_seconds`      | offset seconds | earliest evidence-backed price/discount/financing-price event            | inferred                |
+| `timing.first_objection_seconds`             | offset seconds | earliest objection event; not applicable if none                         | inferred/not_applicable |
+| `timing.first_next_step_discussion_seconds`  | offset seconds | earliest evidence-backed next-step or commitment discussion              | inferred/not_applicable |
 
 ## Coverage and operational metrics
 
 These support management views but are not representative performance judgments.
 
-| Key | Unit | Definition |
-|---|---:|---|
-| `operations.interaction_count` | count | eligible conversations in cohort |
-| `operations.audio_coverage` | ratio | conversations with valid retained recording / cohort conversations |
-| `operations.transcription_coverage` | ratio | conversations with completed active transcription / eligible uploaded conversations |
-| `operations.analysis_coverage` | ratio | conversations with completed active analysis / completed transcription conversations |
-| `operations.evaluation_coverage` | ratio | conversations with applicable published scorecard evaluation / analysis-ready conversations |
-| `operations.outcome_label_coverage` | ratio | eligible conversations/opportunities with a qualifying outcome event / eligible cohort |
-| `operations.processing_failure_rate` | ratio | conversations with terminal stage failure / attempted conversations, grouped by stage/error |
-| `operations.analytics_eligibility_rate` | ratio | analytics-eligible conversations / quality-assessed conversations, with unassessed and exclusion reasons disclosed |
-| `operations.benchmark_eligibility_rate` | ratio | benchmark-eligible conversations / quality-assessed conversations |
-| `operations.outcome_comparison_eligibility_rate` | ratio | outcome-comparison-eligible conversations / quality-assessed conversations |
+| Key                                              |  Unit | Definition                                                                                                         |
+| ------------------------------------------------ | ----: | ------------------------------------------------------------------------------------------------------------------ |
+| `operations.interaction_count`                   | count | eligible conversations in cohort                                                                                   |
+| `operations.audio_coverage`                      | ratio | conversations with valid retained recording / cohort conversations                                                 |
+| `operations.transcription_coverage`              | ratio | conversations with completed active transcription / eligible uploaded conversations                                |
+| `operations.analysis_coverage`                   | ratio | conversations with completed active analysis / completed transcription conversations                               |
+| `operations.evaluation_coverage`                 | ratio | conversations with applicable published scorecard evaluation / analysis-ready conversations                        |
+| `operations.outcome_label_coverage`              | ratio | eligible conversations/opportunities with a qualifying outcome event / eligible cohort                             |
+| `operations.processing_failure_rate`             | ratio | conversations with terminal stage failure / attempted conversations, grouped by stage/error                        |
+| `operations.analytics_eligibility_rate`          | ratio | analytics-eligible conversations / quality-assessed conversations, with unassessed and exclusion reasons disclosed |
+| `operations.benchmark_eligibility_rate`          | ratio | benchmark-eligible conversations / quality-assessed conversations                                                  |
+| `operations.outcome_comparison_eligibility_rate` | ratio | outcome-comparison-eligible conversations / quality-assessed conversations                                         |
 
 ## Tracker and scorecard aggregates
 
-| Key | Unit | Definition |
-|---|---:|---|
-| `trackers.present_rate` | ratio | effective `present/pass` results / applicable non-uncertain results for a tracker version |
-| `trackers.uncertain_rate` | ratio | uncertain results / attempted applicable evaluations |
-| `scorecards.adherence_ratio` | ratio | awarded points / applicable maximum points under one scorecard version |
-| `scorecards.criterion_pass_rate` | ratio | pass results / applicable evaluated results for one criterion version |
-| `scorecards.critical_failure_rate` | ratio | runs with triggered critical failure / applicable evaluated runs |
-| `coaching.opportunity_frequency` | ratio | conversations containing a specific priority definition / coaching-eligible conversations |
+| Key                                |  Unit | Definition                                                                                |
+| ---------------------------------- | ----: | ----------------------------------------------------------------------------------------- |
+| `trackers.present_rate`            | ratio | effective `present/pass` results / applicable non-uncertain results for a tracker version |
+| `trackers.uncertain_rate`          | ratio | uncertain results / attempted applicable evaluations                                      |
+| `scorecards.adherence_ratio`       | ratio | awarded points / applicable maximum points under one scorecard version                    |
+| `scorecards.criterion_pass_rate`   | ratio | pass results / applicable evaluated results for one criterion version                     |
+| `scorecards.critical_failure_rate` | ratio | runs with triggered critical failure / applicable evaluated runs                          |
+| `coaching.opportunity_frequency`   | ratio | conversations containing a specific priority definition / coaching-eligible conversations |
 
 Never aggregate across incompatible tracker/scorecard versions without an explicit compatibility mapping. `NOT_APPLICABLE` is excluded and separately counted; `UNCERTAIN` is not treated as failure.
 
@@ -146,18 +148,18 @@ Never aggregate across incompatible tracker/scorecard versions without an explic
 
 Each aggregate retains definition/version, numerator, denominator, sample size, cohort filter, date range, refresh time, and drill-down conversation IDs.
 
-| Key | Unit | Definition |
-|---|---:|---|
-| `customer.need_frequency` | ratio/count | conversations with effective need definition/entity |
-| `customer.question_frequency` | ratio/count | conversations/questions by normalized topic |
-| `customer.unanswered_question_frequency` | ratio/count | unanswered/partial customer questions by topic |
-| `customer.objection_frequency` | ratio/count | conversations/objections by objection definition |
-| `customer.competitor_mention_frequency` | ratio/count | conversations with competitor entity mention |
-| `customer.price_objection_frequency` | ratio/count | conversations with price-family objection |
-| `customer.feature_request_frequency` | ratio/count | conversations/facts by feature entity |
-| `customer.financing_concern_frequency` | ratio/count | conversations with finance/EMI question or objection |
-| `customer.warranty_concern_frequency` | ratio/count | conversations with warranty question or objection |
-| `customer.availability_issue_frequency` | ratio/count | conversations with stock/waiting-period issue |
+| Key                                      |        Unit | Definition                                           |
+| ---------------------------------------- | ----------: | ---------------------------------------------------- |
+| `customer.need_frequency`                | ratio/count | conversations with effective need definition/entity  |
+| `customer.question_frequency`            | ratio/count | conversations/questions by normalized topic          |
+| `customer.unanswered_question_frequency` | ratio/count | unanswered/partial customer questions by topic       |
+| `customer.objection_frequency`           | ratio/count | conversations/objections by objection definition     |
+| `customer.competitor_mention_frequency`  | ratio/count | conversations with competitor entity mention         |
+| `customer.price_objection_frequency`     | ratio/count | conversations with price-family objection            |
+| `customer.feature_request_frequency`     | ratio/count | conversations/facts by feature entity                |
+| `customer.financing_concern_frequency`   | ratio/count | conversations with finance/EMI question or objection |
+| `customer.warranty_concern_frequency`    | ratio/count | conversations with warranty question or objection    |
+| `customer.availability_issue_frequency`  | ratio/count | conversations with stock/waiting-period issue        |
 
 Counts distinguish `mention_count`, `object_count`, and `conversation_count`. Management copy must name the denominator—for example, “31% of 84 electronics conversations.”
 
@@ -165,13 +167,13 @@ Counts distinguish `mention_count`, `object_count`, and `conversation_count`. Ma
 
 Outcome comparisons require a matching conversation quality assessment with `outcome_comparison_eligible`, a published eligibility policy, outcome window, compatible vertical event definitions, adequate outcome coverage, and minimum sample in every cohort.
 
-| Key | Unit | Definition |
-|---|---:|---|
-| `outcomes.eligible_count` | count | conversations/opportunities meeting comparison policy |
-| `outcomes.labelled_count` | count | eligible records with qualifying outcome event in window |
-| `outcomes.additional_needed` | count | max(0, configured maturity threshold − labelled count), also evaluated per cohort |
-| `outcomes.feature_rate_by_cohort` | ratio | conversations containing a compatible observation, metric, tracker, or score-result condition / eligible outcome cohort |
-| `outcomes.rate_difference` | percentage points | feature rate cohort A − cohort B, descriptive only |
+| Key                               |              Unit | Definition                                                                                                              |
+| --------------------------------- | ----------------: | ----------------------------------------------------------------------------------------------------------------------- |
+| `outcomes.eligible_count`         |             count | conversations/opportunities meeting comparison policy                                                                   |
+| `outcomes.labelled_count`         |             count | eligible records with qualifying outcome event in window                                                                |
+| `outcomes.additional_needed`      |             count | max(0, configured maturity threshold − labelled count), also evaluated per cohort                                       |
+| `outcomes.feature_rate_by_cohort` |             ratio | conversations containing a compatible observation, metric, tracker, or score-result condition / eligible outcome cohort |
+| `outcomes.rate_difference`        | percentage points | feature rate cohort A − cohort B, descriptive only                                                                      |
 
 Maturity labels are proposed as:
 

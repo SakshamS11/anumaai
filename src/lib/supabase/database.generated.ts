@@ -1172,133 +1172,167 @@ export type Database = {
         };
         Relationships: [];
       };
-      product_catalogue_import_runs: {
+      interaction_questions: {
         Row: {
           id: string;
           organization_id: string;
-          source_filename: string;
-          source_checksum: string;
-          status: Database["public"]["Enums"]["catalogue_import_status"];
-          total_row_count: number;
-          imported_row_count: number;
-          invalid_row_count: number;
-          error_summary: Json;
-          created_by_membership_id: string | null;
+          conversation_id: string;
+          analysis_run_id: string;
+          speaker_role: Database["public"]["Enums"]["participant_role"];
+          normalized_topic: string;
+          question_text: string;
+          question_type: string;
+          evidence_group_id: string;
           created_at: string;
-          completed_at: string | null;
         };
         Insert: {
           id?: string;
           organization_id: string;
-          source_filename: string;
-          source_checksum: string;
-          status?: Database["public"]["Enums"]["catalogue_import_status"];
-          total_row_count?: number;
-          imported_row_count?: number;
-          invalid_row_count?: number;
-          error_summary?: Json;
-          created_by_membership_id?: string | null;
+          conversation_id: string;
+          analysis_run_id: string;
+          speaker_role: Database["public"]["Enums"]["participant_role"];
+          normalized_topic: string;
+          question_text: string;
+          question_type: string;
+          evidence_group_id: string;
           created_at?: string;
-          completed_at?: string | null;
         };
         Update: {
           id?: string;
           organization_id?: string;
-          source_filename?: string;
-          source_checksum?: string;
-          status?: Database["public"]["Enums"]["catalogue_import_status"];
-          total_row_count?: number;
-          imported_row_count?: number;
-          invalid_row_count?: number;
-          error_summary?: Json;
-          created_by_membership_id?: string | null;
+          conversation_id?: string;
+          analysis_run_id?: string;
+          speaker_role?: Database["public"]["Enums"]["participant_role"];
+          normalized_topic?: string;
+          question_text?: string;
+          question_type?: string;
+          evidence_group_id?: string;
           created_at?: string;
-          completed_at?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: "product_catalogue_import_runs_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
-      product_catalogue_items: {
+      interaction_question_responses: {
         Row: {
           id: string;
           organization_id: string;
-          external_sku: string;
-          name: string;
-          category: string;
-          subcategory: string | null;
-          brand: string | null;
-          model: string | null;
-          aliases: string[];
-          specifications: Json;
-          is_active: boolean;
-          valid_from: string | null;
-          valid_to: string | null;
-          source_import_run_id: string | null;
-          source_row_number: number | null;
+          conversation_id: string;
+          analysis_run_id: string;
+          question_id: string;
+          responding_role: Database["public"]["Enums"]["participant_role"] | null;
+          response_text: string | null;
+          response_state: string;
+          rationale: string | null;
+          evidence_group_id: string | null;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
           id?: string;
           organization_id: string;
-          external_sku: string;
-          name: string;
-          category: string;
-          subcategory?: string | null;
-          brand?: string | null;
-          model?: string | null;
-          aliases?: string[];
-          specifications?: Json;
-          is_active?: boolean;
-          valid_from?: string | null;
-          valid_to?: string | null;
-          source_import_run_id?: string | null;
-          source_row_number?: number | null;
+          conversation_id: string;
+          analysis_run_id: string;
+          question_id: string;
+          responding_role?: Database["public"]["Enums"]["participant_role"] | null;
+          response_text?: string | null;
+          response_state: string;
+          rationale?: string | null;
+          evidence_group_id?: string | null;
           created_at?: string;
-          updated_at?: string;
         };
         Update: {
           id?: string;
           organization_id?: string;
-          external_sku?: string;
-          name?: string;
-          category?: string;
-          subcategory?: string | null;
-          brand?: string | null;
-          model?: string | null;
-          aliases?: string[];
-          specifications?: Json;
-          is_active?: boolean;
-          valid_from?: string | null;
-          valid_to?: string | null;
-          source_import_run_id?: string | null;
-          source_row_number?: number | null;
+          conversation_id?: string;
+          analysis_run_id?: string;
+          question_id?: string;
+          responding_role?: Database["public"]["Enums"]["participant_role"] | null;
+          response_text?: string | null;
+          response_state?: string;
+          rationale?: string | null;
+          evidence_group_id?: string | null;
           created_at?: string;
-          updated_at?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "product_catalogue_items_organization_id_fkey";
-            columns: ["organization_id"];
-            isOneToOne: false;
-            referencedRelation: "organizations";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "product_catalogue_items_source_import_run_id_fkey";
-            columns: ["source_import_run_id"];
-            isOneToOne: false;
-            referencedRelation: "product_catalogue_import_runs";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
+      };
+      interaction_objections: {
+        Row: {
+          id: string;
+          organization_id: string;
+          conversation_id: string;
+          analysis_run_id: string;
+          speaker_role: Database["public"]["Enums"]["participant_role"];
+          objection_family: string;
+          objection_text: string;
+          evidence_group_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          conversation_id: string;
+          analysis_run_id: string;
+          speaker_role: Database["public"]["Enums"]["participant_role"];
+          objection_family: string;
+          objection_text: string;
+          evidence_group_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          conversation_id?: string;
+          analysis_run_id?: string;
+          speaker_role?: Database["public"]["Enums"]["participant_role"];
+          objection_family?: string;
+          objection_text?: string;
+          evidence_group_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      interaction_objection_handlings: {
+        Row: {
+          id: string;
+          organization_id: string;
+          conversation_id: string;
+          analysis_run_id: string;
+          objection_id: string;
+          responding_role: Database["public"]["Enums"]["participant_role"] | null;
+          response_text: string | null;
+          handling_state: string;
+          strategy: string | null;
+          rationale: string | null;
+          evidence_group_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          conversation_id: string;
+          analysis_run_id: string;
+          objection_id: string;
+          responding_role?: Database["public"]["Enums"]["participant_role"] | null;
+          response_text?: string | null;
+          handling_state: string;
+          strategy?: string | null;
+          rationale?: string | null;
+          evidence_group_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          conversation_id?: string;
+          analysis_run_id?: string;
+          objection_id?: string;
+          responding_role?: Database["public"]["Enums"]["participant_role"] | null;
+          response_text?: string | null;
+          handling_state?: string;
+          strategy?: string | null;
+          rationale?: string | null;
+          evidence_group_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       outcome_events: {
         Row: {
@@ -2131,6 +2165,19 @@ export type Database = {
           metric_run_id: string;
         }[];
       };
+      persist_interaction_intelligence_result: {
+        Args: {
+          p_analysis_run_id: string;
+          p_metric_values: Json;
+          p_objections: Json;
+          p_observations: Json;
+          p_questions: Json;
+        };
+        Returns: {
+          already_persisted: boolean;
+          metric_run_id: string;
+        }[];
+      };
       persist_interaction_review: {
         Args: {
           p_check_evaluations: Json;
@@ -2240,7 +2287,6 @@ export type Database = {
       membership_status: "active" | "inactive";
       organization_invitation_status: "pending" | "accepted" | "expired" | "revoked";
       outcome_source: "manual" | "import";
-      catalogue_import_status: "pending" | "completed" | "completed_with_errors" | "failed";
       participant_role:
         "representative" | "customer" | "additional_customer" | "manager" | "unknown";
       quality_state: "adequate" | "limited" | "insufficient" | "unknown" | "not_assessed";

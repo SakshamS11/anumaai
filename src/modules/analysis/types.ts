@@ -15,6 +15,76 @@ export type ExtractedObservation = {
   evidenceSegmentIds: string[];
 };
 
+export const questionTypes = [
+  "discovery",
+  "clarification",
+  "product_or_service_information",
+  "commercial",
+  "finance",
+  "comparison",
+  "process",
+  "objection_related",
+  "closing",
+  "other",
+] as const;
+export const responseStates = [
+  "answered",
+  "partially_answered",
+  "unanswered",
+  "uncertain",
+] as const;
+export const objectionFamilies = [
+  "price",
+  "value",
+  "product_or_service_fit",
+  "competitor",
+  "timing",
+  "trust",
+  "process",
+  "finance",
+  "availability_claim",
+  "policy",
+  "risk",
+  "other",
+] as const;
+export const objectionHandlingStates = [
+  "resolved",
+  "partially_resolved",
+  "unresolved",
+  "deferred",
+  "uncertain",
+] as const;
+
+export type ExtractedQuestion = {
+  text: string;
+  normalizedTopic: string;
+  questionType: (typeof questionTypes)[number];
+  speakerRole: string;
+  evidenceSegmentIds: string[];
+  response: {
+    text: string | null;
+    speakerRole: string | null;
+    state: (typeof responseStates)[number];
+    rationale: string | null;
+    evidenceSegmentIds: string[];
+  };
+};
+
+export type ExtractedObjection = {
+  text: string;
+  family: (typeof objectionFamilies)[number];
+  speakerRole: string;
+  evidenceSegmentIds: string[];
+  handling: {
+    text: string | null;
+    speakerRole: string | null;
+    state: (typeof objectionHandlingStates)[number];
+    strategy: string | null;
+    rationale: string | null;
+    evidenceSegmentIds: string[];
+  };
+};
+
 export const observationTypes = [
   "need",
   "budget",
@@ -53,6 +123,8 @@ export interface AnalysisProvider {
     segments: AnalysisInputSegment[];
   }): Promise<{
     observations: ExtractedObservation[];
+    questions: ExtractedQuestion[];
+    objections: ExtractedObjection[];
     requestId: string | null;
     inputTokens: number | null;
     outputTokens: number | null;

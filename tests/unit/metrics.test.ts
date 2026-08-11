@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS,
+  dialogueMetricRows,
   mergeConversationalTurns,
   metricRows,
   type MetricSegment,
@@ -156,5 +157,49 @@ describe("interaction metrics", () => {
     ]);
     expect(turns.filter((turn) => turn.group === "representative")).toHaveLength(2);
     expect(turns[0]).toMatchObject({ startMilliseconds: 0, endMilliseconds: 2_000 });
+  });
+});
+
+describe("dialogue projection metrics", () => {
+  it("calculates reusable question and objection coverage without another model call", () => {
+    const values = new Map(
+      dialogueMetricRows({
+        questions: [
+          {
+            speakerRole: "customer",
+            response: { state: "answered", evidenceSegmentIds: ["answer-evidence"] },
+          },
+          {
+            speakerRole: "customer",
+            response: { state: "partially_answered", evidenceSegmentIds: ["partial-evidence"] },
+          },
+          { speakerRole: "customer", response: { state: "unanswered", evidenceSegmentIds: [] } },
+          { speakerRole: "customer", response: { state: "uncertain", evidenceSegmentIds: [] } },
+          {
+            speakerRole: "representative",
+            response: { state: "answered", evidenceSegmentIds: ["discovery-evidence"] },
+          },
+        ],
+        objections: [
+          { handling: { state: "resolved", evidenceSegmentIds: ["resolved-evidence"] } },
+          {
+            handling: { state: "unresolved", evidenceSegmentIds: ["unresolved-response-evidence"] },
+          },
+          { handling: { state: "deferred", evidenceSegmentIds: ["deferred-evidence"] } },
+          { handling: { state: "uncertain", evidenceSegmentIds: [] } },
+        ],
+      }).map((row) => [row.metric_key, row.numeric_value]),
+    );
+    expect(values.get("customer_question_count")).toBe(4);
+    expect(values.get("customer_questions_answered")).toBe(1);
+    expect(values.get("customer_questions_partially_answered")).toBe(1);
+    expect(values.get("customer_questions_unanswered")).toBe(1);
+    expect(values.get("customer_questions_uncertain")).toBe(1);
+    expect(values.get("customer_questions_with_response")).toBe(2);
+    expect(values.get("customer_question_response_coverage")).toBe(0.5);
+    expect(values.get("objections_with_response")).toBe(3);
+    expect(values.get("objections_resolved")).toBe(1);
+    expect(values.get("objections_unresolved")).toBe(1);
+    expect(values.get("objection_response_coverage")).toBe(0.75);
   });
 });

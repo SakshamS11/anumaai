@@ -14,6 +14,102 @@ export type MetricRow = {
   unit: "milliseconds" | "ratio" | "turns" | "words" | "words_per_minute";
 };
 
+type DialogueProjection = {
+  questions: Array<{
+    speakerRole: string;
+    response: { evidenceSegmentIds: string[]; state: string };
+  }>;
+  objections: Array<{
+    handling: { evidenceSegmentIds: string[]; state: string };
+  }>;
+};
+
+/** Counts are computed from the one persisted dialogue projection, never by another model call. */
+export function dialogueMetricRows(dialogue: DialogueProjection): MetricRow[] {
+  const customerQuestions = dialogue.questions.filter((question) =>
+    ["customer", "additional_customer"].includes(question.speakerRole),
+  );
+  const representativeQuestions = dialogue.questions.filter(
+    (question) => question.speakerRole === "representative",
+  );
+  const answered = customerQuestions.filter(
+    (question) => question.response.state === "answered",
+  ).length;
+  const partial = customerQuestions.filter(
+    (question) => question.response.state === "partially_answered",
+  ).length;
+  const unanswered = customerQuestions.filter(
+    (question) => question.response.state === "unanswered",
+  ).length;
+  const uncertain = customerQuestions.filter(
+    (question) => question.response.state === "uncertain",
+  ).length;
+  const questionsWithResponse = customerQuestions.filter(
+    (question) => question.response.evidenceSegmentIds.length > 0,
+  ).length;
+  const objectionsWithResponse = dialogue.objections.filter(
+    (objection) => objection.handling.evidenceSegmentIds.length > 0,
+  ).length;
+  const objectionsResolved = dialogue.objections.filter(
+    (objection) => objection.handling.state === "resolved",
+  ).length;
+  const objectionsPartiallyResolved = dialogue.objections.filter(
+    (objection) => objection.handling.state === "partially_resolved",
+  ).length;
+  const objectionsUnresolved = dialogue.objections.filter(
+    (objection) => objection.handling.state === "unresolved",
+  ).length;
+  const rows: MetricRow[] = [
+    {
+      metric_key: "customer_question_count",
+      numeric_value: customerQuestions.length,
+      unit: "turns",
+    },
+    { metric_key: "customer_questions_answered", numeric_value: answered, unit: "turns" },
+    { metric_key: "customer_questions_partially_answered", numeric_value: partial, unit: "turns" },
+    { metric_key: "customer_questions_unanswered", numeric_value: unanswered, unit: "turns" },
+    { metric_key: "customer_questions_uncertain", numeric_value: uncertain, unit: "turns" },
+    {
+      metric_key: "customer_questions_with_response",
+      numeric_value: questionsWithResponse,
+      unit: "turns",
+    },
+    {
+      metric_key: "representative_question_count",
+      numeric_value: representativeQuestions.length,
+      unit: "turns",
+    },
+    { metric_key: "objection_count", numeric_value: dialogue.objections.length, unit: "turns" },
+    {
+      metric_key: "objections_with_response",
+      numeric_value: objectionsWithResponse,
+      unit: "turns",
+    },
+    { metric_key: "objections_resolved", numeric_value: objectionsResolved, unit: "turns" },
+    {
+      metric_key: "objections_partially_resolved",
+      numeric_value: objectionsPartiallyResolved,
+      unit: "turns",
+    },
+    { metric_key: "objections_unresolved", numeric_value: objectionsUnresolved, unit: "turns" },
+  ];
+  if (customerQuestions.length) {
+    rows.push({
+      metric_key: "customer_question_response_coverage",
+      numeric_value: questionsWithResponse / customerQuestions.length,
+      unit: "ratio",
+    });
+  }
+  if (dialogue.objections.length) {
+    rows.push({
+      metric_key: "objection_response_coverage",
+      numeric_value: objectionsWithResponse / dialogue.objections.length,
+      unit: "ratio",
+    });
+  }
+  return rows;
+}
+
 /** Provider chunks within this gap are one conversational turn. */
 export const SAME_SPEAKER_GAP_TOLERANCE_MILLISECONDS = 250;
 

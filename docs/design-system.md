@@ -186,3 +186,11 @@ Prefer “Evidence,” “Customer Intelligence,” “Process,” and “Outcom
 3. Prototype the Conversation Intelligence evidence/audio interaction first.
 4. Establish responsive table/filter patterns before building aggregate screens.
 5. User-test quality labels and outcome-learning copy with pilot managers.
+
+# Visual quality gate
+
+ANUMA's Evidence Editorial language is not a one-time styling exercise. Every future user-facing change must begin with the user job, information hierarchy, and two to four explicit principles for the affected surface. Implementation is complete only after the rendered page is inspected at approximately 390px, 768–1024px, and 1440px widths. Review hierarchy, spacing, typography, density, focus, keyboard/touch states, reduced motion, loading, empty, error, and long-content states; use screenshots where possible.
+
+Avoid default AI-SaaS sameness: gradients, glow, glassmorphism, generic KPI/card walls, fake charts, decorative waveforms, sparkles, robots, floating decoration, arbitrary pills, and vague AI copy. Components and icons remain valid when they serve a job. ANUMA-specific structures should instead emerge from evidence: speaker turns, timestamps, source fragments, finding-to-evidence traces, question-to-response relationships, objection handling, correction lineage, uncertainty, review state, and real processing stages. Motion communicates state or relationship, supports reduced-motion preferences, and never becomes decoration.
+
+Before release ask: could this page belong to any generic SaaS product? If yes, remove unearned components and make the interaction clearer through ANUMA's actual evidence model. Public pages may be more narrative and expressive; product pages stay calm, dense where useful, accessible, and operationally predictable.

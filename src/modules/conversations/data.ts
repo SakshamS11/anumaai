@@ -45,6 +45,36 @@ export type ConversationDetail = ConversationListItem & {
       state: "unreviewed" | "confirmed" | "rejected";
     }>;
   }>;
+  dialogue: {
+    questions: Array<{
+      id: string;
+      text: string;
+      topic: string;
+      type: string;
+      speakerRole: string;
+      evidenceSegmentId: string | null;
+      responses: Array<{
+        text: string | null;
+        state: string;
+        rationale: string | null;
+        evidenceSegmentId: string | null;
+      }>;
+    }>;
+    objections: Array<{
+      id: string;
+      text: string;
+      family: string;
+      speakerRole: string;
+      evidenceSegmentId: string | null;
+      handling: {
+        text: string | null;
+        state: string;
+        strategy: string | null;
+        rationale: string | null;
+        evidenceSegmentId: string | null;
+      };
+    }>;
+  };
   latestReview: {
     id: string;
     status: string;
@@ -197,6 +227,8 @@ export async function getConversationDetail(
     mappingsResult,
     runResult,
     observationsResult,
+    questionsResult,
+    objectionsResult,
     reviewRunsResult,
   ] = await Promise.all([
     supabase
@@ -253,6 +285,20 @@ export async function getConversationDetail(
       : Promise.resolve({ data: [], error: null }),
     conversation.active_analysis_run_id
       ? supabase
+          .from("interaction_questions")
+          .select("id,question_text,normalized_topic,question_type,speaker_role,evidence_group_id")
+          .eq("analysis_run_id", conversation.active_analysis_run_id)
+          .order("created_at")
+      : Promise.resolve({ data: [], error: null }),
+    conversation.active_analysis_run_id
+      ? supabase
+          .from("interaction_objections")
+          .select("id,objection_text,objection_family,speaker_role,evidence_group_id")
+          .eq("analysis_run_id", conversation.active_analysis_run_id)
+          .order("created_at")
+      : Promise.resolve({ data: [], error: null }),
+    conversation.active_analysis_run_id
+      ? supabase
           .from("review_runs")
           .select("id,status,semantic_request_count,created_at")
           .eq("conversation_id", conversationId)
@@ -272,6 +318,8 @@ export async function getConversationDetail(
       mappingsResult,
       runResult,
       observationsResult,
+      questionsResult,
+      objectionsResult,
       reviewRunsResult,
     ].some((result) => result.error)
   ) {
@@ -284,6 +332,91 @@ export async function getConversationDetail(
   const mappings = mappingsResult.data ?? [];
   const consent = consentResult.data ?? [];
   const observations = observationsResult.data ?? [];
+  const questions = questionsResult.data ?? [];
+  const objections = objectionsResult.data ?? [];
+  const [questionResponsesResult, objectionHandlingsResult, dialogueEvidenceResult] =
+    await Promise.all([
+      questions.length
+        ? supabase
+            .from("interaction_question_responses")
+            .select("question_id,response_text,response_state,rationale,evidence_group_id")
+            .in(
+              "question_id",
+              questions.map((question) => question.id),
+            )
+        : Promise.resolve({ data: [], error: null }),
+      objections.length
+        ? supabase
+            .from("interaction_objection_handlings")
+            .select(
+              "objection_id,response_text,handling_state,strategy,rationale,evidence_group_id",
+            )
+            .in(
+              "objection_id",
+              objections.map((objection) => objection.id),
+            )
+        : Promise.resolve({ data: [], error: null }),
+      [
+        ...questions.map((item) => item.evidence_group_id),
+        ...objections.map((item) => item.evidence_group_id),
+      ].length
+        ? supabase
+            .from("evidence_references")
+            .select("evidence_group_id,transcript_segment_id,sequence_number")
+            .in("evidence_group_id", [
+              ...questions.map((item) => item.evidence_group_id),
+              ...objections.map((item) => item.evidence_group_id),
+            ])
+            .order("sequence_number")
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+  if (
+    questionResponsesResult.error ||
+    objectionHandlingsResult.error ||
+    dialogueEvidenceResult.error
+  ) {
+    throw new Error("Could not load dialogue intelligence.");
+  }
+  const responseEvidenceGroupIds = [
+    ...(questionResponsesResult.data ?? []).flatMap((item) =>
+      item.evidence_group_id ? [item.evidence_group_id] : [],
+    ),
+    ...(objectionHandlingsResult.data ?? []).flatMap((item) =>
+      item.evidence_group_id ? [item.evidence_group_id] : [],
+    ),
+  ];
+  const { data: responseEvidence, error: responseEvidenceError } = responseEvidenceGroupIds.length
+    ? await supabase
+        .from("evidence_references")
+        .select("evidence_group_id,transcript_segment_id,sequence_number")
+        .in("evidence_group_id", responseEvidenceGroupIds)
+        .order("sequence_number")
+    : { data: [], error: null };
+  if (responseEvidenceError) throw new Error("Could not load dialogue response evidence.");
+  const questionResponsesByQuestion = new Map<
+    string,
+    (typeof questionResponsesResult.data)[number][]
+  >();
+  for (const item of questionResponsesResult.data ?? []) {
+    questionResponsesByQuestion.set(item.question_id, [
+      ...(questionResponsesByQuestion.get(item.question_id) ?? []),
+      item,
+    ]);
+  }
+  const objectionHandlingByObjection = new Map(
+    (objectionHandlingsResult.data ?? []).map((item) => [item.objection_id, item]),
+  );
+  const dialogueEvidenceByGroup = new Map(
+    (dialogueEvidenceResult.data ?? []).map((item) => [
+      item.evidence_group_id,
+      item.transcript_segment_id,
+    ]),
+  );
+  for (const item of responseEvidence ?? []) {
+    if (!dialogueEvidenceByGroup.has(item.evidence_group_id)) {
+      dialogueEvidenceByGroup.set(item.evidence_group_id, item.transcript_segment_id);
+    }
+  }
   const { data: observationCorrections, error: observationCorrectionsError } = observations.length
     ? await supabase
         .from("observation_corrections")
@@ -458,6 +591,46 @@ export async function getConversationDetail(
       evidenceGroupId: observation.evidence_group_id,
       corrections: correctionsByObservation.get(observation.id) ?? [],
     })),
+    dialogue: {
+      questions: questions.map((question) => {
+        const responses = questionResponsesByQuestion.get(question.id) ?? [];
+        return {
+          id: question.id,
+          text: question.question_text,
+          topic: question.normalized_topic,
+          type: question.question_type,
+          speakerRole: question.speaker_role,
+          evidenceSegmentId: dialogueEvidenceByGroup.get(question.evidence_group_id) ?? null,
+          responses: responses.map((response) => ({
+            text: response.response_text,
+            state: response.response_state,
+            rationale: response.rationale,
+            evidenceSegmentId: response.evidence_group_id
+              ? (dialogueEvidenceByGroup.get(response.evidence_group_id) ?? null)
+              : null,
+          })),
+        };
+      }),
+      objections: objections.map((objection) => {
+        const handling = objectionHandlingByObjection.get(objection.id);
+        return {
+          id: objection.id,
+          text: objection.objection_text,
+          family: objection.objection_family,
+          speakerRole: objection.speaker_role,
+          evidenceSegmentId: dialogueEvidenceByGroup.get(objection.evidence_group_id) ?? null,
+          handling: {
+            text: handling?.response_text ?? null,
+            state: handling?.handling_state ?? "uncertain",
+            strategy: handling?.strategy ?? null,
+            rationale: handling?.rationale ?? null,
+            evidenceSegmentId: handling?.evidence_group_id
+              ? (dialogueEvidenceByGroup.get(handling.evidence_group_id) ?? null)
+              : null,
+          },
+        };
+      }),
+    },
     latestReview: latestReviewRun
       ? {
           id: latestReviewRun.id,

@@ -9,11 +9,6 @@ const sections = [
   ["People", "Manage access, roles and operating scope.", "/administration/people"],
   ["Structure", "Set up locations and frontline teams.", "/administration/structure"],
   ["Checks", "Set the interaction expectations that matter.", "/administration/checks"],
-  [
-    "Business data",
-    "Import the product catalogue that anchors commercial context.",
-    "/administration/catalogue",
-  ],
   ["Settings", "Review organization defaults and display context.", "/administration/settings"],
 ] as const;
 export default async function AdministrationPage() {

@@ -64,10 +64,6 @@ const ids = {
   reviewA: "d0000000-0000-4000-8000-000000000001",
   reviewOtherA: "d0000000-0000-4000-8000-000000000002",
   reviewB: "d0000000-0000-4000-8000-000000000003",
-  catalogueImportA: "e0000000-0000-4000-8000-000000000001",
-  catalogueImportB: "e0000000-0000-4000-8000-000000000002",
-  catalogueItemA: "e1000000-0000-4000-8000-000000000001",
-  catalogueItemB: "e1000000-0000-4000-8000-000000000002",
 };
 
 const sql = postgres(readDatabaseUrl(), {
@@ -150,8 +146,6 @@ try {
       "scorecard_definition_checks",
       "scorecard_evaluations",
       "review_runs",
-      "product_catalogue_import_runs",
-      "product_catalogue_items",
     ];
 
     const rlsRows = await tx`
@@ -219,20 +213,6 @@ try {
         (${ids.teamA1}, ${ids.orgA}, 'A Showroom Team'),
         (${ids.teamA2}, ${ids.orgA}, 'A Store Team'),
         (${ids.teamB}, ${ids.orgB}, 'B Team')
-    `;
-    await tx`
-      insert into public.product_catalogue_import_runs (
-        id, organization_id, source_filename, source_checksum, status, created_by_membership_id
-      ) values
-        (${ids.catalogueImportA}, ${ids.orgA}, 'catalogue-a.csv', ${"a".repeat(64)}, 'completed', ${ids.adminAMembership}),
-        (${ids.catalogueImportB}, ${ids.orgB}, 'catalogue-b.csv', ${"b".repeat(64)}, 'completed', ${ids.adminBMembership})
-    `;
-    await tx`
-      insert into public.product_catalogue_items (
-        id, organization_id, external_sku, name, category, source_import_run_id
-      ) values
-        (${ids.catalogueItemA}, ${ids.orgA}, 'A-SKU', 'Catalogue product A', 'electronics', ${ids.catalogueImportA}),
-        (${ids.catalogueItemB}, ${ids.orgB}, 'B-SKU', 'Catalogue product B', 'electronics', ${ids.catalogueImportB})
     `;
     await tx`
       insert into public.member_assignments (
@@ -581,38 +561,6 @@ try {
       0,
       "organization A cannot read organization B check definitions",
     );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgA}`,
-      ),
-      1,
-      "representative reads own organization catalogue",
-    );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgB}`,
-      ),
-      0,
-      "representative cannot read another organization catalogue",
-    );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_import_runs where organization_id = ${ids.orgA}`,
-      ),
-      0,
-      "representative cannot read admin catalogue import provenance",
-    );
-    await expectDenied(
-      tx,
-      "representative cannot directly insert catalogue items",
-      () => tx`
-      insert into public.product_catalogue_items (organization_id, external_sku, name, category)
-      values (${ids.orgA}, 'REP-ATTACK', 'Rep attack', 'electronics')
-    `,
-    );
     await expectDenied(
       tx,
       "non-admin cannot create organization check configuration",
@@ -930,14 +878,6 @@ try {
       0,
       "manager cannot read unassigned conversation review",
     );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_import_runs where organization_id = ${ids.orgA}`,
-      ),
-      0,
-      "manager cannot read admin catalogue import provenance",
-    );
     await expectDenied(
       tx,
       "manager review access does not grant audio upload authority",
@@ -1005,30 +945,6 @@ try {
       ),
       0,
       "admin cannot read cross-tenant conversations",
-    );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgA}`,
-      ),
-      1,
-      "admin reads own organization catalogue",
-    );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_items where organization_id = ${ids.orgB}`,
-      ),
-      0,
-      "admin cannot read another organization catalogue",
-    );
-    assertEqual(
-      await count(
-        tx,
-        tx`select count(*) from public.product_catalogue_import_runs where organization_id = ${ids.orgA}`,
-      ),
-      1,
-      "admin reads own catalogue import provenance",
     );
     await tx`
       insert into public.locations (organization_id, name, location_type)

@@ -13,6 +13,7 @@
 /coverage
 /playwright-report
 /test-results
+/tmp/
 
 # Local operating-system files
 .DS_Store

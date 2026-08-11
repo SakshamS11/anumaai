@@ -19,6 +19,71 @@
   --risk-surface: #fef0ed;
 }
 
+/* Dialogue relationships are deliberately a trace, not another dashboard card. */
+.dialogue-intelligence {
+  border-top: 1px solid var(--line, #d8d7d2);
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+}
+.dialogue-stream {
+  margin-top: 1.75rem;
+  max-width: 54rem;
+}
+.dialogue-stream h3 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+.dialogue-trace {
+  border-left: 2px solid var(--signal-coral, #ff4f3d);
+  padding: 0.2rem 0 1.15rem 1rem;
+  margin: 0 0 1.25rem;
+}
+.dialogue-trace blockquote {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  margin: 0.3rem 0 0.45rem;
+}
+.dialogue-meta {
+  color: var(--muted, #5f6470);
+  font-size: 0.8rem;
+  margin: 0;
+  text-transform: capitalize;
+}
+.dialogue-response {
+  align-items: flex-start;
+  border-top: 1px solid var(--line, #d8d7d2);
+  display: flex;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+}
+.dialogue-response > span {
+  color: var(--aqua, #20d6c7);
+  font-weight: 700;
+}
+.dialogue-response p:not(.dialogue-meta) {
+  margin: 0.2rem 0 0.45rem;
+}
+.evidence-link {
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  text-decoration-color: var(--aqua, #20d6c7);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+@media (max-width: 640px) {
+  .dialogue-intelligence {
+    margin-top: 2rem;
+  }
+  .dialogue-trace {
+    padding-left: 0.8rem;
+  }
+  .dialogue-trace blockquote {
+    font-size: 1rem;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
