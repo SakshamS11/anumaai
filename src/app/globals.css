@@ -1864,15 +1864,15 @@ a {
 }
 .marketing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.79fr) minmax(560px, 1fr);
+  grid-template-columns: minmax(0, 0.83fr) minmax(560px, 1.17fr);
   gap: clamp(2.5rem, 5vw, 5rem);
   align-items: start;
-  padding: clamp(3.25rem, 5.5vw, 5rem) 0;
+  padding: clamp(3.5rem, 6vw, 5.75rem) 0 clamp(3.75rem, 7vw, 6.5rem);
 }
 .hero-copy h1 {
-  max-width: 14ch;
+  max-width: 15.5ch;
   margin: 0.6rem 0 1.2rem;
-  font-size: clamp(3.15rem, 4.65vw, 4.35rem);
+  font-size: clamp(3.1rem, 4.6vw, 4.45rem);
   letter-spacing: -0.065em;
   line-height: 0.98;
 }
@@ -1888,6 +1888,26 @@ a {
   gap: 1.1rem;
   flex-wrap: wrap;
   margin-top: 1.7rem;
+}
+.hero-proof {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  max-width: 43ch;
+  margin: 2.1rem 0 0;
+  color: var(--graphite);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.73rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+.hero-proof span {
+  flex: 0 0 auto;
+  width: 0.52rem;
+  height: 0.52rem;
+  margin-top: 0.32rem;
+  border-radius: 50%;
+  background: var(--electric-aqua);
 }
 .text-link {
   color: var(--carbon);
@@ -2082,6 +2102,96 @@ a {
   border-radius: 50%;
   background: var(--electric-aqua);
 }
+.signal-gap {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(2rem, 8vw, 8rem);
+  border-top: 1px solid var(--carbon);
+  border-bottom: 1px solid var(--border);
+  padding: clamp(3.5rem, 8vw, 6.5rem) 0;
+}
+.signal-gap h2,
+.value-threads h2 {
+  max-width: 13ch;
+  margin: 0.55rem 0 0;
+  font-size: clamp(2.25rem, 4.5vw, 4.4rem);
+  letter-spacing: -0.065em;
+  line-height: 0.98;
+}
+.signal-gap-copy {
+  display: grid;
+  align-content: end;
+  gap: 1.1rem;
+  max-width: 45ch;
+}
+.signal-gap-copy p {
+  margin: 0;
+  color: var(--graphite);
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.65;
+}
+.signal-gap-copy p:first-child {
+  color: var(--carbon);
+  font-weight: 650;
+}
+.value-threads {
+  display: grid;
+  grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.24fr);
+  gap: clamp(2rem, 8vw, 8rem);
+  border-top: 1px solid var(--carbon);
+  padding: clamp(4rem, 9vw, 7.5rem) 0;
+}
+.value-threads-intro > p:last-child {
+  max-width: 36ch;
+  color: var(--graphite);
+  line-height: 1.65;
+}
+.value-threads ol {
+  display: grid;
+  align-content: start;
+  margin: 0;
+  padding: 0;
+  border-top: 2px solid var(--carbon);
+  list-style: none;
+}
+.value-thread {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) minmax(12rem, 0.82fr);
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+.value-thread-number,
+.value-thread ul {
+  color: var(--graphite);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.value-thread h3 {
+  margin: 0;
+  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  letter-spacing: -0.035em;
+}
+.value-thread p {
+  max-width: 35ch;
+  margin: 0.45rem 0 0;
+  color: var(--graphite);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.value-thread ul {
+  display: grid;
+  align-content: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0 0 0 0.9rem;
+  border-left: 2px solid var(--electric-aqua);
+  list-style: none;
+  line-height: 1.35;
+}
 .record-comparison {
   position: relative;
   display: grid;
@@ -2258,6 +2368,14 @@ a {
 }
 .trace-proof .eyebrow {
   color: var(--electric-aqua);
+}
+.trace-proof h2 {
+  max-width: 19ch;
+  margin: 0.65rem 0 0;
+  color: var(--ink-inverse);
+  font-size: clamp(2rem, 4vw, 3.9rem);
+  letter-spacing: -0.06em;
+  line-height: 0.98;
 }
 .trace-proof-grid {
   display: grid;
@@ -2682,6 +2800,8 @@ a {
     background: var(--border);
   }
   .marketing-hero,
+  .signal-gap,
+  .value-threads,
   .business-questions,
   .dynamics,
   .how-it-works,
@@ -2691,6 +2811,9 @@ a {
   }
   .hero-copy h1 {
     font-size: clamp(2.7rem, 10vw, 4.2rem);
+  }
+  .hero-proof {
+    margin-top: 1.6rem;
   }
   .evidence-canvas {
     min-height: 0;
@@ -2756,6 +2879,13 @@ a {
   }
   .dynamics-data dl {
     grid-template-columns: 1fr;
+  }
+  .value-thread {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+  }
+  .value-thread ul {
+    grid-column: 2;
+    margin-top: 0.25rem;
   }
   .language-trace {
     grid-template-columns: 1fr;

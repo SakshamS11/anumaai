@@ -14,10 +14,10 @@ test("the public entry point explains ANUMA and links to access routes", async (
   await expect(page).toHaveURL(/\/$/);
   await expect(
     page.getByRole("heading", {
-      name: "Every conversation leaves a signal. ANUMA turns it into intelligence.",
+      name: "The customer told your team what matters. Did the business keep it?",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "See ANUMA in action" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Explore a conversation" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in", exact: true }).first()).toBeVisible();
 });
 
@@ -53,15 +53,21 @@ test("illustrative findings expose their exact source by keyboard and touch", as
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
-  const competitor = page.getByRole("button", { name: "COMPETITOR Amazon · ₹78,000" });
-  await competitor.focus();
-  await expect(competitor).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("mark")).toHaveText("Amazon pe LOQ ₹78,000");
+  await page.getByRole("tab", { name: "Question → response" }).click();
 
-  const budget = page.getByRole("button", { name: "BUDGET ₹80,000" });
-  await budget.click();
-  await expect(budget).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("mark")).toHaveText("Budget around ₹80,000 hai");
+  const question = page.getByRole("button", {
+    name: /Customer question.*5x optical zoom/i,
+  });
+  await question.focus();
+  await expect(question).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("mark")).toHaveText("5x optical zoom");
+
+  const response = page.getByRole("button", {
+    name: /Representative response.*Answered.*EMI options/i,
+  });
+  await response.click();
+  await expect(response).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("mark")).toHaveText("show you the EMI options");
 });
 
 test("sign-in and workspace sign-up expose dedicated credential forms", async ({ page }) => {

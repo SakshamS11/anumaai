@@ -14,18 +14,22 @@ const dialogue = [
   {
     speaker: "Customer",
     time: "00:12",
-    text: "Camera important hai, but ₹1.2 lakh se zyada nahi.",
+    text: "Camera important hai. But ₹1.2 lakh se zyada nahi.",
   },
-  { speaker: "Customer", time: "00:41", text: "Does the Ultra have 5x optical zoom?" },
+  {
+    speaker: "Customer",
+    time: "00:41",
+    text: "Does the Ultra have 5x optical zoom?",
+  },
   {
     speaker: "Representative",
     time: "01:06",
-    text: "It does. I’ll also confirm the final EMI options.",
+    text: "It does. I’ll show you the EMI options as well.",
   },
 ];
 const findings: Finding[] = [
   {
-    label: "Decision driver",
+    label: "What matters",
     value: "Camera quality",
     source: 0,
     phrase: "Camera important",
@@ -46,10 +50,10 @@ const findings: Finding[] = [
     kind: "dialogue",
   },
   {
-    label: "Response",
-    value: "Answered · confirm EMI",
+    label: "Representative response",
+    value: "Answered · EMI options",
     source: 2,
-    phrase: "confirm the final EMI options",
+    phrase: "show you the EMI options",
     kind: "dialogue",
   },
 ];
@@ -85,7 +89,7 @@ export function SignalTheatre() {
       <div className="evidence-canvas-head">
         <div>
           <p>Illustrative interaction</p>
-          <strong>Conversation → evidence-backed signals</strong>
+          <strong>Spoken moment → usable business record</strong>
         </div>
         <span className="canvas-status">
           <i aria-hidden="true" /> Source linked
@@ -101,7 +105,7 @@ export function SignalTheatre() {
           role="tab"
           type="button"
         >
-          Structured signals
+          What the customer meant
         </button>
         <button
           aria-selected={lens === "dialogue"}
@@ -155,7 +159,7 @@ export function SignalTheatre() {
         </svg>
         <div
           className="evidence-findings"
-          aria-label="Illustrative structured findings"
+          aria-label="Illustrative interaction intelligence"
           role="group"
         >
           {available.map(({ finding, index }) => (
@@ -176,8 +180,8 @@ export function SignalTheatre() {
         </div>
       </div>
       <footer>
-        <span className="verified-dot" aria-hidden="true" /> Select a finding to focus its original
-        source phrase.
+        <span className="verified-dot" aria-hidden="true" /> Select a finding to keep its original
+        source phrase in view.
       </footer>
     </section>
   );

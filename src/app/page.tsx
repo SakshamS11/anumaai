@@ -3,127 +3,191 @@ import { ConversationLenses } from "@/components/public/conversation-lenses";
 import { PublicNavigation } from "@/components/public/public-navigation";
 import { SignalTheatre } from "@/components/public/signal-theatre";
 
-const questions = [
-  [
-    "What are customers asking for that we do not currently offer?",
-    "Needs · questions · product gaps",
-  ],
-  [
-    "Which competitors keep entering your conversations?",
-    "Competitor · price comparison · objection",
-  ],
-  ["Where are price objections going unresolved?", "Concern · response · supporting evidence"],
-  ["What happened before the outcome?", "Interaction context · traceable source"],
+const records = [
+  {
+    number: "01",
+    title: "Customer context",
+    copy: "What they need, what matters, what they can spend and what is getting in the way.",
+    examples: ["Need · night photography", "Maximum budget · ₹120,000"],
+  },
+  {
+    number: "02",
+    title: "Frontline execution",
+    copy: "What your team asked, answered, clarified, committed to and left unresolved.",
+    examples: ["Question · partially answered", "Commitment · EMI options"],
+  },
+  {
+    number: "03",
+    title: "Evidence you can inspect",
+    copy: "Every material finding stays connected to the speaker, moment and original words that support it.",
+    examples: ["Customer · 00:41", "Source evidence retained"],
+  },
 ];
+
+const behaviours = [
+  "Requirement discovery",
+  "Budget discovery",
+  "Customer question addressed",
+  "Objection handled",
+  "Next action captured",
+];
+
 export default function HomePage() {
   return (
     <main className="marketing-page">
       <PublicNavigation />
+
       <section className="marketing-hero" id="product">
         <div className="hero-copy">
           <p className="eyebrow">Frontline interaction intelligence</p>
-          <h1>Every conversation leaves a signal. ANUMA turns it into intelligence.</h1>
+          <h1>The customer told your team what matters. Did the business keep it?</h1>
           <p>
-            ANUMA turns frontline customer interactions into structured, evidence-backed
-            intelligence — revealing what customers need, how teams respond, and what happens next.
+            ANUMA turns frontline conversations into evidence-backed customer context — the needs,
+            questions, objections and commitments that usually disappear when an interaction ends.
           </p>
           <div className="hero-actions">
             <a className="button button-primary" href="#evidence-canvas">
-              See ANUMA in action
+              Explore a conversation
             </a>
             <a className="text-link" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
-              Book a demo <span aria-hidden="true">→</span>
+              Talk to ANUMA <span aria-hidden="true">→</span>
             </a>
           </div>
+          <p className="hero-proof">
+            <span aria-hidden="true" /> Built from the interaction itself. Every material finding
+            keeps its path back to source evidence.
+          </p>
         </div>
         <SignalTheatre />
       </section>
-      <ConversationLenses />
-      <section className="business-questions">
-        <p className="eyebrow">What could your business know?</p>
+
+      <section className="signal-gap" aria-labelledby="signal-gap-heading">
         <div>
-          <h2>The questions already inside your conversations.</h2>
-          <div className="question-list">
-            {questions.map(([question, signals], index) => (
-              <details key={question}>
-                <summary>
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  {question}
-                </summary>
-                <p>{signals}</p>
-              </details>
-            ))}
-          </div>
+          <p className="eyebrow">The information gap</p>
+          <h2 id="signal-gap-heading">The interaction ends. Its business context should not.</h2>
+        </div>
+        <div className="signal-gap-copy">
+          <p>
+            A team may remember the sale, the ticket or the next task. But the conversation holds
+            the reason behind it: what the customer needed, what they questioned, and where the
+            representative earned or lost confidence.
+          </p>
+          <p>
+            ANUMA keeps that context usable without asking your people to turn every conversation
+            into manual notes.
+          </p>
         </div>
       </section>
-      <section className="dynamics">
+
+      <ConversationLenses />
+
+      <section className="value-threads" aria-labelledby="value-threads-heading">
+        <div className="value-threads-intro">
+          <p className="eyebrow">What remains after the conversation</p>
+          <h2 id="value-threads-heading">Not a summary. A record your business can work with.</h2>
+          <p>
+            ANUMA does not turn human interaction into a detached score or a black-box conclusion.
+            It preserves the useful layers independently so each can be reviewed, corrected and
+            reused.
+          </p>
+        </div>
+        <ol>
+          {records.map((record) => (
+            <li className="value-thread" key={record.number}>
+              <span className="value-thread-number">{record.number}</span>
+              <div>
+                <h3>{record.title}</h3>
+                <p>{record.copy}</p>
+              </div>
+              <ul aria-label={`${record.title} examples`}>
+                {record.examples.map((example) => (
+                  <li key={example}>{example}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="dynamics" aria-labelledby="dynamics-heading">
         <div>
           <p className="eyebrow">Conversation dynamics</p>
-          <h2>How the interaction behaved.</h2>
-          <p>Objective measures describe the interaction. They do not judge it.</p>
+          <h2 id="dynamics-heading">
+            See how the interaction moved — without pretending to judge it.
+          </h2>
+          <p>
+            Speaking time, turns and pace describe the shape of a conversation. They are objective
+            context for a review, not a verdict on a person.
+          </p>
         </div>
-        <div className="dynamics-data">
+        <div className="dynamics-data" aria-label="Illustrative conversation dynamics" role="group">
           <div className="speech-lines">
             <p>
               <span>Customer</span>
-              <i className="customer-line" />
+              <i className="customer-line" aria-hidden="true" />
             </p>
             <p>
               <span>Representative</span>
-              <i className="rep-line" />
+              <i className="rep-line" aria-hidden="true" />
             </p>
           </div>
           <dl>
-            <dt>Duration</dt>
-            <dd>4:18</dd>
-            <dt>Customer talk</dt>
+            <dt>Interaction duration</dt>
+            <dd>4m 18s</dd>
+            <dt>Customer talk share</dt>
             <dd>52%</dd>
-            <dt>Representative talk</dt>
+            <dt>Representative talk share</dt>
             <dd>48%</dd>
-            <dt>Turns</dt>
+            <dt>Conversational turns</dt>
             <dd>37</dd>
-            <dt>Longest rep stretch</dt>
+            <dt>Longest representative stretch</dt>
             <dd>22 sec</dd>
           </dl>
         </div>
       </section>
-      <section className="trace-proof">
+
+      <section className="trace-proof" aria-labelledby="trace-proof-heading">
         <div>
-          <p className="eyebrow">Intelligence you can trace</p>
+          <p className="eyebrow">A conclusion is only useful if you can inspect it</p>
+          <h2 id="trace-proof-heading">
+            No detached summaries. Follow every important signal back to the moment it came from.
+          </h2>
           <div className="trace-proof-grid">
             <article>
-              <span>Finding</span>
+              <span>Structured finding</span>
               <strong>
-                Customer budget
+                Maximum budget
                 <br />
-                ₹80,000
+                ₹120,000
               </strong>
               <small>
-                <i /> Evidence linked
+                <i aria-hidden="true" /> Evidence linked
               </small>
             </article>
             <svg viewBox="0 0 100 170" aria-hidden="true">
               <path d="M50 0 V170" />
             </svg>
             <article>
-              <span>Source</span>
+              <span>Original source</span>
               <strong>
-                Customer · <time>00:42</time>
+                Customer · <time>00:12</time>
               </strong>
-              <blockquote>“Budget around ₹80,000 hai.”</blockquote>
-              <a href="#evidence-canvas">Return to source context →</a>
+              <blockquote>“Camera important hai, but ₹1.2 lakh se zyada nahi.”</blockquote>
+              <a href="#evidence-canvas">Return to the source interaction →</a>
             </article>
           </div>
         </div>
       </section>
-      <section className="language-story">
+
+      <section className="language-story" aria-labelledby="language-heading">
         <div>
-          <p className="eyebrow">Built for how people actually speak</p>
-          <h2>Natural conversations do not follow perfect scripts.</h2>
+          <p className="eyebrow">Built for natural speech</p>
+          <h2 id="language-heading">
+            People do not speak in perfect forms. Your business still needs a clear record.
+          </h2>
           <p>
-            ANUMA structures business meaning from natural, code-mixed interaction while preserving
-            its original evidence. Quality is validated through controlled evaluation, not a
-            universal language claim.
+            ANUMA keeps original wording available as evidence while structuring the business
+            meaning in English. Different speech; a consistent record of what mattered.
           </p>
         </div>
         <div
@@ -132,49 +196,49 @@ export default function HomePage() {
           role="group"
         >
           <article>
-            <span>How it was said</span>
+            <span>What the customer said</span>
             <blockquote>“Budget around eighty thousand hai.”</blockquote>
           </article>
           <i aria-hidden="true" />
           <article>
-            <span>How ANUMA structures it</span>
+            <span>What the business can use</span>
             <strong>
-              Budget
+              Maximum budget
               <br />
               ₹80,000
             </strong>
           </article>
-          <small>Different words. Consistent business meaning.</small>
+          <small>Original words retained. Meaning made usable.</small>
         </div>
       </section>
-      <section className="expectations">
-        <p className="eyebrow">Your business. Your expectations.</p>
-        <h2>Evaluate the behaviours your organization chooses.</h2>
+
+      <section className="expectations" aria-labelledby="expectations-heading">
+        <p className="eyebrow">Your expectations, applied to the evidence</p>
+        <h2 id="expectations-heading">
+          Define what a strong interaction means for your organization.
+        </h2>
         <ul>
-          {[
-            "Requirement discovery",
-            "Budget discovery",
-            "Customer question addressed",
-            "Objection handled",
-            "Next action captured",
-          ].map((item) => (
+          {behaviours.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
         <p>
-          ANUMA evaluates selected expectations against what actually happened in the interaction.
+          ANUMA evaluates your chosen expectations against what actually happened — then shows the
+          evidence behind the review.
         </p>
       </section>
+
       <section className="marketing-final">
-        <p className="eyebrow">Every conversation leaves a signal.</p>
-        <h2>Make the next one usable.</h2>
+        <p className="eyebrow">The conversation already happened.</p>
+        <h2>Make its value visible.</h2>
         <a className="button button-primary" href="mailto:hello@anuma.ai?subject=ANUMA%20demo">
-          Book a demo
+          Talk to ANUMA
         </a>
         <Link className="text-link" href="/sign-in">
           Sign in →
         </Link>
       </section>
+
       <footer className="marketing-footer">
         <Link className="wordmark" href="/">
           ANUMA
@@ -183,7 +247,7 @@ export default function HomePage() {
           <a href="#product">Product</a>
           <a href="#how-it-works">How it works</a>
           <Link href="/sign-in">Sign in</Link>
-          <a href="mailto:hello@anuma.ai?subject=ANUMA%20demo">Book a demo</a>
+          <a href="mailto:hello@anuma.ai?subject=ANUMA%20demo">Talk to ANUMA</a>
         </nav>
       </footer>
     </main>
